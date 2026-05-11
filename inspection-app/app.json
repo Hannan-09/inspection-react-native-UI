@@ -1,32 +1,47 @@
 {
   "expo": {
-    "name": "inspection-app",
-    "slug": "inspection-app",
+    "name": "Reecomm Inspector",
+    "slug": "reecomm-inspector",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1E56A0"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.reecomm.inspector"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1E56A0"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.reecomm.inspector",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d3b2fc3a-438b-48c9-acb3-346be0d816a2"
+      }
+    }
   }
 }
