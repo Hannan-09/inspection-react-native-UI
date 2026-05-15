@@ -1,6 +1,47 @@
 import { apiService } from "./api";
+import { API_CONFIG } from "../../config/api.config";
 
 class InspectionAPI {
+  // Get inspections assigned to the inspector
+  async getAssignedInspections(pageNo = 1, size = 10, assignmentStatus = "") {
+    try {
+      const params = { pageNo, size };
+      if (assignmentStatus) {
+        params.assignmentStatus = assignmentStatus;
+      }
+      
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.INSPECTIONS.ASSIGNED_LIST, params);
+      return response; // Return full response including pageResponse
+    } catch (error) {
+      console.error("Error fetching assigned inspections:", error);
+      throw error;
+    }
+  }
+
+  // Get single assigned inspection by ID
+  async getAssignedInspectionById(id) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.ASSIGNED_DETAILS.replace(":id", id);
+      const response = await apiService.get(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error fetching assigned inspection details:", error);
+      throw error;
+    }
+  }
+
+  // Accept an assigned inspection
+  async acceptAssignment(id) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.ACCEPT.replace(":id", id);
+      const response = await apiService.put(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error accepting assignment:", error);
+      throw error;
+    }
+  }
+
   // Get all inspections
   async getAll(params = {}) {
     // TODO: Uncomment when API is ready
@@ -67,6 +108,18 @@ class InspectionAPI {
       return response.data;
     } catch (error) {
       console.error("Error submitting inspection:", error);
+      throw error;
+    }
+  }
+
+  async reject(id, reason) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.REJECT.replace(":id", id);
+      const urlWithParams = `${endpoint}?rejectionReason=${encodeURIComponent(reason)}`;
+      const response = await apiService.put(urlWithParams);
+      return response.data;
+    } catch (error) {
+      console.error("Error rejecting inspection:", error);
       throw error;
     }
   }

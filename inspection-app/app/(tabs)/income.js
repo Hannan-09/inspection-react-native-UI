@@ -1,13 +1,9 @@
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
+import { inspectionAPI } from "../../services/api/inspectionAPI";
 
 export default function IncomeTab() {
   const [refreshing, setRefreshing] = useState(false);
@@ -17,71 +13,27 @@ export default function IncomeTab() {
     loadIncomeData();
   }, []);
 
-  const loadIncomeData = () => {
-    // Mock income data - in real app, fetch from API
-    const mockData = [
-      {
-        id: "1",
-        carModel: "Toyota Camry 2022",
-        carNumber: "MH-12-AB-1234",
-        inspectionDate: "2026-05-09",
-        amount: 2500,
-        status: "received",
-        inspectionType: "Consultant",
-        paymentDate: "2026-05-10",
-      },
-      {
-        id: "2",
-        carModel: "Honda City 2021",
-        carNumber: "DL-8C-XY-5678",
-        inspectionDate: "2026-05-08",
-        amount: 2000,
-        status: "received",
-        inspectionType: "Seller",
-        paymentDate: "2026-05-09",
-      },
-      {
-        id: "3",
-        carModel: "Maruti Swift 2020",
-        carNumber: "KA-01-MN-9012",
-        inspectionDate: "2026-05-11",
-        amount: 1800,
-        status: "pending",
-        inspectionType: "Buyer",
-        expectedDate: "2026-05-15",
-      },
-      {
-        id: "4",
-        carModel: "Tata Nexon EV 2022",
-        carNumber: "MH-02-CD-7890",
-        inspectionDate: "2026-05-06",
-        amount: 3000,
-        status: "received",
-        inspectionType: "Seller",
-        paymentDate: "2026-05-07",
-      },
-      {
-        id: "5",
-        carModel: "Hyundai Creta 2023",
-        carNumber: "GJ-05-PQ-3456",
-        inspectionDate: "2026-05-10",
-        amount: 2200,
-        status: "pending",
-        inspectionType: "Consultant",
-        expectedDate: "2026-05-14",
-      },
-      {
-        id: "6",
-        carModel: "BMW 3 Series 2022",
-        carNumber: "MH-01-XY-4567",
-        inspectionDate: "2026-05-05",
-        amount: 5000,
-        status: "received",
-        inspectionType: "Buyer",
-        paymentDate: "2026-05-06",
-      },
-    ];
-    setIncomeData(mockData);
+  const loadIncomeData = async () => {
+    try {
+      const all = await inspectionAPI.getAll();
+      // Derive income records from completed/rejected inspections
+      const mapped = all
+        .filter((i) => i.status === "completed" || i.status === "ongoing")
+        .map((i) => ({
+          id: i.id,
+          carModel: i.carModel,
+          carNumber: i.carNumber,
+          inspectionDate: i.date,
+          amount: i.amount || 2000, // use amount from API or default
+          status: i.status === "completed" ? "received" : "pending",
+          inspectionType: i.inspectionType,
+          paymentDate: i.status === "completed" ? i.completedDate || i.date : undefined,
+          expectedDate: i.status === "ongoing" ? i.date : undefined,
+        }));
+      setIncomeData(mapped);
+    } catch (error) {
+      console.error("Error loading income:", error);
+    }
   };
 
   const onRefresh = async () => {

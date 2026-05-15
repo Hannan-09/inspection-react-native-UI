@@ -6,6 +6,10 @@ import {
   StyleSheet,
   RefreshControl,
   Animated,
+  ActivityIndicator,
+  Modal,
+  TextInput,
+  Alert,
 } from "react-native";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +22,13 @@ export default function InspectionsTab() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("pending");
+  const [pageNo, setPageNo] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [selectedInspectionId, setSelectedInspectionId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   // Animated values for scroll indicator
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -27,54 +38,163 @@ export default function InspectionsTab() {
     layoutWidth: 0,
   });
 
-  useEffect(() => {
-    loadInspections();
-  }, []);
+  // Status mapping for API
+  const statusMap = {
+    pending: "ASSIGNED",
+    ongoing: "IN_PROGRESS",
+    completed: "COMPLETED",
+    rejected: "REJECTED",
+  };
 
-  const loadInspections = async () => {
+  useEffect(() => {
+    loadInspections(1, true);
+  }, [activeTab]);
+
+  const loadInspections = async (page = 1, isInitial = false) => {
     try {
-      setLoading(true);
-      const data = await inspectionAPI.getAll();
-      setInspections(data);
+      if (isInitial) {
+        setLoading(true);
+        setPageNo(1);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const response = await inspectionAPI.getAssignedInspections(
+        page,
+        10,
+        statusMap[activeTab],
+      );
+
+      if (response?.data) {
+        if (isInitial) {
+          setInspections(response.data);
+        } else {
+          setInspections((prev) => [...prev, ...response.data]);
+        }
+
+        const { currentPage, totalPages } = response.pageResponse || {};
+        setHasMore(currentPage < totalPages);
+        setPageNo(page);
+      }
     } catch (error) {
       console.error("Error loading inspections:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadInspections();
+    await loadInspections(1, true);
     setRefreshing(false);
   };
 
-  // Filter inspections based on active tab
-  const filteredInspections = inspections.filter((item) => {
-    if (activeTab === "pending") return item.status === "pending";
-    if (activeTab === "ongoing") return item.status === "ongoing";
-    if (activeTab === "completed") return item.status === "completed";
-    if (activeTab === "rejected") return item.status === "rejected";
-    return true;
+  const loadMore = () => {
+    if (hasMore && !loadingMore && !loading) {
+      loadInspections(pageNo + 1);
+    }
+  };
+
+  const handleAccept = async (id) => {
+    try {
+      setSubmitting(true);
+      await inspectionAPI.acceptAssignment(id);
+      Alert.alert("Success", "Inspection accepted successfully!");
+      loadInspections(1, true); // Refresh list
+      loadTabCounts(); // Refresh counts
+    } catch (error) {
+      Alert.alert("Error", "Failed to accept inspection.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRejectPress = (id) => {
+    setSelectedInspectionId(id);
+    setRejectModalVisible(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectReason.trim()) {
+      Alert.alert("Required", "Please enter a reason for rejection.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await inspectionAPI.reject(selectedInspectionId, rejectReason.trim());
+      setRejectModalVisible(false);
+      setRejectReason("");
+      Alert.alert("Success", "Inspection rejected.");
+      loadInspections(1, true);
+      loadTabCounts();
+    } catch (error) {
+      Alert.alert("Error", "Failed to reject inspection.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const [tabCounts, setTabCounts] = useState({
+    pending: 0,
+    ongoing: 0,
+    completed: 0,
+    rejected: 0,
   });
 
-  // Get counts for each status
-  const pendingCount = inspections.filter((i) => i.status === "pending").length;
-  const ongoingCount = inspections.filter((i) => i.status === "ongoing").length;
-  const completedCount = inspections.filter(
-    (i) => i.status === "completed",
-  ).length;
-  const rejectedCount = inspections.filter(
-    (i) => i.status === "rejected",
-  ).length;
+  useEffect(() => {
+    loadTabCounts();
+  }, []);
+
+  const loadTabCounts = async () => {
+    try {
+      const [pRes, oRes, cRes, rRes] = await Promise.all([
+        inspectionAPI.getAssignedInspections(1, 1, "ASSIGNED"),
+        inspectionAPI.getAssignedInspections(1, 1, "IN_PROGRESS"),
+        inspectionAPI.getAssignedInspections(1, 1, "COMPLETED"),
+        inspectionAPI.getAssignedInspections(1, 1, "REJECTED"),
+      ]);
+
+      setTabCounts({
+        pending: pRes?.pageResponse?.totalElements || 0,
+        ongoing: oRes?.pageResponse?.totalElements || 0,
+        completed: cRes?.pageResponse?.totalElements || 0,
+        rejected: rRes?.pageResponse?.totalElements || 0,
+      });
+    } catch (error) {
+      console.log("Error loading tab counts:", error);
+    }
+  };
+
+  const { pending: pendingCount, ongoing: ongoingCount, completed: completedCount, rejected: rejectedCount } = tabCounts;
 
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
         return { bg: "#DCFCE7", text: "#166534", icon: "checkmark-circle" };
-      case "pending":
+      case "assigned":
         return { bg: "#FEF3C7", text: "#92400E", icon: "time-outline" };
-      case "ongoing":
+      case "in_progress":
         return { bg: "#DBEAFE", text: "#1E40AF", icon: "car-sport" };
       case "rejected":
         return { bg: "#FEE2E2", text: "#991B1B", icon: "close-circle" };
@@ -84,20 +204,20 @@ export default function InspectionsTab() {
   };
 
   const getInspectionTypeColor = (type) => {
-    switch (type) {
-      case "Consultant":
-        return { bg: "#DBEAFE", text: "#1E40AF" };
-      case "Seller":
-        return { bg: "#FCE7F3", text: "#9F1239" };
-      case "Buyer":
-        return { bg: "#E0E7FF", text: "#3730A3" };
-      default:
-        return { bg: "#F3F4F6", text: "#6B7280" };
-    }
+    const t = type?.toUpperCase() || "";
+    if (t.includes("CONSULTANT") || t.includes("CONSULTATION"))
+      return { bg: "#DBEAFE", text: "#1E40AF" };
+    if (t.includes("SELLER"))
+      return { bg: "#FCE7F3", text: "#9F1239" };
+    if (t.includes("BUYER") || t.includes("VIDEO"))
+      return { bg: "#E0E7FF", text: "#3730A3" };
+    return { bg: "#F3F4F6", text: "#6B7280" };
   };
 
   const renderInspection = ({ item }) => {
-    const statusColor = getStatusColor(item.status);
+    // Map API status to UI status mapping for colors
+    const uiStatus = item.assignmentStatus?.toLowerCase() || "pending";
+    const statusColor = getStatusColor(uiStatus);
     const typeColor = getInspectionTypeColor(item.inspectionType);
 
     return (
@@ -110,10 +230,10 @@ export default function InspectionsTab() {
         <View className="flex-row justify-between items-start mb-3">
           <View className="flex-1">
             <Text className="font-bold" style={styles.carModel}>
-              {item.carModel}
+              {item.makerName} {item.modelName}
             </Text>
             <Text className="font-semibold mt-1" style={styles.carNumber}>
-              {item.carNumber}
+              {item.regNumber}
             </Text>
           </View>
           <View
@@ -128,7 +248,7 @@ export default function InspectionsTab() {
               className="ml-1 font-semibold capitalize"
               style={[styles.statusText, { color: statusColor.text }]}
             >
-              {item.status}
+              {item.assignmentStatus?.replace(/_/g, " ")}
             </Text>
           </View>
         </View>
@@ -144,53 +264,95 @@ export default function InspectionsTab() {
             className="ml-1 font-medium"
             style={[styles.typeText, { color: typeColor.text }]}
           >
-            {item.inspectionType}
+            {item.inspectionType?.replace(/_/g, " ")}
           </Text>
         </View>
-
-        {/* Owner Info */}
-        <View className="flex-row items-center mt-3">
-          <Ionicons name="person-outline" size={16} color="#6B7280" />
-          <Text className="ml-2" style={styles.infoText}>
-            {item.ownerName}
-          </Text>
+        {/* Info Rows */}
+        <View className="mt-3">
+          <View className="flex-row items-center mb-1">
+            <Ionicons name="person-outline" size={14} color="#6B7280" />
+            <Text className="ml-2" style={styles.cardDetail}>
+              {item.ownerFirstname} {item.ownerLastname}
+            </Text>
+          </View>
+          <View className="flex-row items-center mb-1">
+            <Ionicons name="location-outline" size={14} color="#6B7280" />
+            <Text className="ml-2" style={styles.cardDetail} numberOfLines={1}>
+              {item.cityName}, {item.stateName}
+            </Text>
+          </View>
+          <View className="flex-row items-center">
+            <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+            <Text className="ml-2" style={styles.cardDetail}>
+              {formatDate(item.scheduledAt)} • {formatTime(item.scheduledAt)}
+            </Text>
+          </View>
         </View>
 
-        {/* Location */}
-        <View className="flex-row items-center mt-2">
-          <Ionicons name="location-outline" size={16} color="#6B7280" />
-          <Text className="ml-2 flex-1" style={styles.infoText}>
-            {item.location}
-          </Text>
-        </View>
+        {/* Action Buttons */}
+        <View style={styles.cardActions}>
+          {item.assignmentStatus === "ASSIGNED" && (
+            <>
+              <TouchableOpacity 
+                style={styles.cardRejectButton} 
+                onPress={() => handleRejectPress(item.id)}
+              >
+                <Text style={styles.cardRejectButtonText}>Reject</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.cardAcceptButton} 
+                onPress={() => handleAccept(item.id)}
+              >
+                <Text style={styles.cardAcceptButtonText}>Accept</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          
+          {item.assignmentStatus === "IN_PROGRESS" && (
+            <>
+              <TouchableOpacity 
+                style={styles.cardRejectButton} 
+                onPress={() => handleRejectPress(item.id)}
+              >
+                <Text style={styles.cardRejectButtonText}>Reject</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.cardAcceptButton} 
+                onPress={() => router.push(`/inspection-section?id=${item.id}`)}
+              >
+                <Text style={styles.cardAcceptButtonText}>Start Inspection</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
-        {/* Date & Time */}
-        <View className="flex-row items-center mt-2">
-          <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-          <Text className="ml-2" style={styles.infoText}>
-            {item.date}
-          </Text>
-          <Ionicons
-            name="time-outline"
-            size={16}
-            color="#6B7280"
-            className="ml-4"
-            style={{ marginLeft: 16 }}
-          />
-          <Text className="ml-2" style={styles.infoText}>
-            {item.time}
-          </Text>
+          {item.assignmentStatus === "COMPLETED" && (
+            <TouchableOpacity 
+              style={[styles.cardAcceptButton, { backgroundColor: "#F3F4F6" }]} 
+              onPress={() => router.push(`/inspection-details?id=${item.id}`)}
+            >
+              <Text style={[styles.cardAcceptButtonText, { color: "#1E56A0" }]}>View Inspection</Text>
+            </TouchableOpacity>
+          )}
+
+          {(item.assignmentStatus === "REJECTED") && (
+            <TouchableOpacity 
+              style={[styles.cardAcceptButton, { backgroundColor: "#F3F4F6" }]} 
+              onPress={() => router.push(`/inspection-details?id=${item.id}`)}
+            >
+              <Text style={[styles.cardAcceptButtonText, { color: "#4B5563" }]}>View Details</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Rejection Reason (if rejected) */}
-        {item.status === "rejected" && item.rejectionReason && (
+        {activeTab === "rejected" && item.assignmentStatus === "REJECTED" && (
           <View
             className="mt-3 flex-row items-start"
             style={styles.rejectionBox}
           >
             <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
             <Text className="ml-2 flex-1" style={styles.rejectionText}>
-              {item.rejectionReason}
+              {item.rejectionReason || "No reason provided"}
             </Text>
           </View>
         )}
@@ -420,12 +582,21 @@ export default function InspectionsTab() {
   return (
     <View className="flex-1" style={styles.container}>
       <FlatList
-        data={filteredInspections}
+        data={inspections}
         renderItem={renderInspection}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={headerComponent}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={{ paddingVertical: 20 }}>
+              <ActivityIndicator color="#1E56A0" />
+            </View>
+          ) : null
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -435,30 +606,76 @@ export default function InspectionsTab() {
           />
         }
         ListEmptyComponent={
-          <View
-            className="items-center justify-center"
-            style={styles.emptyContainer}
-          >
-            <Ionicons name="car-outline" size={64} color="#D1D5DB" />
-            <Text className="mt-4 font-semibold" style={styles.emptyTitle}>
-              No {activeTab} inspections
-            </Text>
-            <Text className="mt-2 text-center" style={styles.emptyText}>
-              There are no {activeTab} car inspections at the moment
-            </Text>
-          </View>
+          !loading ? (
+            <View
+              className="items-center justify-center"
+              style={styles.emptyContainer}
+            >
+              <Ionicons name="car-outline" size={64} color="#D1D5DB" />
+              <Text className="mt-4 font-semibold" style={styles.emptyTitle}>
+                No {activeTab} inspections
+              </Text>
+              <Text className="mt-2 text-center" style={styles.emptyText}>
+                There are no {activeTab} car inspections at the moment
+              </Text>
+            </View>
+          ) : null
         }
       />
+
+      {/* Reject Modal */}
+      <Modal visible={rejectModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Reject Inspection</Text>
+            <Text style={styles.modalLabel}>Reason for Rejection</Text>
+            <TextInput
+              style={styles.modalInput}
+              multiline
+              numberOfLines={4}
+              placeholder="Enter rejection reason..."
+              value={rejectReason}
+              onChangeText={setRejectReason}
+            />
+            <View className="flex-row mt-4">
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setRejectModalVisible(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={handleRejectConfirm} disabled={submitting}>
+                {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalConfirmText}>Confirm Reject</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
+  modalContent: { backgroundColor: "#fff", borderRadius: 16, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 16 },
+  modalLabel: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 8 },
+  modalInput: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
+  modalCancel: { flex: 1, height: 48, justifyContent: "center", alignItems: "center" },
+  modalCancelText: { fontSize: 16, fontWeight: "bold", color: "#6B7280" },
+  modalConfirm: { flex: 2, height: 48, backgroundColor: "#DC2626", borderRadius: 12, justifyContent: "center", alignItems: "center" },
+  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+
+  // Card Actions
+  cardActions: { flexDirection: "row", marginTop: 12, gap: 10 },
+  cardRejectButton: { flex: 1, height: 36, backgroundColor: "#F3F4F6", borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardRejectButtonText: { color: "#4B5563", fontSize: 13, fontWeight: "600" },
+  cardAcceptButton: { flex: 1, height: 36, backgroundColor: "#1E56A0", borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardAcceptButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+
   container: {
     backgroundColor: "#F9FAFB",
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 120,
   },
   statsContainer: {
     flexDirection: "row",

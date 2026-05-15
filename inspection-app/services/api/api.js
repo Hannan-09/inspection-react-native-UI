@@ -1,3 +1,4 @@
+import * as SecureStore from "expo-secure-store";
 import { API_CONFIG } from "../../config/api.config";
 
 class ApiService {
@@ -93,20 +94,99 @@ class ApiService {
     return error;
   }
 
+  // ── Token Management ──────────────────────────────────────────────────────
+
   async getAuthToken() {
-    // TODO: Implement token retrieval from secure storage
-    // Example: return await SecureStore.getItemAsync('authToken');
-    return null;
+    try {
+      return await SecureStore.getItemAsync("authToken");
+    } catch {
+      return null;
+    }
   }
 
-  setAuthToken(token) {
-    // TODO: Implement token storage
-    // Example: await SecureStore.setItemAsync('authToken', token);
+  async setAuthToken(token) {
+    try {
+      await SecureStore.setItemAsync("authToken", token);
+    } catch (error) {
+      console.error("Error saving token:", error);
+    }
   }
 
-  clearAuthToken() {
-    // TODO: Implement token removal
-    // Example: await SecureStore.deleteItemAsync('authToken');
+  async clearAuthToken() {
+    try {
+      await SecureStore.deleteItemAsync("authToken");
+    } catch (error) {
+      console.error("Error clearing token:", error);
+    }
+  }
+
+  // ── User Data (cached locally for offline display) ─────────────────────
+
+  async setUserData(user) {
+    try {
+      await SecureStore.setItemAsync("userData", JSON.stringify(user));
+    } catch (error) {
+      console.error("Error saving user data:", error);
+    }
+  }
+
+  async getUserData() {
+    try {
+      const raw = await SecureStore.getItemAsync("userData");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async clearUserData() {
+    try {
+      await SecureStore.deleteItemAsync("userData");
+    } catch (error) {
+      console.error("Error clearing user data:", error);
+    }
+  }
+
+  // Convenience: check if user is logged in
+  async isAuthenticated() {
+    const token = await this.getAuthToken();
+    return !!token;
+  }
+
+  // ── Refresh Token ─────────────────────────────────────────────────────────
+
+  async getRefreshToken() {
+    try {
+      return await SecureStore.getItemAsync("refreshToken");
+    } catch {
+      return null;
+    }
+  }
+
+  async setRefreshToken(token) {
+    try {
+      await SecureStore.setItemAsync("refreshToken", token);
+    } catch (error) {
+      console.error("Error saving refresh token:", error);
+    }
+  }
+
+  async clearRefreshToken() {
+    try {
+      await SecureStore.deleteItemAsync("refreshToken");
+    } catch (error) {
+      console.error("Error clearing refresh token:", error);
+    }
+  }
+
+  // ── Clear All (logout helper) ─────────────────────────────────────────────
+
+  async clearAll() {
+    await Promise.all([
+      this.clearAuthToken(),
+      this.clearRefreshToken(),
+      this.clearUserData(),
+    ]);
   }
 }
 

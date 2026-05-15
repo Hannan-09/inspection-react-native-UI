@@ -1,16 +1,33 @@
 import { apiService } from "./api";
+import { API_CONFIG } from "../../config/api.config";
 
 class AuthAPI {
-  // Login
-  async login(email, password) {
+  // Login — parses: response.data.accessToken + refreshToken + inspectorId + username
+  async login(username, password) {
     try {
-      const response = await apiService.post("/auth/login", {
-        email,
+      const response = await apiService.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
+        username,
         password,
       });
 
-      if (response.token) {
-        await apiService.setAuthToken(response.token);
+      // Actual response shape:
+      // { status, statusCode, message, data: { accessToken, refreshToken, inspectorId, username } }
+      const tokenData = response.data;
+
+      if (tokenData?.accessToken) {
+        await apiService.setAuthToken(tokenData.accessToken);
+      }
+
+      if (tokenData?.refreshToken) {
+        await apiService.setRefreshToken(tokenData.refreshToken);
+      }
+
+      // Store inspector profile for offline display
+      if (tokenData) {
+        await apiService.setUserData({
+          inspectorId: tokenData.inspectorId,
+          username: tokenData.username,
+        });
       }
 
       return response;
@@ -20,45 +37,38 @@ class AuthAPI {
     }
   }
 
-  // Register
-  async register(userData) {
-    try {
-      const response = await apiService.post("/auth/register", userData);
-
-      if (response.token) {
-        await apiService.setAuthToken(response.token);
-      }
-
-      return response;
-    } catch (error) {
-      console.error("Registration error:", error);
-      throw error;
-    }
-  }
-
-  // Logout
+  // Logout — clears access token, refresh token, and user data
   async logout() {
     try {
-      await apiService.post("/auth/logout");
-      await apiService.clearAuthToken();
-      return true;
+      await apiService.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT);
+    } catch {
+      // Clear locally even if the API call fails
+    } finally {
+      await apiService.clearAll();
+    }
+    return true;
+  }
+
+  // Get current user (inspector profile) from API
+  async getCurrentUser() {
+    try {
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.AUTH.PROFILE);
+      const profile = response.data;
+      // Refresh cached user data
+      if (profile) {
+        await apiService.setUserData(profile);
+      }
+      return profile;
     } catch (error) {
-      console.error("Logout error:", error);
-      // Clear token even if API call fails
-      await apiService.clearAuthToken();
-      throw error;
+      console.error("Error fetching current user:", error);
+      // Fall back to locally cached data
+      return await apiService.getUserData();
     }
   }
 
-  // Get current user
-  async getCurrentUser() {
-    try {
-      const response = await apiService.get("/auth/me");
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching current user:", error);
-      throw error;
-    }
+  // Explicit alias for fetching profile
+  async getProfile() {
+    return this.getCurrentUser();
   }
 
   // Refresh token
@@ -100,6 +110,41 @@ class AuthAPI {
       return response;
     } catch (error) {
       console.error("Reset password error:", error);
+      throw error;
+    }
+  }
+  // Update inspector profile
+  async updateProfile(profileData) {
+    try {
+      const response = await apiService.put(API_CONFIG.ENDPOINTS.AUTH.UPDATE_PROFILE, profileData);
+      if (response.data) {
+        await apiService.setUserData(response.data);
+      }
+      return response;
+    } catch (error) {
+      console.error("Update profile error:", error);
+      throw error;
+    }
+  }
+
+  // Address Utilities
+  async getStates() {
+    try {
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.AUTH.STATES);
+      return response.data || response;
+    } catch (error) {
+      console.error("Get states error:", error);
+      throw error;
+    }
+  }
+
+  async getCities(stateId) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.AUTH.CITIES.replace(":stateId", stateId);
+      const response = await apiService.get(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error("Get cities error:", error);
       throw error;
     }
   }

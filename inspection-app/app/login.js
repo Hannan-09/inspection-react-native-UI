@@ -9,21 +9,65 @@ import {
   StyleSheet,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
+import { authAPI } from "../services/api/authAPI";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("login");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const showError = (message) => {
+    Toast.show({
+      type: "error",
+      text1: "Login Failed",
+      text2: message,
+      position: "top",
+      visibilityTime: 4000,
+    });
+  };
 
   const handleLogin = async () => {
     Keyboard.dismiss();
-    router.replace("/home");
+
+    // Basic validation
+    if (!username.trim()) {
+      showError("Please enter your username.");
+      return;
+    }
+    if (!password) {
+      showError("Please enter your password.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await authAPI.login(username.trim(), password);
+      Toast.show({
+        type: "success",
+        text1: "Login Successful",
+        text2: "Welcome back!",
+        position: "top",
+        visibilityTime: 1500,
+      });
+      // Short delay so the toast is visible before navigating
+      setTimeout(() => router.replace("/home"), 1200);
+    } catch (err) {
+      const msg =
+        err?.message ||
+        "Login failed. Please check your credentials and try again.";
+      showError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,9 +84,6 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          {/* Background Circle */}
-          {/* <View style={styles.backgroundCircle} /> */}
-
           {/* Login Card */}
           <View className="bg-white" style={styles.loginCard}>
             {/* Logo */}
@@ -58,32 +99,30 @@ export default function LoginScreen() {
               </Text>
             </View>
 
-            {/* Tabs */}
+            {/* Title */}
             <View className="flex-row mb-9 justify-center items-center">
-                <Text
-                  className="font-bold"
-                  style={[
-                    styles.tabText,
-                    styles.tabTextActive,
-                    styles.tabButton
-                  ]}
-                >
-                  Login
-                </Text>
-                <View style={styles.tabIndicator} />
+              <Text
+                className="font-bold"
+                style={[styles.tabText, styles.tabTextActive, styles.tabButton]}
+              >
+                Login
+              </Text>
+              <View style={styles.tabIndicator} />
             </View>
 
-            {/* Email Input */}
+
+            {/* Username Input */}
             <View className="mb-4" style={styles.inputContainer}>
               <TextInput
-                placeholder="Email Address"
+                placeholder="Username"
                 placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
+                value={username}
+                onChangeText={(t) => { setUsername(t); }}
                 autoCapitalize="none"
+                autoCorrect={false}
                 returnKeyType="next"
                 style={styles.input}
+                editable={!loading}
               />
             </View>
 
@@ -97,12 +136,13 @@ export default function LoginScreen() {
                 placeholderTextColor="#999"
                 secureTextEntry={!showPassword}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(t) => { setPassword(t); }}
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
                 style={styles.passwordInput}
+                editable={!loading}
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} disabled={loading}>
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
                   size={22}
@@ -115,18 +155,27 @@ export default function LoginScreen() {
             <TouchableOpacity
               onPress={handleLogin}
               className="items-center justify-center mb-4"
-              style={styles.loginButton}
+              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+              disabled={loading}
             >
-              <Text
-                className="text-white font-bold"
-                style={styles.loginButtonText}
-              >
-                LOGIN
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text
+                  className="text-white font-bold"
+                  style={styles.loginButtonText}
+                >
+                  LOGIN
+                </Text>
+              )}
             </TouchableOpacity>
 
             {/* Forgot Password */}
-            <TouchableOpacity className="mb-6">
+            <TouchableOpacity
+              className="mb-6"
+              onPress={() => Alert.alert("Forgot Password", "Please contact your administrator to reset your password.")}
+              disabled={loading}
+            >
               <Text className="font-medium" style={styles.forgotText}>
                 Forgot Password?
               </Text>
@@ -147,32 +196,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 40,
-  },
-  backgroundCircle: {
-    position: "absolute",
-    width: 700,
-    height: 700,
-    borderRadius: 350,
-    backgroundColor: "#DCE5F3",
-    opacity: 0.6,
-  },
-  dotBlue: {
-    position: "absolute",
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#1E56A0",
-    top: 120,
-    left: 40,
-  },
-  dotGreen: {
-    position: "absolute",
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: "#69A84F",
-    bottom: 100,
-    right: 40,
   },
   loginCard: {
     width: "88%",
@@ -238,28 +261,15 @@ const styles = StyleSheet.create({
     height: 55,
     borderRadius: 12,
   },
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
   loginButtonText: {
     fontSize: 16,
     letterSpacing: 1,
   },
   forgotText: {
     color: "#1E56A0",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#E5E5E5",
-  },
-  dividerText: {
-    color: "#999",
-  },
-  googleButton: {
-    backgroundColor: "#4285F4",
-    height: 52,
-    borderRadius: 10,
-  },
-  linkedinButton: {
-    backgroundColor: "#0077B5",
-    height: 52,
-    borderRadius: 10,
+    textAlign: "center",
   },
 });

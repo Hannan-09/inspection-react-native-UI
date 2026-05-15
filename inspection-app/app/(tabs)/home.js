@@ -5,6 +5,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
+  Modal,
+  TextInput,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,50 +19,127 @@ export default function HomeTab() {
   const router = useRouter();
   const [inspections, setInspections] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    pending: 0,
+    ongoing: 0,
+    completed: 0,
+    revenue: "0",
+  });
+
+  // Action states
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [selectedInspectionId, setSelectedInspectionId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadInspections();
+    loadData();
   }, []);
 
-  const loadInspections = async () => {
+  const loadData = async () => {
     try {
-      const data = await inspectionAPI.getAll();
-      setInspections(data);
+      // 1. Fetch recent 3 pending inspections
+      const pendingRes = await inspectionAPI.getAssignedInspections(1, 3, "ASSIGNED");
+      if (pendingRes?.data) {
+        setInspections(pendingRes.data);
+      }
+
+      // 2. Fetch stats counts
+      const [pRes, oRes, cRes] = await Promise.all([
+        inspectionAPI.getAssignedInspections(1, 1, "ASSIGNED"),
+        inspectionAPI.getAssignedInspections(1, 1, "IN_PROGRESS"),
+        inspectionAPI.getAssignedInspections(1, 1, "COMPLETED"),
+      ]);
+
+      setStats({
+        pending: pRes?.pageResponse?.totalElements || 0,
+        ongoing: oRes?.pageResponse?.totalElements || 0,
+        completed: cRes?.pageResponse?.totalElements || 0,
+        revenue: "₹0", // Revenue still mock for now as API doesn't provide it
+      });
     } catch (error) {
-      console.error("Error loading inspections:", error);
+      console.error("Error loading home data:", error);
+    }
+  };
+
+  const handleAccept = async (id) => {
+    try {
+      setSubmitting(true);
+      await inspectionAPI.acceptAssignment(id);
+      Alert.alert("Success", "Inspection accepted successfully!");
+      loadData(); // Refresh list and stats
+    } catch (error) {
+      Alert.alert("Error", "Failed to accept inspection.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRejectPress = (id) => {
+    setSelectedInspectionId(id);
+    setRejectModalVisible(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectReason.trim()) {
+      Alert.alert("Required", "Please enter a reason for rejection.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await inspectionAPI.reject(selectedInspectionId, rejectReason.trim());
+      setRejectModalVisible(false);
+      setRejectReason("");
+      Alert.alert("Success", "Inspection rejected.");
+      loadData();
+    } catch (error) {
+      Alert.alert("Error", "Failed to reject inspection.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadInspections();
+    await loadData();
     setRefreshing(false);
   };
 
-  // Calculate stats
-  const pendingCount = inspections.filter((i) => i.status === "pending").length;
-  const ongoingCount = 2; // Mock data - in real app, track ongoing inspections
-  const completedCount = inspections.filter(
-    (i) => i.status === "completed",
-  ).length;
-  const totalRevenue = "₹45,000"; // Mock data - calculate from completed inspections
+  // Stats are now in the stats state
+  const { pending: pendingCount, ongoing: ongoingCount, completed: completedCount, revenue: revenueAmount } = stats;
 
-  // Get recent 3 pending inspections
-  const recentInspections = inspections
-    .filter((i) => i.status === "pending")
-    .slice(0, 3);
+  // Recent inspections are already fetched as size=3
+  const recentInspections = inspections;
 
   const getInspectionTypeColor = (type) => {
-    switch (type) {
-      case "Consultant":
-        return { bg: "#DBEAFE", text: "#1E40AF" };
-      case "Seller":
-        return { bg: "#FCE7F3", text: "#9F1239" };
-      case "Buyer":
-        return { bg: "#E0E7FF", text: "#3730A3" };
-      default:
-        return { bg: "#F3F4F6", text: "#6B7280" };
-    }
+    const t = type?.toUpperCase() || "";
+    if (t.includes("CONSULTANT") || t.includes("CONSULTATION"))
+      return { bg: "#DBEAFE", text: "#1E40AF" };
+    if (t.includes("SELLER"))
+      return { bg: "#FCE7F3", text: "#9F1239" };
+    if (t.includes("BUYER") || t.includes("VIDEO"))
+      return { bg: "#E0E7FF", text: "#3730A3" };
+    return { bg: "#F3F4F6", text: "#6B7280" };
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const renderInspectionCard = (item) => {
@@ -74,12 +155,12 @@ export default function HomeTab() {
         {/* Header */}
         <View className="flex-row justify-between items-start mb-2">
           <View className="flex-1">
-            <Text style={styles.cardTitle}>{item.carModel}</Text>
-            <Text style={styles.cardNumber}>{item.carNumber}</Text>
+            <Text style={styles.cardTitle}>{item.makerName} {item.modelName}</Text>
+            <Text style={styles.cardNumber}>{item.regNumber}</Text>
           </View>
           <View style={styles.pendingBadge}>
             <Ionicons name="time-outline" size={12} color="#92400E" />
-            <Text style={styles.pendingText}>Pending</Text>
+            <Text style={styles.pendingText}>{item.assignmentStatus || "Pending"}</Text>
           </View>
         </View>
 
@@ -91,34 +172,52 @@ export default function HomeTab() {
             color={typeColor.text}
           />
           <Text style={[styles.typeText, { color: typeColor.text }]}>
-            {item.inspectionType}
+            {item.inspectionType?.replace(/_/g, " ")}
           </Text>
         </View>
 
         {/* Details */}
         <View className="flex-row items-center mt-2">
           <Ionicons name="person-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.cardDetail}>{item.ownerName}</Text>
+          <Text style={styles.cardDetail}>{item.ownerFirstname} {item.ownerLastname}</Text>
         </View>
 
         <View className="flex-row items-center mt-1">
           <Ionicons name="location-outline" size={14} color="#9CA3AF" />
           <Text style={styles.cardDetail} numberOfLines={1}>
-            {item.location}
+            {item.cityName}, {item.stateName}
           </Text>
         </View>
 
         <View className="flex-row items-center mt-1">
           <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.cardDetail}>{item.date}</Text>
+          <Text style={styles.cardDetail}>{formatDate(item.scheduledAt)}</Text>
           <Ionicons
             name="time-outline"
             size={14}
             color="#9CA3AF"
             style={{ marginLeft: 12 }}
           />
-          <Text style={styles.cardDetail}>{item.time}</Text>
+          <Text style={styles.cardDetail}>{formatTime(item.scheduledAt)}</Text>
         </View>
+
+        {/* Action Buttons */}
+        {item.assignmentStatus === "ASSIGNED" && (
+          <View style={styles.cardActions}>
+            <TouchableOpacity 
+              style={styles.cardRejectButton} 
+              onPress={() => handleRejectPress(item.id)}
+            >
+              <Text style={styles.cardRejectButtonText}>Reject</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.cardAcceptButton} 
+              onPress={() => handleAccept(item.id)}
+            >
+              <Text style={styles.cardAcceptButtonText}>Accept</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -184,7 +283,7 @@ export default function HomeTab() {
             <View style={styles.statIconContainer}>
               <Ionicons name="wallet-outline" size={28} color="#4F46E5" />
             </View>
-            <Text style={styles.statNumber}>{totalRevenue}</Text>
+            <Text style={styles.statNumber}>{revenueAmount}</Text>
             <Text style={styles.statLabel}>Revenue</Text>
           </View>
         </View>
@@ -212,11 +311,55 @@ export default function HomeTab() {
         {/* Bottom Spacing */}
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Reject Modal */}
+      <Modal visible={rejectModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Reject Inspection</Text>
+            <Text style={styles.modalLabel}>Reason for Rejection</Text>
+            <TextInput
+              style={styles.modalInput}
+              multiline
+              numberOfLines={4}
+              placeholder="Enter rejection reason..."
+              value={rejectReason}
+              onChangeText={setRejectReason}
+            />
+            <View className="flex-row mt-4">
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setRejectModalVisible(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={handleRejectConfirm} disabled={submitting}>
+                {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalConfirmText}>Confirm Reject</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
+  modalContent: { backgroundColor: "#fff", borderRadius: 16, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 16 },
+  modalLabel: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 8 },
+  modalInput: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
+  modalCancel: { flex: 1, height: 48, justifyContent: "center", alignItems: "center" },
+  modalCancelText: { fontSize: 16, fontWeight: "bold", color: "#6B7280" },
+  modalConfirm: { flex: 2, height: 48, backgroundColor: "#DC2626", borderRadius: 12, justifyContent: "center", alignItems: "center" },
+  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+  
+  // Card Actions
+  cardActions: { flexDirection: "row", marginTop: 12, gap: 10 },
+  cardRejectButton: { flex: 1, height: 36, backgroundColor: "#F3F4F6", borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardRejectButtonText: { color: "#4B5563", fontSize: 13, fontWeight: "600" },
+  cardAcceptButton: { flex: 1, height: 36, backgroundColor: "#1E56A0", borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardAcceptButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+
   container: {
     backgroundColor: "#F9FAFB",
   },

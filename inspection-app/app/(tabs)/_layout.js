@@ -1,8 +1,41 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import { useState, useEffect } from "react";
+import { apiService } from "../../services/api/api";
 
 export default function TabLayout() {
+  const [userName, setUserName] = useState("");
+  const [initials, setInitials] = useState("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      // 1. Try cached data first for immediate display
+      const cached = await apiService.getUserData();
+      if (cached) {
+        setUserName(cached.firstname && cached.lastname ? `${cached.firstname} ${cached.lastname}` : cached.username || "");
+        if (cached.firstname && cached.lastname) {
+          setInitials(`${cached.firstname.charAt(0)}${cached.lastname.charAt(0)}`.toUpperCase());
+        }
+      }
+      
+      // 2. Refresh from API to get latest name
+      try {
+        const fresh = await apiService.get("/api/v1/website/vehicle/inspector/profile");
+        if (fresh?.data) {
+          const profile = fresh.data;
+          setUserName(`${profile.firstname} ${profile.lastname}`);
+          setInitials(`${profile.firstname.charAt(0)}${profile.lastname.charAt(0)}`.toUpperCase());
+          await apiService.setUserData(profile);
+        }
+      } catch (error) {
+        console.log("Error refreshing profile in layout:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
@@ -38,10 +71,14 @@ export default function TabLayout() {
           headerTitle: () => (
             <View style={styles.headerTitle}>
               <View style={styles.profileImage}>
-                <Ionicons name="person" size={28} color="#1E56A0" />
+                {initials ? (
+                  <Text style={styles.initialsText}>{initials}</Text>
+                ) : (
+                  <Ionicons name="person" size={28} color="#1E56A0" />
+                )}
               </View>
               <View style={styles.headerTextContainer}>
-                <Text style={styles.headerGreeting}>Hi, Hannan</Text>
+              <Text style={styles.headerGreeting}>Hi, {userName || "Inspector"}</Text>
                 <Text style={styles.headerSubtitle}>How is your day?</Text>
               </View>
             </View>
@@ -58,9 +95,6 @@ export default function TabLayout() {
           headerRight: () => (
             <TouchableOpacity style={styles.notificationButton}>
               <Ionicons name="notifications" size={24} color="#1E56A0" />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>3</Text>
-              </View>
             </TouchableOpacity>
           ),
         }}
@@ -134,6 +168,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#111827",
+  },
+  initialsText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1E56A0",
   },
   headerSubtitle: {
     fontSize: 13,

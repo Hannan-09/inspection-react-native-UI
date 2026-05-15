@@ -5,8 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -19,15 +20,44 @@ import {
   MediaUpload,
 } from "../components/inspection/FormField";
 import inspectionSchema2W from "../reecomm_inspection_2W.json";
+import inspectionSchema4W from "../reecomm_inspection_4W.json";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function InspectionSectionScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
 
   const sectionKey = params.sectionKey || "section_1_engine_powertrain";
-  const sectionData = inspectionSchema2W.sections[sectionKey];
+  const vehicleCategory = params.vehicleCategory || "2W"; // "2W" or "4W"
+  const inspectionId = params.inspectionId || "unknown";
+
+  // Pick the right schema
+  const schema = vehicleCategory === "4W" ? inspectionSchema4W : inspectionSchema2W;
+  const sectionData = schema.sections?.[sectionKey] || schema[sectionKey];
 
   const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Storage key unique per inspection + section
+  const storageKey = `inspection_${inspectionId}_${sectionKey}`;
+
+  // Load previously saved data on mount
+  useEffect(() => {
+    const loadSaved = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(storageKey);
+        if (saved) {
+          setFormData(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error("Error loading section data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSaved();
+  }, [storageKey]);
 
   const updateField = (fieldName, value) => {
     setFormData((prev) => ({
@@ -36,15 +66,50 @@ export default function InspectionSectionScreen() {
     }));
   };
 
-  const handleSave = () => {
-    // TODO: Validate required fields
-    // TODO: Save to local state or API
-    Alert.alert("Saved", "Section data saved successfully");
-    router.back();
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // Persist to AsyncStorage
+      await AsyncStorage.setItem(storageKey, JSON.stringify(formData));
+
+      // Update the section progress tracker
+      const progressKey = `inspection_${inspectionId}_progress`;
+      const rawProgress = await AsyncStorage.getItem(progressKey);
+      const progress = rawProgress ? JSON.parse(rawProgress) : {};
+      progress[sectionKey] = "completed";
+      await AsyncStorage.setItem(progressKey, JSON.stringify(progress));
+
+      Alert.alert("Saved ✓", "Section data saved successfully.", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      console.error("Error saving section:", error);
+      Alert.alert("Error", "Failed to save section data. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Conditional field visibility ──────────────────────────────────────────
+  const isFieldVisible = (fieldName, fieldConfig) => {
+    if (!fieldConfig.conditional_show) return true;
+
+    const { field: condField, value: condValue } = fieldConfig.conditional_show;
+
+    // Handle array of values
+    if (Array.isArray(condValue)) {
+      return condValue.includes(formData[condField]);
+    }
+    return formData[condField] === condValue;
   };
 
   const renderField = (fieldName, fieldConfig) => {
+    // Check conditional visibility
+    if (!isFieldVisible(fieldName, fieldConfig)) return null;
+
     const value = formData[fieldName];
+
+    // Human-readable label from snake_case
     const label = fieldName
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -154,6 +219,15 @@ export default function InspectionSectionScreen() {
     return null;
   };
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#F9FAFB", justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#1E56A0" />
+        <Text style={{ marginTop: 12, color: "#6B7280", fontSize: 14 }}>Loading section...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       {/* Header */}
@@ -191,9 +265,6 @@ export default function InspectionSectionScreen() {
           {sectionData?.fields &&
             Object.entries(sectionData.fields).map(
               ([fieldName, fieldConfig]) => {
-                // Skip conditional fields for now (TODO: implement conditional logic)
-                if (fieldConfig.conditional_show) return null;
-
                 return (
                   <View key={fieldName}>
                     {renderField(fieldName, fieldConfig)}
@@ -202,7 +273,7 @@ export default function InspectionSectionScreen() {
                     )}
                   </View>
                 );
-              },
+              }
             )}
         </View>
 
@@ -213,12 +284,19 @@ export default function InspectionSectionScreen() {
       {/* Fixed Bottom Buttons */}
       <View style={styles.bottomButtons}>
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[styles.saveButton, saving && { opacity: 0.7 }]}
           onPress={handleSave}
           activeOpacity={0.7}
+          disabled={saving}
         >
-          <Ionicons name="checkmark-circle" size={20} color="#fff" />
-          <Text style={styles.saveButtonText}>Save Section</Text>
+          {saving ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Ionicons name="checkmark-circle" size={20} color="#fff" />
+          )}
+          <Text style={styles.saveButtonText}>
+            {saving ? "Saving..." : "Save Section"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
