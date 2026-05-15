@@ -9,7 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import inspectionSchema2W from "../utils/reecomm_inspection_2W.json";
+import inspectionSchema2W from "../reecomm_inspection_2W.json";
 
 export default function StartInspectionScreen() {
   const params = useLocalSearchParams();

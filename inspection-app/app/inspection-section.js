@@ -18,7 +18,7 @@ import {
   MiniToggle,
   MediaUpload,
 } from "../components/inspection/FormField";
-import inspectionSchema2W from "../utils/reecomm_inspection_2W.json";
+import inspectionSchema2W from "../reecomm_inspection_2W.json";
 
 export default function InspectionSectionScreen() {
   const params = useLocalSearchParams();

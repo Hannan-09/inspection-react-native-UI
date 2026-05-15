@@ -1,0 +1,263 @@
+{
+  "schema_version": "1.0",
+  "vehicle_category": "4W",
+  "supported_subtypes": ["Hatchback", "Sedan", "SUV / MUV", "Crossover", "Van / MPV", "Pickup Truck"],
+  "supported_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+
+  "inspection_meta": {
+    "inspection_id": { "type": "string", "format": "uuid", "description": "Unique inspection ID" },
+    "vehicle_id": { "type": "string", "description": "FK to vehicle listing" },
+    "lister_id": { "type": "string", "description": "FK to seller/lister" },
+    "inspector_id": { "type": "string", "description": "FK to assigned inspector" },
+    "assigned_by_admin_id": { "type": "string" },
+    "inspection_date": { "type": "string", "format": "date" },
+    "inspection_start_time": { "type": "string", "format": "time" },
+    "inspection_end_time": { "type": "string", "format": "time" },
+    "inspection_type": { "type": "string", "enum": ["AVX", "Third-Party", "AI-Assisted"] },
+    "vehicle_category": { "type": "string", "enum": ["4W"] },
+    "vehicle_subtype": { "type": "string", "enum": ["Hatchback", "Sedan", "SUV / MUV", "Crossover", "Van / MPV", "Pickup Truck"] },
+    "fuel_type": { "type": "string", "enum": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"] },
+    "status": { "type": "string", "enum": ["in_progress", "submitted", "admin_approved", "rejected"] },
+    "inspection_score": { "type": "number", "minimum": 0, "maximum": 5 },
+    "total_checkpoints": { "type": "integer" },
+    "passed_checkpoints": { "type": "integer" },
+    "failed_checkpoints": { "type": "integer" },
+    "overall_risk_level": { "type": "string", "enum": ["Low", "Moderate", "High"] }
+  },
+
+  "sections": {
+
+    "section_1_engine_powertrain": {
+      "label": "Engine & Powertrain",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"],
+      "note": "Skip this entire section for EV. Use section_1_ev_battery instead.",
+      "fields": {
+        "engine_sound_video": { "type": "media_url", "required": true, "description": "30s video of engine running" },
+        "overheating": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "misfiring_smoke": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "back_compression": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "oil_leakage": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "coolant_leakage": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "engine_mount_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "gaskets_and_seals": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "throttle_body": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "exhaust_leaks": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "catalytic_converter": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "note": "4W only" },
+        "fuel_tank": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "fuel_lines": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "fuel_rails_injectors": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "wiring_harness": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "photo_required_on_fail": true },
+        "battery_voltage": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "battery_voltage_value": { "type": "number", "unit": "V", "optional": true },
+        "alternator_starter": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "gear_shifting": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "gearbox_leaks": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "clutch_life_percent": { "type": "integer", "minimum": 0, "maximum": 100, "input_ui": "slider", "unit": "%" },
+        "drive_shaft_axle": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "note": "4W RWD only" }
+      }
+    },
+
+    "section_1_ev_battery": {
+      "label": "Battery & EV Powertrain",
+      "applicable_fuel_types": ["EV (Electric)"],
+      "note": "Only shown when fuel_type = EV (Electric). Replaces section_1_engine_powertrain.",
+      "fields": {
+        "motor_running_video": { "type": "media_url", "required": true, "description": "30s video with display visible" },
+        "battery_soh_percent": { "type": "integer", "minimum": 0, "maximum": 100, "input_ui": "slider", "unit": "%", "description": "State of Health from OBD or onboard display" },
+        "battery_soc_percent": { "type": "integer", "minimum": 0, "maximum": 100, "input_ui": "slider", "unit": "%", "description": "State of Charge at time of inspection" },
+        "battery_pack_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "battery_thermal_cooling": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "charging_port_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons", "photo_required": true },
+        "bms_warning_light": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "description": "Pass = no warning, Fail = warning present" },
+        "range_indicator_functional": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "motor_noise_vibration": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "regenerative_braking_active": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "hv_wiring_harness": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "photo_required_on_fail": true },
+        "dc_dc_converter": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "onboard_charger_status": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "note": "4W only" }
+      }
+    },
+
+    "section_2_mechanical": {
+      "label": "Mechanical Components",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "fields": {
+        "steering_performance": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "description": "Check for play, hardness, noise" },
+        "steering_rack_leakage": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "shocks_struts": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "photo_required_on_fail": true },
+        "ball_joints_bushes": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "suspension_noise": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "disc_drum_brake_condition": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "photo_required_on_fail": true },
+        "brake_pad_life_percent": { "type": "integer", "minimum": 0, "maximum": 100, "input_ui": "slider", "unit": "%" },
+        "brake_fluid_lines": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "abs_warning_light": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "note": "4W only, if equipped" }
+      }
+    },
+
+    "section_3_exterior_panels": {
+      "label": "Exterior — Panel Inspection",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "panels": [
+        "Bonnet", "Roof", "Front Bumper", "Rear Bumper",
+        "FL Door", "FR Door", "RL Door", "RR Door",
+        "FL Fender", "FR Fender", "RL Quarter", "RR Quarter"
+      ],
+      "per_panel_fields": {
+        "original_paint": { "type": "boolean", "input_ui": "mini_toggle" },
+        "repainted": { "type": "boolean", "input_ui": "mini_toggle", "photo_required_if_true": true },
+        "dent_severity": { "type": "string", "enum": ["None", "Minor", "Moderate", "Major"], "input_ui": "mini_buttons", "photo_required_if_not_none": true },
+        "scratch_severity": { "type": "string", "enum": ["None", "Minor", "Moderate", "Major"], "input_ui": "mini_buttons" },
+        "rust_present": { "type": "boolean", "input_ui": "mini_toggle", "photo_required_if_true": true },
+        "panel_photo": { "type": "media_url", "optional": true }
+      },
+      "example_record": {
+        "panel_name": "FL Door",
+        "original_paint": true,
+        "repainted": false,
+        "dent_severity": "Minor",
+        "scratch_severity": "None",
+        "rust_present": false,
+        "panel_photo": "https://cdn.reecomm.in/media/insp_001_fl_door.jpg"
+      }
+    },
+
+    "section_4_glass_exterior_electronics": {
+      "label": "Glass & Exterior Electronics",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "fields": {
+        "glass_scratches": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "glass_cracks_chips": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "photo_required_on_fail": true },
+        "side_mirrors": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "parking_sensors": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "exterior_lights_all": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "wipers_washers": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" }
+      }
+    },
+
+    "section_5_interior_cabin": {
+      "label": "Interior & Cabin",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "fields": {
+        "ac_cooling_heating": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
+        "ac_compressor": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
+        "ac_gas_leakage": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
+        "hvac_climate_control": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["EV (Electric)"] },
+        "speakers": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "infotainment_system": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "interior_lights": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "central_locking": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "power_windows_all": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "reverse_camera_sensors": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "seat_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "dashboard_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
+        "water_flood_damage_signs": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "photo_required_on_fail": true }
+      }
+    },
+
+    "section_6_structural_history": {
+      "label": "Structural History",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "fields": {
+        "structural_damage": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons", "photo_required_if_not_none": true },
+        "flood_damage_confirmed": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "underbody_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons", "photo_required": true },
+        "chassis_alignment": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" }
+      }
+    },
+
+    "section_7_tyres": {
+      "label": "Tyres",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "positions": ["Front Left", "Front Right", "Rear Left", "Rear Right"],
+      "per_tyre_fields": {
+        "tread_depth_mm": { "type": "number", "unit": "mm", "input_ui": "number_input" },
+        "tyre_age_years": { "type": "integer", "unit": "years", "input_ui": "number_input" },
+        "condition": { "type": "string", "enum": ["Good", "Worn", "Replace"], "input_ui": "mini_buttons" },
+        "tyre_photo": { "type": "media_url", "required": true }
+      },
+      "spare_tyre_condition": { "type": "string", "enum": ["Good", "Worn", "Missing"], "input_ui": "condition_buttons" },
+      "example_record": {
+        "position": "Front Left",
+        "tread_depth_mm": 5.5,
+        "tyre_age_years": 2,
+        "condition": "Good",
+        "tyre_photo": "https://cdn.reecomm.in/media/insp_001_tyre_fl.jpg"
+      }
+    },
+
+    "section_8_obd_diagnostics": {
+      "label": "OBD / Diagnostics",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"],
+      "note": "Mandatory for 4W ICE. For EV use BMS check in battery section.",
+      "fields": {
+        "obd_scan_done": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "error_codes_present": { "type": "boolean", "input_ui": "tap_buttons" },
+        "error_code_details": { "type": "string", "input_ui": "textarea", "description": "Enter codes e.g. P0300, P0171", "conditional_show": "error_codes_present === true" },
+        "emission_status": { "type": "string", "enum": ["Pass", "Fail", "Advisory"], "input_ui": "tap_buttons" }
+      }
+    },
+
+    "section_9_modifications": {
+      "label": "Modification Check",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "summary_fields": {
+        "modifications_detected": { "type": "boolean", "input_ui": "tap_buttons" },
+        "modification_count": { "type": "integer", "conditional_show": "modifications_detected === true" },
+        "modification_risk_level": { "type": "string", "enum": ["Low", "Moderate", "High"], "conditional_show": "modifications_detected === true" },
+        "seller_declaration_match": { "type": "boolean", "conditional_show": "modifications_detected === true" }
+      },
+      "modification_items": {
+        "description": "Array of modification records. Add one per modification found.",
+        "type": "array",
+        "conditional_show": "modifications_detected === true",
+        "item_fields": {
+          "modification_category": {
+            "type": "string",
+            "enum": [
+              "Aftermarket exhaust", "Suspension altered", "ECU remap",
+              "Turbo modification", "Body kit", "Alloy wheels non-OEM",
+              "Electrical rewiring", "Infotainment replacement",
+              "Headlight modification", "Other"
+            ]
+          },
+          "modification_type": { "type": "string", "enum": ["Cosmetic", "Performance", "Structural", "Electrical"] },
+          "is_oem": { "type": "boolean" },
+          "impact_on_warranty": { "type": "string", "enum": ["None", "Minor", "Major", "Unknown"] },
+          "impact_on_safety": { "type": "string", "enum": ["None", "Minor", "Major"] },
+          "documentation_available": { "type": "boolean" },
+          "photo": { "type": "media_url", "required": true },
+          "remarks": { "type": "string", "input_ui": "textarea" }
+        }
+      }
+    },
+
+    "section_10_media": {
+      "label": "Media & Documentation",
+      "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
+      "fields": {
+        "engine_or_motor_running_video": { "type": "media_url", "required": true },
+        "underbody_photos": { "type": "array", "items": { "type": "media_url" }, "min_count": 4, "required": true },
+        "test_drive_video": { "type": "media_url", "required": true },
+        "major_dent_photos": { "type": "array", "items": { "type": "media_url" }, "required_if": "any panel dent_severity = Major" },
+        "inspection_pdf_url": { "type": "media_url", "description": "Auto-generated after submission" }
+      }
+    }
+  },
+
+  "scoring": {
+    "method": "pass_ratio",
+    "formula": "score = 5 * (passed_checkpoints / total_checkpoints)",
+    "range": "0.0 to 5.0",
+    "risk_mapping": {
+      "Low": "score >= 4.0",
+      "Moderate": "score >= 2.5 and < 4.0",
+      "High": "score < 2.5"
+    }
+  },
+
+  "submission_flow": {
+    "1_inspector_submits": "status = submitted",
+    "2_admin_reviews": "status = admin_approved OR rejected",
+    "3_report_published": "inspection_pdf_url populated, visible on listing"
+  }
+}
