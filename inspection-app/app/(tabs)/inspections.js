@@ -13,7 +13,8 @@ import {
 } from "react-native";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
+import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
 
 export default function InspectionsTab() {
@@ -26,6 +27,7 @@ export default function InspectionsTab() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submittingId, setSubmittingId] = useState(null);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [selectedInspectionId, setSelectedInspectionId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -41,14 +43,20 @@ export default function InspectionsTab() {
   // Status mapping for API
   const statusMap = {
     pending: "ASSIGNED",
+    accepted: "ACCEPTED",
     ongoing: "IN_PROGRESS",
+    submitted: "SUBMITTED",
     completed: "COMPLETED",
     rejected: "REJECTED",
   };
 
-  useEffect(() => {
-    loadInspections(1, true);
-  }, [activeTab]);
+  // Refresh when tab changes OR when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadInspections(1, true);
+      loadTabCounts();
+    }, [activeTab])
+  );
 
   const loadInspections = async (page = 1, isInitial = false) => {
     try {
@@ -98,15 +106,21 @@ export default function InspectionsTab() {
 
   const handleAccept = async (id) => {
     try {
-      setSubmitting(true);
+      setSubmittingId(id);
       await inspectionAPI.acceptAssignment(id);
-      Alert.alert("Success", "Inspection accepted successfully!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Inspection accepted successfully!",
+        position: "top",
+        visibilityTime: 2000,
+      });
       loadInspections(1, true); // Refresh list
       loadTabCounts(); // Refresh counts
     } catch (error) {
       Alert.alert("Error", "Failed to accept inspection.");
     } finally {
-      setSubmitting(false);
+      setSubmittingId(null);
     }
   };
 
@@ -121,17 +135,52 @@ export default function InspectionsTab() {
       return;
     }
     try {
-      setSubmitting(true);
+      setSubmittingId(selectedInspectionId);
       await inspectionAPI.reject(selectedInspectionId, rejectReason.trim());
       setRejectModalVisible(false);
       setRejectReason("");
-      Alert.alert("Success", "Inspection rejected.");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Inspection rejected.",
+        position: "top",
+        visibilityTime: 2000,
+      });
       loadInspections(1, true);
       loadTabCounts();
     } catch (error) {
       Alert.alert("Error", "Failed to reject inspection.");
     } finally {
-      setSubmitting(false);
+      setSubmittingId(null);
+    }
+  };
+
+  const handleStartInspection = async (item) => {
+    const isAccepted = item.assignmentStatus?.toUpperCase() === "ACCEPTED";
+    
+    try {
+      setSubmittingId(item.id);
+      
+      // Only call START api if the status is ACCEPTED
+      if (isAccepted) {
+        await inspectionAPI.startInspection(item.id);
+      }
+      
+      // Navigate to the start inspection screen
+      router.push(
+        `/start-inspection?id=${item.id}` +
+        `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
+        `&vehicleSubtype=${encodeURIComponent(item.vehicleSubType || "")}` +
+        `&fuelType=${encodeURIComponent(item.fuelType || "")}` +
+        `&makerName=${encodeURIComponent(item.makerName || "")}` +
+        `&modelName=${encodeURIComponent(item.modelName || "")}` +
+        `&regNumber=${encodeURIComponent(item.regNumber || "")}`
+      );
+    } catch (error) {
+      console.error("Error starting inspection:", error);
+      Alert.alert("Error", "Failed to start inspection. Please try again.");
+    } finally {
+      setSubmittingId(null);
     }
   };
 
@@ -157,27 +206,29 @@ export default function InspectionsTab() {
 
   const [tabCounts, setTabCounts] = useState({
     pending: 0,
+    accepted: 0,
     ongoing: 0,
+    submitted: 0,
     completed: 0,
     rejected: 0,
   });
 
-  useEffect(() => {
-    loadTabCounts();
-  }, []);
-
   const loadTabCounts = async () => {
     try {
-      const [pRes, oRes, cRes, rRes] = await Promise.all([
+      const [pRes, aRes, oRes, sRes, cRes, rRes] = await Promise.all([
         inspectionAPI.getAssignedInspections(1, 1, "ASSIGNED"),
+        inspectionAPI.getAssignedInspections(1, 1, "ACCEPTED"),
         inspectionAPI.getAssignedInspections(1, 1, "IN_PROGRESS"),
+        inspectionAPI.getAssignedInspections(1, 1, "SUBMITTED"),
         inspectionAPI.getAssignedInspections(1, 1, "COMPLETED"),
         inspectionAPI.getAssignedInspections(1, 1, "REJECTED"),
       ]);
 
       setTabCounts({
         pending: pRes?.pageResponse?.totalElements || 0,
+        accepted: aRes?.pageResponse?.totalElements || 0,
         ongoing: oRes?.pageResponse?.totalElements || 0,
+        submitted: sRes?.pageResponse?.totalElements || 0,
         completed: cRes?.pageResponse?.totalElements || 0,
         rejected: rRes?.pageResponse?.totalElements || 0,
       });
@@ -186,16 +237,30 @@ export default function InspectionsTab() {
     }
   };
 
-  const { pending: pendingCount, ongoing: ongoingCount, completed: completedCount, rejected: rejectedCount } = tabCounts;
+  const { 
+    pending: pendingCount, 
+    accepted: acceptedCount, 
+    ongoing: ongoingCount, 
+    submitted: submittedCount, 
+    completed: completedCount, 
+    rejected: rejectedCount 
+  } = tabCounts;
 
   const getStatusColor = (status) => {
-    switch (status) {
+    const s = status?.toLowerCase();
+    switch (s) {
       case "completed":
         return { bg: "#DCFCE7", text: "#166534", icon: "checkmark-circle" };
       case "assigned":
+      case "pending":
         return { bg: "#FEF3C7", text: "#92400E", icon: "time-outline" };
+      case "accepted":
+        return { bg: "#EFF6FF", text: "#1E56A0", icon: "checkmark-done" };
       case "in_progress":
+      case "ongoing":
         return { bg: "#DBEAFE", text: "#1E40AF", icon: "car-sport" };
+      case "submitted":
+        return { bg: "#F0FDF4", text: "#15803D", icon: "send-outline" };
       case "rejected":
         return { bg: "#FEE2E2", text: "#991B1B", icon: "close-circle" };
       default:
@@ -300,15 +365,20 @@ export default function InspectionsTab() {
                 <Text style={styles.cardRejectButtonText}>Reject</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.cardAcceptButton} 
+                style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]} 
                 onPress={() => handleAccept(item.id)}
+                disabled={submittingId !== null}
               >
-                <Text style={styles.cardAcceptButtonText}>Accept</Text>
+                {submittingId === item.id ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.cardAcceptButtonText}>Accept</Text>
+                )}
               </TouchableOpacity>
             </>
           )}
           
-          {item.assignmentStatus === "IN_PROGRESS" && (
+          {((item.assignmentStatus?.toUpperCase() === "IN_PROGRESS") || (item.assignmentStatus?.toUpperCase() === "ACCEPTED")) && (
             <>
               <TouchableOpacity 
                 style={styles.cardRejectButton} 
@@ -317,20 +387,35 @@ export default function InspectionsTab() {
                 <Text style={styles.cardRejectButtonText}>Reject</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.cardAcceptButton} 
-                onPress={() => router.push(`/inspection-section?id=${item.id}`)}
+                style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]} 
+                onPress={() => handleStartInspection(item)}
+                disabled={submittingId !== null}
               >
-                <Text style={styles.cardAcceptButtonText}>Start Inspection</Text>
+                {submittingId === item.id ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.cardAcceptButtonText}>
+                    {item.assignmentStatus?.toUpperCase() === "IN_PROGRESS" ? "Continue to Inspection" : "Start Inspection"}
+                  </Text>
+                )}
               </TouchableOpacity>
             </>
           )}
 
-          {item.assignmentStatus === "COMPLETED" && (
+          {(item.assignmentStatus === "COMPLETED" || item.assignmentStatus === "SUBMITTED") && (
             <TouchableOpacity 
-              style={[styles.cardAcceptButton, { backgroundColor: "#F3F4F6" }]} 
-              onPress={() => router.push(`/inspection-details?id=${item.id}`)}
+              style={[styles.cardAcceptButton, { backgroundColor: "#1E56A0" }]} 
+              onPress={() => router.push(
+                `/inspection-report?id=${item.id}` +
+                `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
+                `&vehicleSubtype=${encodeURIComponent(item.vehicleSubType || "")}` +
+                `&fuelType=${encodeURIComponent(item.fuelType || "")}` +
+                `&makerName=${encodeURIComponent(item.makerName || "")}` +
+                `&modelName=${encodeURIComponent(item.modelName || "")}` +
+                `&regNumber=${encodeURIComponent(item.regNumber || "")}`
+              )}
             >
-              <Text style={[styles.cardAcceptButtonText, { color: "#1E56A0" }]}>View Inspection</Text>
+              <Text style={styles.cardAcceptButtonText}>View Report</Text>
             </TouchableOpacity>
           )}
 
@@ -435,6 +520,38 @@ export default function InspectionsTab() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              onPress={() => setActiveTab("accepted")}
+              style={[styles.tab, activeTab === "accepted" && styles.activeTab]}
+            >
+              <Text
+                className="font-semibold"
+                style={[
+                  styles.tabText,
+                  activeTab === "accepted" && styles.activeTabText,
+                ]}
+              >
+                Accepted
+              </Text>
+              {acceptedCount > 0 && (
+                <View
+                  style={[
+                    styles.badge,
+                    activeTab === "accepted" && styles.activeBadge,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      activeTab === "accepted" && styles.activeBadgeText,
+                    ]}
+                  >
+                    {acceptedCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
               onPress={() => setActiveTab("ongoing")}
               style={[styles.tab, activeTab === "ongoing" && styles.activeTab]}
             >
@@ -445,7 +562,7 @@ export default function InspectionsTab() {
                   activeTab === "ongoing" && styles.activeTabText,
                 ]}
               >
-                Ongoing
+                In Progress
               </Text>
               {ongoingCount > 0 && (
                 <View
@@ -461,6 +578,38 @@ export default function InspectionsTab() {
                     ]}
                   >
                     {ongoingCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setActiveTab("submitted")}
+              style={[styles.tab, activeTab === "submitted" && styles.activeTab]}
+            >
+              <Text
+                className="font-semibold"
+                style={[
+                  styles.tabText,
+                  activeTab === "submitted" && styles.activeTabText,
+                ]}
+              >
+                Submitted
+              </Text>
+              {submittedCount > 0 && (
+                <View
+                  style={[
+                    styles.badge,
+                    activeTab === "submitted" && styles.activeBadge,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      activeTab === "submitted" && styles.activeBadgeText,
+                    ]}
+                  >
+                    {submittedCount}
                   </Text>
                 </View>
               )}

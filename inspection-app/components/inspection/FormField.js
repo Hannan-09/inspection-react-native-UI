@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   ScrollView,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -14,9 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 
 // ── Tap Buttons (Pass / Fail / N/A) ─────────────────────────────────────────
 
-export const TapButtons = ({ value, onChange, label, required }) => {
-  const options = ["Pass", "Fail", "N/A"];
-
+export const TapButtons = ({ value, onChange, label, required, options = ["Pass", "Fail", "N/A"] }) => {
   return (
     <View style={styles.fieldContainer}>
       <Text style={styles.fieldLabel}>
@@ -24,28 +23,34 @@ export const TapButtons = ({ value, onChange, label, required }) => {
         {required && <Text style={styles.required}> *</Text>}
       </Text>
       <View style={styles.buttonRow}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option}
-            style={[
-              styles.tapButton,
-              value === option && styles.tapButtonSelected,
-              option === "Pass" && value === option && styles.passSelected,
-              option === "Fail" && value === option && styles.failSelected,
-            ]}
-            onPress={() => onChange(option)}
-            activeOpacity={0.7}
-          >
-            <Text
+        {options.map((option) => {
+          const isSelected = value === option;
+          const isPassType = option === "Pass" || option === "True";
+          const isFailType = option === "Fail" || option === "False";
+
+          return (
+            <TouchableOpacity
+              key={option}
               style={[
-                styles.tapButtonText,
-                value === option && styles.tapButtonTextSelected,
+                styles.tapButton,
+                isSelected && styles.tapButtonSelected,
+                isPassType && isSelected && styles.passSelected,
+                isFailType && isSelected && styles.failSelected,
               ]}
+              onPress={() => onChange(option)}
+              activeOpacity={0.7}
             >
-              {option}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.tapButtonText,
+                  isSelected && styles.tapButtonTextSelected,
+                ]}
+              >
+                {option}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -217,93 +222,77 @@ export const MediaUpload = ({
   label,
   required,
   type = "photo",
+  maxCount,
 }) => {
-  // value can be a single URI string or an array of URIs
+  const [pickerVisible, setPickerVisible] = useState(false);
+
   const uris = value
-    ? Array.isArray(value)
-      ? value
-      : [value]
+    ? Array.isArray(value) ? value : [value]
     : [];
 
-  const requestPermission = async () => {
+  const limit = maxCount || (type === "video" ? 1 : 99);
+
+  const requestLibraryPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library in Settings to upload media.",
-        [{ text: "OK" }]
-      );
+      Alert.alert("Permission Required", "Please allow photo library access in Settings.");
       return false;
     }
     return true;
   };
 
   const pickFromLibrary = async () => {
-    const granted = await requestPermission();
-    if (!granted) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes:
-        type === "video"
-          ? ImagePicker.MediaTypeOptions.Videos
-          : ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: type !== "video",
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets?.length > 0) {
-      const newUris = result.assets.map((a) => a.uri);
-      // Merge with existing
-      const merged = [...uris, ...newUris];
-      onChange(merged.length === 1 ? merged[0] : merged);
-    }
-  };
-
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Required",
-        "Please allow camera access in Settings.",
-        [{ text: "OK" }]
-      );
+    setPickerVisible(false);
+    if (uris.length >= limit) {
+      Alert.alert("Limit Reached", `You can only upload up to ${limit} ${type}(s).`);
       return;
     }
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes:
-        type === "video"
-          ? ImagePicker.MediaTypeOptions.Videos
-          : ImagePicker.MediaTypeOptions.Images,
+    const granted = await requestLibraryPermission();
+    if (!granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: type === "video" ? ImagePicker.MediaTypeOptions.Videos : ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: limit > 1,
       quality: 0.8,
+      selectionLimit: limit - uris.length,
     });
-
     if (!result.canceled && result.assets?.length > 0) {
-      const newUri = result.assets[0].uri;
-      const merged = [...uris, newUri];
+      const newUris = result.assets.map((a) => a.uri);
+      let merged = [...uris, ...newUris];
+      if (merged.length > limit) merged = merged.slice(0, limit);
       onChange(merged.length === 1 ? merged[0] : merged);
     }
   };
 
-  const showOptions = () => {
-    Alert.alert(
-      type === "video" ? "Upload Video" : "Upload Photo",
-      "Choose a source",
-      [
-        { text: "Camera", onPress: takePhoto },
-        {
-          text: type === "video" ? "Video Library" : "Photo Library",
-          onPress: pickFromLibrary,
-        },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
+  const takeFromCamera = async () => {
+    setPickerVisible(false);
+    if (uris.length >= limit) {
+      Alert.alert("Limit Reached", `You can only upload up to ${limit} ${type}(s).`);
+      return;
+    }
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Please allow camera access in Settings.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: type === "video" ? ImagePicker.MediaTypeOptions.Videos : ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets?.length > 0) {
+      let merged = [...uris, result.assets[0].uri];
+      if (merged.length > limit) merged = merged.slice(0, limit);
+      onChange(merged.length === 1 ? merged[0] : merged);
+    }
   };
 
   const removeMedia = (index) => {
     const updated = uris.filter((_, i) => i !== index);
     onChange(updated.length === 0 ? null : updated.length === 1 ? updated[0] : updated);
   };
+
+  const isVideo = type === "video";
 
   return (
     <View style={styles.fieldContainer}>
@@ -314,18 +303,11 @@ export const MediaUpload = ({
 
       {/* Uploaded previews */}
       {uris.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.previewRow}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.previewRow}>
           {uris.map((uri, index) => (
             <View key={index} style={styles.previewContainer}>
               <Image source={{ uri }} style={styles.previewImage} />
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeMedia(index)}
-              >
+              <TouchableOpacity style={styles.removeButton} onPress={() => removeMedia(index)}>
                 <Ionicons name="close-circle" size={20} color="#DC2626" />
               </TouchableOpacity>
             </View>
@@ -334,19 +316,10 @@ export const MediaUpload = ({
       )}
 
       {/* Upload button */}
-      <TouchableOpacity
-        style={styles.uploadButton}
-        onPress={showOptions}
-        activeOpacity={0.7}
-      >
-        <Ionicons
-          name={type === "video" ? "videocam-outline" : "camera-outline"}
-          size={24}
-          color="#1E56A0"
-        />
+      <TouchableOpacity style={styles.uploadButton} onPress={() => setPickerVisible(true)} activeOpacity={0.7}>
+        <Ionicons name={isVideo ? "videocam-outline" : "camera-outline"} size={24} color="#1E56A0" />
         <Text style={styles.uploadButtonText}>
-          {uris.length > 0 ? "Add More" : "Upload"}{" "}
-          {type === "video" ? "Video" : "Photo"}
+          {uris.length > 0 ? "Add More" : "Upload"} {isVideo ? "Video" : "Photo"}
         </Text>
       </TouchableOpacity>
 
@@ -354,11 +327,61 @@ export const MediaUpload = ({
         <View style={styles.uploadedIndicator}>
           <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
           <Text style={styles.uploadedText}>
-            {uris.length} {type === "video" ? "video" : "photo"}
-            {uris.length > 1 ? "s" : ""} uploaded
+            {uris.length} {isVideo ? "video" : "photo"}{uris.length > 1 ? "s" : ""} uploaded
           </Text>
         </View>
       )}
+
+      {/* ── Beautiful Upload Source Modal ──────────────────────────── */}
+      <Modal visible={pickerVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setPickerVisible(false)}
+        >
+          <View style={styles.pickerModal}>
+            {/* Header */}
+            <View style={styles.pickerHeader}>
+              <View style={styles.pickerIconBg}>
+                <Ionicons name={isVideo ? "videocam" : "camera"} size={26} color="#1E56A0" />
+              </View>
+              <Text style={styles.pickerTitle}>{isVideo ? "Upload Video" : "Upload Photo"}</Text>
+              <Text style={styles.pickerSubtitle}>Choose a source</Text>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.pickerDivider} />
+
+            {/* Options */}
+            <TouchableOpacity style={styles.pickerOption} onPress={takeFromCamera} activeOpacity={0.7}>
+              <View style={[styles.pickerOptionIcon, { backgroundColor: "#EFF6FF" }]}>
+                <Ionicons name="camera" size={22} color="#1E56A0" />
+              </View>
+              <View style={styles.pickerOptionText}>
+                <Text style={styles.pickerOptionTitle}>Camera</Text>
+                <Text style={styles.pickerOptionSub}>{isVideo ? "Record a new video" : "Take a new photo"}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.pickerOption} onPress={pickFromLibrary} activeOpacity={0.7}>
+              <View style={[styles.pickerOptionIcon, { backgroundColor: "#F0FDF4" }]}>
+                <Ionicons name={isVideo ? "film-outline" : "images-outline"} size={22} color="#16A34A" />
+              </View>
+              <View style={styles.pickerOptionText}>
+                <Text style={styles.pickerOptionTitle}>{isVideo ? "Video Library" : "Photo Library"}</Text>
+                <Text style={styles.pickerOptionSub}>Choose from your device</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+
+            {/* Cancel */}
+            <TouchableOpacity style={styles.pickerCancel} onPress={() => setPickerVisible(false)} activeOpacity={0.7}>
+              <Text style={styles.pickerCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -596,5 +619,102 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#16A34A",
     marginLeft: 4,
+  },
+
+  // ── Upload Source Modal ────────────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+  },
+  pickerModal: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingBottom: 56,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  pickerHeader: {
+    alignItems: "center",
+    paddingTop: 28,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
+  },
+  pickerIconBg: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    backgroundColor: "#EFF6FF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    shadowColor: "#1E56A0",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  pickerTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#111827",
+    letterSpacing: -0.3,
+    marginBottom: 4,
+  },
+  pickerSubtitle: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    fontWeight: "500",
+  },
+  pickerDivider: {
+    height: 1,
+    backgroundColor: "#F3F4F6",
+    marginHorizontal: 20,
+    marginBottom: 8,
+  },
+  pickerOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  pickerOptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  pickerOptionText: {
+    flex: 1,
+  },
+  pickerOptionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 2,
+  },
+  pickerOptionSub: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    fontWeight: "500",
+  },
+  pickerCancel: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  pickerCancelText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#6B7280",
   },
 });

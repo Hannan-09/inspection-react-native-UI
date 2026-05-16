@@ -13,10 +13,14 @@ class ApiService {
     const config = {
       ...options,
       headers: {
-        "Content-Type": "application/json",
         ...options.headers,
       },
     };
+
+    // Only set Content-Type to application/json if not sending FormData
+    if (!(options.body instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
 
     // Add auth token if available
     const token = await this.getAuthToken();
@@ -77,6 +81,20 @@ class ApiService {
 
   async delete(endpoint) {
     return this.request(endpoint, { method: "DELETE" });
+  }
+
+  async postMultipart(endpoint, formData) {
+    return this.request(endpoint, {
+      method: "POST",
+      body: formData,
+    });
+  }
+
+  async putMultipart(endpoint, formData) {
+    return this.request(endpoint, {
+      method: "PUT",
+      body: formData,
+    });
   }
 
   async handleError(response) {

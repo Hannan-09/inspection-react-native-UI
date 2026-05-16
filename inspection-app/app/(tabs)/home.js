@@ -13,6 +13,7 @@ import {
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
 
 export default function HomeTab() {
@@ -66,7 +67,13 @@ export default function HomeTab() {
     try {
       setSubmitting(true);
       await inspectionAPI.acceptAssignment(id);
-      Alert.alert("Success", "Inspection accepted successfully!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Inspection accepted successfully!",
+        position: "top",
+        visibilityTime: 2000,
+      });
       loadData(); // Refresh list and stats
     } catch (error) {
       Alert.alert("Error", "Failed to accept inspection.");
@@ -90,7 +97,13 @@ export default function HomeTab() {
       await inspectionAPI.reject(selectedInspectionId, rejectReason.trim());
       setRejectModalVisible(false);
       setRejectReason("");
-      Alert.alert("Success", "Inspection rejected.");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Inspection rejected.",
+        position: "top",
+        visibilityTime: 2000,
+      });
       loadData();
     } catch (error) {
       Alert.alert("Error", "Failed to reject inspection.");
@@ -132,6 +145,24 @@ export default function HomeTab() {
     });
   };
 
+  const getStatusColor = (status) => {
+    const s = status?.toUpperCase();
+    switch (s) {
+      case "ASSIGNED":
+        return { bg: "#FEF3C7", text: "#92400E", icon: "time-outline" };
+      case "IN_PROGRESS":
+      case "ONGOING":
+      case "ACCEPTED":
+        return { bg: "#DBEAFE", text: "#1E40AF", icon: "car-sport" };
+      case "COMPLETED":
+        return { bg: "#DCFCE7", text: "#166534", icon: "checkmark-circle" };
+      case "REJECTED":
+        return { bg: "#FEE2E2", text: "#991B1B", icon: "close-circle" };
+      default:
+        return { bg: "#F3F4F6", text: "#6B7280", icon: "help-circle" };
+    }
+  };
+
   const formatTime = (dateString) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
@@ -144,6 +175,7 @@ export default function HomeTab() {
 
   const renderInspectionCard = (item) => {
     const typeColor = getInspectionTypeColor(item.inspectionType);
+    const statusColor = getStatusColor(item.assignmentStatus);
 
     return (
       <TouchableOpacity
@@ -158,9 +190,13 @@ export default function HomeTab() {
             <Text style={styles.cardTitle}>{item.makerName} {item.modelName}</Text>
             <Text style={styles.cardNumber}>{item.regNumber}</Text>
           </View>
-          <View style={styles.pendingBadge}>
-            <Ionicons name="time-outline" size={12} color="#92400E" />
-            <Text style={styles.pendingText}>{item.assignmentStatus || "Pending"}</Text>
+          <View style={[styles.pendingBadge, { backgroundColor: statusColor.bg }]}>
+            <Ionicons name={statusColor.icon} size={12} color={statusColor.text} />
+            <Text style={[styles.pendingText, { color: statusColor.text }]}>
+              {item.assignmentStatus?.toUpperCase() === "ACCEPTED" 
+                ? "IN PROGRESS" 
+                : item.assignmentStatus?.replace(/_/g, " ") || "Pending"}
+            </Text>
           </View>
         </View>
 

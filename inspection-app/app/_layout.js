@@ -43,6 +43,34 @@ export default function RootLayout() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="start-inspection"
+          options={{
+            title: "Start Inspection",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="inspection-details"
+          options={{
+            title: "Inspection Details",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="inspection-section"
+          options={{
+            title: "Inspection Section",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="inspection-report"
+          options={{
+            title: "Inspection Report",
+            headerShown: true,
+          }}
+        />
       </Stack>
       <Toast />
     </>

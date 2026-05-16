@@ -5,7 +5,28 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
+import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../services/api/inspectionAPI";
+
+const LoadingImage = ({ uri, style, ...props }) => {
+  const [imageLoading, setImageLoading] = useState(false);
+  return (
+    <View style={style}>
+      <Image
+        source={{ uri }}
+        style={[style, { position: "absolute", top: 0, left: 0 }]}
+        onLoadStart={() => setImageLoading(true)}
+        onLoadEnd={() => setImageLoading(false)}
+        {...props}
+      />
+      {imageLoading && (
+        <View style={[style, { justifyContent: "center", alignItems: "center", backgroundColor: "#F3F4F6" }]}>
+          <ActivityIndicator size="small" color="#1E56A0" />
+        </View>
+      )}
+    </View>
+  );
+};
 
 export default function InspectionDetailsScreen() {
   const params = useLocalSearchParams();
@@ -20,6 +41,24 @@ export default function InspectionDetailsScreen() {
   useEffect(() => {
     loadDetails();
   }, [params.id]);
+
+  const getStatusInfo = (status) => {
+    const s = status?.toUpperCase();
+    switch (s) {
+      case "ASSIGNED":
+        return { bg: "#FEF3C7", text: "#92400E" };
+      case "IN_PROGRESS":
+      case "ONGOING":
+      case "ACCEPTED":
+        return { bg: "#DBEAFE", text: "#1E40AF" };
+      case "COMPLETED":
+        return { bg: "#DCFCE7", text: "#166534" };
+      case "REJECTED":
+        return { bg: "#FEE2E2", text: "#991B1B" };
+      default:
+        return { bg: "#F3F4F6", text: "#6B7280" };
+    }
+  };
 
   const loadDetails = async () => {
     if (!params.id) return;
@@ -84,9 +123,14 @@ export default function InspectionDetailsScreen() {
     try {
       await inspectionAPI.reject(details.id, rejectReason.trim());
       setRejectModalVisible(false);
-      Alert.alert("Rejected", "Inspection has been rejected.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      Toast.show({
+        type: "success",
+        text1: "Rejected",
+        text2: "Inspection has been rejected.",
+        position: "top",
+        visibilityTime: 1500,
+      });
+      setTimeout(() => router.back(), 1200);
     } catch (error) {
       Alert.alert("Error", "Failed to reject inspection. Please try again.");
     } finally {
@@ -99,17 +143,48 @@ export default function InspectionDetailsScreen() {
       try {
         setSubmitting(true);
         await inspectionAPI.acceptAssignment(details.id);
-        Alert.alert("Success", "Inspection accepted successfully!");
-        loadDetails(); // Reload to update status to IN_PROGRESS
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Inspection accepted successfully!",
+          position: "top",
+          visibilityTime: 2000,
+        });
+        setDetails(prev => ({ ...prev, assignmentStatus: "IN_PROGRESS" }));
+        loadDetails(); // Reload to update status to IN_PROGRESS from backend
       } catch (error) {
         Alert.alert("Error", "Failed to accept inspection. Please try again.");
       } finally {
         setSubmitting(false);
       }
     } else {
-      router.push(`/inspection-section?id=${details.id}`);
+      try {
+        setSubmitting(true);
+        // Only call the START api if the status is ACCEPTED
+        if (details.assignmentStatus?.toUpperCase() === "ACCEPTED") {
+          await inspectionAPI.startInspection(details.id);
+        }
+        
+        // Navigate to the start inspection screen
+        router.push(
+          `/start-inspection?id=${details.id}` +
+          `&vehicleCategory=${encodeURIComponent(details.vehicleType || "")}` +
+          `&vehicleSubtype=${encodeURIComponent(details.vehicleSubType || "")}` +
+          `&fuelType=${encodeURIComponent(details.fuelType || "")}` +
+          `&makerName=${encodeURIComponent(details.makerName || "")}` +
+          `&modelName=${encodeURIComponent(details.modelName || "")}` +
+          `&regNumber=${encodeURIComponent(details.regNumber || "")}`
+        );
+      } catch (error) {
+        console.error("Error starting inspection:", error);
+        Alert.alert("Error", "Failed to start inspection. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
+
+  const statusInfo = getStatusInfo(details?.assignmentStatus);
 
   if (loading) {
     return (
@@ -147,8 +222,8 @@ export default function InspectionDetailsScreen() {
           <View className="flex-row items-center mb-3">
             <View style={styles.carIcon}>
               {details.thumbnailUrl ? (
-                <Image 
-                  source={{ uri: details.thumbnailUrl }} 
+                <LoadingImage 
+                  uri={details.thumbnailUrl} 
                   style={styles.carThumbnail} 
                   resizeMode="cover" 
                 />
@@ -160,8 +235,8 @@ export default function InspectionDetailsScreen() {
               <Text style={styles.carModel}>{details.makerName} {details.modelName}</Text>
               <Text style={styles.carNumber}>{details.regNumber}</Text>
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: "#FEF3C7" }]}>
-              <Text style={[styles.statusText, { color: "#92400E" }]}>
+            <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
+              <Text style={[styles.statusText, { color: statusInfo.text }]}>
                 {details.assignmentStatus?.replace(/_/g, " ")}
               </Text>
             </View>
@@ -261,7 +336,7 @@ export default function InspectionDetailsScreen() {
             </ScrollView>
             <View style={styles.imageGallery}>
               {imagesByCategory[selectedImageCategory]?.map((img, idx) => (
-                <Image key={idx} source={{ uri: img }} style={styles.vehicleImage} resizeMode="cover" />
+                <LoadingImage key={idx} uri={img} style={styles.vehicleImage} resizeMode="cover" />
               ))}
             </View>
           </View>
@@ -272,7 +347,10 @@ export default function InspectionDetailsScreen() {
 
       {/* Action Buttons */}
       <View style={styles.bottomButtons}>
-        {(details.assignmentStatus === "ASSIGNED" || details.assignmentStatus === "IN_PROGRESS") && (
+        {((details.assignmentStatus?.toUpperCase() === "ASSIGNED") || 
+          (details.assignmentStatus?.toUpperCase() === "IN_PROGRESS") ||
+          (details.assignmentStatus?.toUpperCase() === "ACCEPTED") ||
+          (details.assignmentStatus?.toUpperCase() === "ONGOING")) && (
           <>
             <TouchableOpacity 
               style={styles.rejectButton} 
@@ -292,12 +370,13 @@ export default function InspectionDetailsScreen() {
               ) : (
                 <>
                   <Ionicons 
-                    name={details.assignmentStatus === 'ASSIGNED' ? "checkmark-circle" : "play-circle"} 
+                    name={details.assignmentStatus?.toUpperCase() === 'ASSIGNED' ? "checkmark-circle" : "play-circle"} 
                     size={22} 
                     color="#fff" 
                   />
                   <Text style={styles.acceptButtonText}>
-                    {details.assignmentStatus === 'ASSIGNED' ? "Accept" : "Start Inspection"}
+                    {details.assignmentStatus?.toUpperCase() === 'ASSIGNED' ? "Accept" : 
+                     details.assignmentStatus?.toUpperCase() === 'IN_PROGRESS' ? "Continue to Inspection" : "Start Inspection"}
                   </Text>
                 </>
               )}
@@ -305,13 +384,21 @@ export default function InspectionDetailsScreen() {
           </>
         )}
 
-        {details.assignmentStatus === "COMPLETED" && (
+        {(details.assignmentStatus?.toUpperCase() === "COMPLETED" || details.assignmentStatus?.toUpperCase() === "SUBMITTED") && (
           <TouchableOpacity 
-            style={[styles.acceptButton, { marginLeft: 0, backgroundColor: "#F3F4F6" }]} 
-            onPress={() => router.back()}
+            style={[styles.acceptButton, { marginLeft: 0, backgroundColor: "#1E56A0" }]} 
+            onPress={() => router.push(
+              `/inspection-report?id=${details.id}` +
+              `&vehicleCategory=${encodeURIComponent(details.vehicleType || "")}` +
+              `&vehicleSubtype=${encodeURIComponent(details.vehicleSubType || "")}` +
+              `&fuelType=${encodeURIComponent(details.fuelType || "")}` +
+              `&makerName=${encodeURIComponent(details.makerName || "")}` +
+              `&modelName=${encodeURIComponent(details.modelName || "")}` +
+              `&regNumber=${encodeURIComponent(details.regNumber || "")}`
+            )}
           >
-            <Ionicons name="checkmark-done-circle" size={22} color="#1E56A0" />
-            <Text style={[styles.acceptButtonText, { color: "#1E56A0" }]}>Inspection Completed</Text>
+            <Ionicons name="document-text" size={22} color="#fff" />
+            <Text style={styles.acceptButtonText}>View Inspection Report</Text>
           </TouchableOpacity>
         )}
 
