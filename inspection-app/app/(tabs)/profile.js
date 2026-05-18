@@ -62,15 +62,42 @@ export default function ProfileTab() {
     ]);
   };
 
+  // Helper to calculate experience from createdAt
+  const getExperienceDuration = (createdAtStr) => {
+    if (!createdAtStr) return "0 months";
+    const created = new Date(createdAtStr);
+    const now = new Date();
+    
+    let years = now.getFullYear() - created.getFullYear();
+    let months = now.getMonth() - created.getMonth();
+    
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+    
+    const yearText = years > 0 ? `${years} ${years === 1 ? "year" : "years"}` : "";
+    const monthText = months > 0 ? `${months} ${months === 1 ? "month" : "months"}` : "";
+    
+    if (yearText && monthText) {
+      return `${yearText} ${monthText}`;
+    } else if (yearText) {
+      return yearText;
+    } else if (monthText) {
+      return monthText;
+    }
+    return "0.0";
+  };
+
   // Fallback display data
   const display = {
     name: userData?.firstname && userData?.lastname ? `${userData.firstname} ${userData.lastname}` : userData?.username || "Inspector",
     role: userData?.inspectorType?.replace(/_/g, " ") || "Car Inspector",
     email: userData?.email || "—",
     phone: userData?.contactNumber || "—",
-    experience: userData?.experience || "—",
-    inspectionsCompleted: userData?.inspectionsCompleted ?? "—",
-    rating: userData?.rating ?? "—",
+    experience: getExperienceDuration(userData?.createdAt),
+    inspectionsCompleted: userData?.totalInspectionsCompleted !== undefined && userData?.totalInspectionsCompleted !== null ? userData.totalInspectionsCompleted : "0",
+    rating: userData?.averageRating !== undefined && userData?.averageRating !== null ? userData.averageRating : "0",
     address: userData?.address ? `${userData.address}, ${userData.city?.name || ""}, ${userData.state?.name || ""}, ${userData.country?.name || ""}` : "—",
     aadhar: userData?.aadharCardNumber || "—",
     dl: userData?.drivingLicenseNumber || "—",

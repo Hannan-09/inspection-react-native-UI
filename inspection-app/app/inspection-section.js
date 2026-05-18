@@ -11,12 +11,31 @@ import inspectionSchema4W from "../reecomm_inspection_4W.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { inspectionAPI } from "../services/api/inspectionAPI";
 
+// ── Normalizers ────────────────────────────────────────────────────────────────
+const normalizeCategory = (vehicleType) => {
+  const t = (vehicleType || "").toUpperCase();
+  if (t.includes("FOUR") || t === "4W") return "4W";
+  if (t.includes("TWO") || t === "2W") return "2W";
+  return "4W";
+};
+
+const normalizeFuelType = (fuelType) => {
+  const f = (fuelType || "").toUpperCase();
+  if (f === "PETROL") return "Petrol";
+  if (f === "DIESEL") return "Diesel";
+  if (f === "CNG") return "CNG";
+  if (f === "LPG") return "LPG";
+  if (f === "HYBRID") return "Hybrid";
+  if (f.includes("ELECTRIC") || f === "EV") return "EV (Electric)";
+  return fuelType || "Petrol";
+};
+
 export default function InspectionSectionScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
 
   const sectionKey      = params.sectionKey      || "section_1_engine_powertrain";
-  const vehicleCategory = params.vehicleCategory || "2W";
+  const vehicleCategory = normalizeCategory(params.vehicleCategory);
   const inspectionId    = params.inspectionId    || "unknown";
   const isReadOnly      = params.readOnly        === "true";
 
@@ -32,7 +51,7 @@ export default function InspectionSectionScreen() {
   const [newMod, setNewMod]           = useState({});
 
   const storageKey = `inspection_${inspectionId}_${sectionKey}`;
-  const [fuelType, setFuelType] = useState(params.fuelType || "");
+  const [fuelType, setFuelType] = useState(normalizeFuelType(params.fuelType || ""));
   const [subType, setSubType] = useState(params.vehicleSubType || "");
 
   useEffect(() => {
@@ -42,7 +61,7 @@ export default function InspectionSectionScreen() {
         if (isReadOnly) {
           const res = await inspectionAPI.getInspectionReport(inspectionId);
           const report = res.data || res;
-          if (report.fuelType) setFuelType(report.fuelType);
+          if (report.fuelType) setFuelType(normalizeFuelType(report.fuelType));
           if (report.vehicleSubType) setSubType(report.vehicleSubType);
           const mappedData = mapReportToSectionState(report, sectionKey);
           setFormData(mappedData);
@@ -583,7 +602,10 @@ export default function InspectionSectionScreen() {
             else if (condVal === "false") target = false;
             else target = condVal.replace(/'/g, "");
 
-            if (actualVal !== target) return false;
+            const normActual = String(actualVal !== undefined && actualVal !== null ? actualVal : "").trim().toLowerCase();
+            const normTarget = String(target !== undefined && target !== null ? target : "").trim().toLowerCase();
+
+            if (normActual !== normTarget) return false;
           }
         }
       } catch (e) {
@@ -599,20 +621,22 @@ export default function InspectionSectionScreen() {
     if (!shouldShowField(fieldName, fieldConfig)) return null;
 
     const label = toLabel(fieldName);
-    const isVideo = fieldConfig.description?.toLowerCase().includes("video");
+    const isVideo = fieldName.toLowerCase().includes("video") || fieldConfig.description?.toLowerCase().includes("video");
 
     if (fieldConfig.type === "media_url") {
       return (
         <MediaUpload key={fieldName} label={label} value={value} onChange={onChange}
           required={fieldConfig.required}
           type={isVideo ? "video" : "photo"}
-          maxCount={isVideo ? 1 : undefined} />
+          maxCount={isVideo ? 1 : undefined}
+          isReadOnly={isReadOnly} />
       );
     }
     if (fieldConfig.type === "array" && fieldConfig.items?.type === "media_url") {
       return (
         <MediaUpload key={fieldName} label={label} value={value} onChange={onChange}
-          required={fieldConfig.required} type="photo" />
+          required={fieldConfig.required} type="photo"
+          isReadOnly={isReadOnly} />
       );
     }
     if (fieldConfig.input_ui === "tap_buttons") {
@@ -657,13 +681,13 @@ export default function InspectionSectionScreen() {
       return <SliderInput key={fieldName} label={label} value={value} onChange={onChange} unit={fieldConfig.unit || "%"} />;
     }
     if (fieldConfig.input_ui === "number_input" || fieldConfig.type === "number" || fieldConfig.type === "integer") {
-      return <NumberInput key={fieldName} label={label} value={value} onChange={onChange} unit={fieldConfig.unit || ""} />;
+      return <NumberInput key={fieldName} label={label} value={value} onChange={onChange} unit={fieldConfig.unit || ""} isReadOnly={isReadOnly} />;
     }
     if (fieldConfig.input_ui === "textarea" || fieldConfig.type === "string") {
-      return <TextArea key={fieldName} label={label} value={value} onChange={onChange} placeholder={fieldConfig.description || ""} />;
+      return <TextArea key={fieldName} label={label} value={value} onChange={onChange} placeholder={fieldConfig.description || ""} isReadOnly={isReadOnly} />;
     }
     return null;
-  }, [styles]);
+  }, [styles, shouldShowField, isReadOnly]);
 
   // ── Optimized Section Components ─────────────────────────────────────────────
   const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, renderField }) => {
@@ -940,7 +964,7 @@ export default function InspectionSectionScreen() {
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16 }}>
         {/* Note */}
-        {sectionData?.note && (
+        {sectionData?.note && !isReadOnly && (
           <View style={styles.noteCard}>
             <Ionicons name="information-circle" size={20} color="#1E56A0" />
             <Text style={styles.noteText}>{sectionData.note}</Text>

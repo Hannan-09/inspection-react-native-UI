@@ -219,7 +219,7 @@ export default function InspectionDetailsScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Vehicle Info Card */}
         <View style={styles.card}>
-          <View className="flex-row items-center mb-3">
+          <View className="flex-row items-center">
             <View style={styles.carIcon}>
               {details.thumbnailUrl ? (
                 <LoadingImage 
@@ -241,82 +241,169 @@ export default function InspectionDetailsScreen() {
               </Text>
             </View>
           </View>
-          <View style={styles.divider} />
-          <View style={styles.specsGrid}>
+        </View>
+
+        {/* Vehicle Specifications Card */}
+        <View style={styles.newCard}>
+          <Text style={styles.newCardTitle}>Vehicle Specifications</Text>
+          <View style={styles.specTable}>
             {[
-              { icon: "calendar-outline", label: "Year", val: details.yearOfMfg },
-              { icon: "color-palette-outline", label: "Color", val: details.colour },
-              { icon: "speedometer-outline", label: "KM Driven", val: `${details.kmDriven} km` },
-              { icon: "water-outline", label: "Fuel", val: details.fuelType },
-              { icon: "person-outline", label: "Owner", val: `${details.ownership} Owner` },
-              { icon: "settings-outline", label: "Transmission", val: details.transmissionType },
-            ].map((s) => (
-              <View key={s.label} style={styles.specItem}>
-                <Ionicons name={s.icon} size={16} color="#6B7280" />
-                <View className="ml-2">
-                  <Text style={styles.specLabel}>{s.label}</Text>
-                  <Text style={styles.specValue}>{s.val || "—"}</Text>
-                </View>
+              { label: "Make & Model", val: `${details.makerName || ""} ${details.modelName || ""} ${details.variantName || ""}`.trim() || "—" },
+              { label: "Transmission", val: details.transmissionType || "—" },
+              { label: "Fuel Type", val: `${details.fuelType || "—"}${details.isCngFitted ? " + CNG (" + (details.cngType || "") + ")" : ""}` },
+              { label: "Year of Mfg", val: details.yearOfMfg || "—" },
+              { label: "KM Driven", val: details.kmDriven ? `${details.kmDriven.toLocaleString("en-IN")} km` : "—" },
+              { label: "Color", val: details.colour || "—" },
+              { label: "Seating", val: details.seatingCapacity ? `${details.seatingCapacity} Seater` : "5 Seater" },
+              { label: "Ownership", val: details.ownership === 1 ? "First Owner" : details.ownership === 2 ? "Second Owner" : details.ownership === 3 ? "Third Owner" : details.ownership ? `${details.ownership} Owner` : "—" },
+              { label: "Spare Key", val: details.spareKey ? "Yes" : "No" },
+              { label: "Spare Wheel", val: details.spareWheel ? "Yes" : "No" },
+              { label: "Has Challan", val: details.hasChallan ? "Yes" : "No", isStatus: details.hasChallan, isRed: details.hasChallan },
+              { label: "Insurance", val: details.insurance ? "Active" : "Inactive", isStatus: true, isRed: !details.insurance },
+              { label: "PUC", val: details.puc ? "Active" : "Inactive", isStatus: true, isRed: !details.puc },
+              { label: "RC Status", val: details.rcFrontUrl ? "Active" : "Inactive", isStatus: true, isRed: !details.rcFrontUrl },
+            ].map((item, idx) => (
+              <View key={item.label} style={[styles.specRow, idx === 13 && { borderBottomWidth: 0 }]}>
+                <Text style={styles.specRowLabel}>{item.label}</Text>
+                <Text style={[
+                  styles.specRowValue, 
+                  item.isStatus && { color: item.isRed ? "#DC2626" : "#16A34A", fontWeight: "bold" }
+                ]}>
+                  {item.val}
+                </Text>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Owner Details */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Owner Information</Text>
-          <View className="flex-row items-center justify-between mb-4">
-            <View>
-              <Text style={styles.ownerName}>{details.ownerFirstname} {details.ownerLastname}</Text>
-              <Text style={styles.ownerRole}>{details.ownerUserRole?.replace(/_/g, " ")}</Text>
+        {/* Seller Details */}
+        <View style={styles.newCard}>
+          <View className="flex-row justify-between items-center mb-2">
+            <Text style={styles.newCardTitle}>Seller Details</Text>
+            <View style={styles.sellerTag}>
+              <Text style={styles.sellerTagText}>Seller</Text>
             </View>
-            <TouchableOpacity style={styles.actionIcon} onPress={() => makeCall(details.whatsappNumber)}>
-              <Ionicons name="call" size={20} color="#1E56A0" />
-            </TouchableOpacity>
           </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="location-outline" size={18} color="#6B7280" />
-            <Text style={styles.infoText} numberOfLines={2}>{details.address}, {details.cityName}</Text>
+
+          <View style={styles.sellerInfoRow}>
+            <Ionicons name="person" size={18} color="#1E56A0" style={styles.sellerIcon} />
+            <Text style={styles.sellerNameText}>
+              {details.ownerFirstname} {details.ownerLastname}
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.sellerInfoRow} 
+            activeOpacity={0.7} 
+            onPress={() => makeCall(details.whatsappNumber)}
+          >
+            <Ionicons name="call" size={18} color="#16A34A" style={styles.sellerIcon} />
+            <Text style={styles.sellerPhoneText}>
+              {details.whatsappNumber || "—"}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.sellerInfoRow}>
+            <Ionicons name="mail" size={18} color="#6B7280" style={styles.sellerIcon} />
+            <Text style={styles.sellerEmailText}>
+              {details.ownerEmail || `${details.ownerFirstname?.toLowerCase()}.${details.ownerLastname?.toLowerCase()}@email.com`}
+            </Text>
           </View>
         </View>
 
         {/* Requester Details */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Requester Information</Text>
-          <View className="flex-row items-center justify-between mb-2">
-            <View>
-              <Text style={styles.ownerName}>{details.requestedUserFirstname} {details.requestedUserLastname}</Text>
-              <Text style={styles.ownerRole}>{details.requesterType?.replace(/_/g, " ")}</Text>
+        {details.requestedUserFirstname ? (
+          <View style={styles.newCard}>
+            <View className="flex-row justify-between items-center mb-2">
+              <Text style={styles.newCardTitle}>Requester Details</Text>
+              <View style={styles.requesterTag}>
+                <Text style={styles.requesterTagText}>
+                  {details.requesterType?.replace(/_/g, " ")?.replace(/\b\w/g, c => c.toUpperCase()) || "Buyer"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.sellerInfoRow}>
+              <Ionicons name="person" size={18} color="#1E56A0" style={styles.sellerIcon} />
+              <Text style={styles.sellerNameText}>
+                {details.requestedUserFirstname} {details.requestedUserLastname}
+              </Text>
+            </View>
+
+            <View style={styles.sellerInfoRow}>
+              <Ionicons name="briefcase" size={18} color="#6B7280" style={styles.sellerIcon} />
+              <Text style={styles.sellerEmailText}>
+                {details.requestedUserRole?.replace(/_/g, " ")?.replace(/\b\w/g, c => c.toUpperCase()) || "Consultation"}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Inspection Schedule */}
+        <View style={styles.newCard}>
+          <Text style={styles.newCardTitle}>Inspection Schedule</Text>
+
+          {/* Date Row */}
+          <View style={styles.scheduleItem}>
+            <View style={styles.scheduleIconBox}>
+              <Ionicons name="calendar-sharp" size={20} color="#1E56A0" />
+            </View>
+            <View style={styles.scheduleInfo}>
+              <Text style={styles.scheduleLabel}>Date</Text>
+              <Text style={styles.scheduleValue}>{formatDate(details.scheduledAt)}</Text>
+            </View>
+          </View>
+
+          {/* Time Row */}
+          <View style={styles.scheduleItem}>
+            <View style={styles.scheduleIconBox}>
+              <Ionicons name="time" size={20} color="#1E56A0" />
+            </View>
+            <View style={styles.scheduleInfo}>
+              <Text style={styles.scheduleLabel}>Time</Text>
+              <Text style={styles.scheduleValue}>{formatTime(details.scheduledAt)}</Text>
+            </View>
+          </View>
+
+          {/* Type Row */}
+          <View style={styles.scheduleItem}>
+            <View style={styles.scheduleIconBox}>
+              <Ionicons name="document-text" size={20} color="#1E56A0" />
+            </View>
+            <View style={styles.scheduleInfo}>
+              <Text style={styles.scheduleLabel}>Type</Text>
+              <Text style={styles.scheduleValue}>
+                {details.inspectionType?.replace(/_/g, " ")?.replace(/\b\w/g, c => c.toUpperCase()) || "Consultant"}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Inspection Details */}
-        <View style={styles.card}>
-          <View className="flex-row items-center justify-between mb-3">
-            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Inspection Schedule</Text>
-            <TouchableOpacity style={styles.actionIcon} onPress={openMaps}>
-              <Ionicons name="navigate" size={20} color="#1E56A0" />
+        {/* Inspection Location */}
+        <View style={styles.newCard}>
+          <View className="flex-row justify-between items-center mb-4">
+            <Text style={styles.newCardTitle}>Inspection Location</Text>
+            <TouchableOpacity style={styles.directionButton} activeOpacity={0.8} onPress={openMaps}>
+              <Ionicons name="navigate-sharp" size={16} color="#fff" />
+              <Text style={styles.directionButtonText}>Directions</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="calendar-outline" size={18} color="#6B7280" />
-            <Text style={styles.infoText}>Scheduled: {formatDate(details.scheduledAt)}</Text>
+
+          {/* Address Box */}
+          <View style={styles.addressBox}>
+            <Ionicons name="location" size={22} color="#EF4444" style={styles.addressIcon} />
+            <Text style={styles.addressBoxText}>
+              {details.address ? `${details.address}, ${details.cityName || ""}, ${details.stateName || ""} - ${details.pincode || ""}` : "—"}
+            </Text>
           </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="time-outline" size={18} color="#6B7280" />
-            <Text style={styles.infoText}>Time: {formatTime(details.scheduledAt)}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="document-text-outline" size={18} color="#6B7280" />
-            <Text style={styles.infoText}>Type: {details.inspectionType?.replace(/_/g, " ")}</Text>
-          </View>
-          {details.remarks && (
-            <View style={styles.noteBox}>
-              <Text style={styles.noteTitle}>Instructions:</Text>
-              <Text style={styles.noteText}>{details.remarks}</Text>
+
+          {/* Instructions Alert Box */}
+          {(details.remark || details.remarks) ? (
+            <View style={styles.instructionBox}>
+              <Ionicons name="information-circle" size={20} color="#1E56A0" style={styles.instructionIcon} />
+              <Text style={styles.instructionBoxText}>{details.remark || details.remarks}</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         {/* Images */}
@@ -488,4 +575,180 @@ const styles = StyleSheet.create({
   modalCancelText: { fontSize: 16, fontWeight: "bold", color: "#6B7280" },
   modalConfirm: { flex: 2, height: 48, backgroundColor: "#DC2626", borderRadius: 12, justifyContent: "center", alignItems: "center" },
   modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+  
+  // Premium Card Redesign Styles
+  newCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  newCardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  sellerTag: {
+    backgroundColor: "#DEF7EC",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
+  },
+  sellerTagText: {
+    color: "#03543F",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  sellerInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 14,
+  },
+  sellerIcon: {
+    width: 24,
+    textAlign: "center",
+  },
+  sellerNameText: {
+    fontSize: 15,
+    color: "#4B5563",
+    marginLeft: 10,
+    fontWeight: "500",
+  },
+  sellerPhoneText: {
+    fontSize: 15,
+    color: "#16A34A",
+    marginLeft: 10,
+    fontWeight: "600",
+  },
+  sellerEmailText: {
+    fontSize: 15,
+    color: "#4B5563",
+    marginLeft: 10,
+  },
+  scheduleItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+  },
+  scheduleIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scheduleInfo: {
+    marginLeft: 14,
+  },
+  scheduleLabel: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginBottom: 2,
+    fontWeight: "500",
+  },
+  scheduleValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+  directionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1E56A0",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 100,
+    shadowColor: "#1E56A0",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  directionButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "bold",
+    marginLeft: 6,
+  },
+  addressBox: {
+    flexDirection: "row",
+    backgroundColor: "#FEF2F2",
+    borderLeftWidth: 4,
+    borderLeftColor: "#EF4444",
+    borderRadius: 8,
+    padding: 14,
+    marginTop: 6,
+    alignItems: "flex-start",
+  },
+  addressIcon: {
+    marginTop: 1,
+  },
+  addressBoxText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#374151",
+    marginLeft: 8,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+  instructionBox: {
+    flexDirection: "row",
+    backgroundColor: "#EFF6FF",
+    borderRadius: 8,
+    padding: 14,
+    marginTop: 14,
+    alignItems: "center",
+  },
+  instructionIcon: {},
+  instructionBoxText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#1E56A0",
+    marginLeft: 8,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  specTable: {
+    marginTop: 10,
+  },
+  specRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  specRowLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  specRowValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111827",
+    textAlign: "right",
+  },
+  requesterTag: {
+    backgroundColor: "#DBEAFE",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
+  },
+  requesterTagText: {
+    color: "#1E40AF",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
 });
+
+
+

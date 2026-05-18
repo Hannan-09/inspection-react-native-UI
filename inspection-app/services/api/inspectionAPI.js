@@ -376,7 +376,9 @@ class InspectionAPI {
   async getInspectionReport(id) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.GET_REPORT.replace(":id", id);
+      console.log("Endpoint:", endpoint);
       const response = await apiService.get(endpoint);
+      console.log("Response:", response);
       return response.data || response;
     } catch (error) {
       console.error("Error fetching inspection report:", error);

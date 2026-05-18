@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { useVideoPlayer, VideoView } from "expo-video";
 
 // ── Tap Buttons (Pass / Fail / N/A) ─────────────────────────────────────────
 
@@ -145,6 +146,7 @@ export const NumberInput = ({
   label,
   required,
   unit = "",
+  isReadOnly,
 }) => {
   return (
     <View style={styles.fieldContainer}>
@@ -152,13 +154,14 @@ export const NumberInput = ({
         {label}
         {required && <Text style={styles.required}> *</Text>}
       </Text>
-      <View style={styles.numberInputContainer}>
+      <View style={[styles.numberInputContainer, isReadOnly && { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" }]}>
         <TextInput
-          style={styles.numberInput}
+          style={[styles.numberInput, isReadOnly && { color: "#374151" }]}
           value={value?.toString() || ""}
           onChangeText={(text) => onChange(parseFloat(text) || 0)}
           keyboardType="decimal-pad"
           placeholder="Enter value"
+          editable={!isReadOnly}
         />
         {unit ? <Text style={styles.inputUnit}>{unit}</Text> : null}
       </View>
@@ -174,6 +177,7 @@ export const TextArea = ({
   label,
   required,
   placeholder = "",
+  isReadOnly,
 }) => {
   return (
     <View style={styles.fieldContainer}>
@@ -182,13 +186,14 @@ export const TextArea = ({
         {required && <Text style={styles.required}> *</Text>}
       </Text>
       <TextInput
-        style={styles.textArea}
+        style={[styles.textArea, isReadOnly && { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB", color: "#374151" }]}
         value={value || ""}
         onChangeText={onChange}
         placeholder={placeholder}
         multiline
         numberOfLines={4}
         textAlignVertical="top"
+        editable={!isReadOnly}
       />
     </View>
   );
@@ -216,6 +221,28 @@ export const MiniToggle = ({ value, onChange, label, required }) => {
 
 // ── Media Upload (Photo / Video) ──────────────────────────────────────────────
 
+export const ReadOnlyVideoPlayer = ({ uri }) => {
+  const player = useVideoPlayer(uri, (playerInstance) => {
+    playerInstance.loop = true;
+    playerInstance.muted = false;
+    playerInstance.play();
+  });
+
+  return (
+    <View style={styles.videoPlayerContainer}>
+      <VideoView
+        style={styles.videoPlayer}
+        player={player}
+        allowsFullscreen
+        allowsPictureInPicture
+        nativeControls={true}
+      />
+    </View>
+  );
+};
+
+// ── Media Upload (Photo / Video) ──────────────────────────────────────────────
+
 export const MediaUpload = ({
   value,
   onChange,
@@ -223,6 +250,7 @@ export const MediaUpload = ({
   required,
   type = "photo",
   maxCount,
+  isReadOnly,
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -301,29 +329,37 @@ export const MediaUpload = ({
         {required && <Text style={styles.required}> *</Text>}
       </Text>
 
-      {/* Uploaded previews */}
+      {/* Uploaded previews / video player */}
       {uris.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.previewRow}>
-          {uris.map((uri, index) => (
-            <View key={index} style={styles.previewContainer}>
-              <Image source={{ uri }} style={styles.previewImage} />
-              <TouchableOpacity style={styles.removeButton} onPress={() => removeMedia(index)}>
-                <Ionicons name="close-circle" size={20} color="#DC2626" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
+        isReadOnly && isVideo ? (
+          <ReadOnlyVideoPlayer uri={uris[0]} />
+        ) : (
+          <ScrollView horizontal={!isReadOnly} showsHorizontalScrollIndicator={false} style={styles.previewRow}>
+            {uris.map((uri, index) => (
+              <View key={index} style={[styles.previewContainer, isReadOnly && styles.previewContainerReadOnly]}>
+                <Image source={{ uri }} style={[styles.previewImage, isReadOnly && styles.previewImageReadOnly]} />
+                {!isReadOnly && (
+                  <TouchableOpacity style={styles.removeButton} onPress={() => removeMedia(index)}>
+                    <Ionicons name="close-circle" size={20} color="#DC2626" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        )
       )}
 
       {/* Upload button */}
-      <TouchableOpacity style={styles.uploadButton} onPress={() => setPickerVisible(true)} activeOpacity={0.7}>
-        <Ionicons name={isVideo ? "videocam-outline" : "camera-outline"} size={24} color="#1E56A0" />
-        <Text style={styles.uploadButtonText}>
-          {uris.length > 0 ? "Add More" : "Upload"} {isVideo ? "Video" : "Photo"}
-        </Text>
-      </TouchableOpacity>
+      {!isReadOnly && (
+        <TouchableOpacity style={styles.uploadButton} onPress={() => setPickerVisible(true)} activeOpacity={0.7}>
+          <Ionicons name={isVideo ? "videocam-outline" : "camera-outline"} size={24} color="#1E56A0" />
+          <Text style={styles.uploadButtonText}>
+            {uris.length > 0 ? "Add More" : "Upload"} {isVideo ? "Video" : "Photo"}
+          </Text>
+        </TouchableOpacity>
+      )}
 
-      {uris.length > 0 && (
+      {uris.length > 0 && !isReadOnly && (
         <View style={styles.uploadedIndicator}>
           <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
           <Text style={styles.uploadedText}>
@@ -716,5 +752,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: "#6B7280",
+  },
+  videoPlayerContainer: {
+    width: "100%",
+    height: 220,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#000",
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  videoPlayer: {
+    width: "100%",
+    height: "100%",
+  },
+  previewContainerReadOnly: {
+    marginRight: 0,
+    marginBottom: 10,
+    width: "100%",
+  },
+  previewImageReadOnly: {
+    width: "100%",
+    height: 200,
+    borderRadius: 14,
+    resizeMode: "cover",
   },
 });

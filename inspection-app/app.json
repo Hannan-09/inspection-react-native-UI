@@ -43,7 +43,8 @@
           "photosPermission": "Allow Reecomm Inspector to access your photos for vehicle inspections.",
           "cameraPermission": "Allow Reecomm Inspector to use the camera to capture vehicle photos."
         }
-      ]
+      ],
+      "expo-video"
     ],
     "extra": {
       "router": {},
