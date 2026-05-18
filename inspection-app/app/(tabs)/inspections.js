@@ -163,7 +163,13 @@ export default function InspectionsTab() {
       
       // Only call START api if the status is ACCEPTED
       if (isAccepted) {
-        await inspectionAPI.startInspection(item.id);
+        const t = (item.vehicleType || "").toUpperCase();
+        const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
+        if (cat === "2W") {
+          await inspectionAPI.startInspection2W(item.id);
+        } else {
+          await inspectionAPI.startInspection(item.id);
+        }
       }
       
       // Navigate to the start inspection screen

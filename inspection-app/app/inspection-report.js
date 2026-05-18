@@ -26,7 +26,8 @@ export default function InspectionReportScreen() {
   const loadReport = async () => {
     try {
       setLoading(true);
-      const res = await inspectionAPI.getInspectionReport(inspectionId);
+      const vehicleCategory = params.vehicleCategory || params.vehicleType || "";
+      const res = await inspectionAPI.getInspectionReport(inspectionId, vehicleCategory);
       const data = res.data || res;
       setReport(data);
 

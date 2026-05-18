@@ -162,7 +162,13 @@ export default function InspectionDetailsScreen() {
         setSubmitting(true);
         // Only call the START api if the status is ACCEPTED
         if (details.assignmentStatus?.toUpperCase() === "ACCEPTED") {
-          await inspectionAPI.startInspection(details.id);
+          const t = (details.vehicleType || "").toUpperCase();
+          const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
+          if (cat === "2W") {
+            await inspectionAPI.startInspection2W(details.id);
+          } else {
+            await inspectionAPI.startInspection(details.id);
+          }
         }
         
         // Navigate to the start inspection screen

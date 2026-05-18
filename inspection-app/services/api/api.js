@@ -40,6 +40,57 @@ class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        if (response.status === 401 && !options._retry && endpoint !== API_CONFIG.ENDPOINTS.AUTH.REFRESH && endpoint !== API_CONFIG.ENDPOINTS.AUTH.LOGIN) {
+          const refreshToken = await this.getRefreshToken();
+          if (refreshToken) {
+            try {
+              const refreshUrl = `${this.baseURL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH}`;
+              // Try refreshing token. Usually passed as query param or in body depending on backend.
+              // We'll pass it in header and body just in case, but typically the backend reads a Bearer token or a specific body field.
+              const refreshResponse = await fetch(refreshUrl, {
+                method: "POST",
+                headers: { 
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${refreshToken}`
+                },
+                body: JSON.stringify({ refreshToken })
+              });
+
+              if (refreshResponse.ok) {
+                const refreshData = await refreshResponse.json();
+                // The new token is typically in data.accessToken or directly in accessToken
+                const newAccessToken = refreshData.data?.accessToken || refreshData.accessToken;
+                const newRefreshToken = refreshData.data?.refreshToken || refreshData.refreshToken;
+
+                if (newAccessToken) {
+                  await this.setAuthToken(newAccessToken);
+                  if (newRefreshToken) await this.setRefreshToken(newRefreshToken);
+
+                  // Retry original request
+                  const retryConfig = { ...config, _retry: true };
+                  retryConfig.headers["Authorization"] = `Bearer ${newAccessToken}`;
+                  
+                  const retryController = new AbortController();
+                  const retryTimeoutId = setTimeout(() => retryController.abort(), this.timeout);
+                  const retryResponse = await fetch(url, { ...retryConfig, signal: retryController.signal });
+                  clearTimeout(retryTimeoutId);
+
+                  if (!retryResponse.ok) throw await this.handleError(retryResponse);
+                  return await retryResponse.json();
+                }
+              } else {
+                // If refresh fails, clear tokens
+                await this.clearAll();
+              }
+            } catch (refreshErr) {
+              console.error("Token refresh failed", refreshErr);
+              await this.clearAll();
+            }
+          } else {
+             // No refresh token available
+             await this.clearAll();
+          }
+        }
         throw await this.handleError(response);
       }
 

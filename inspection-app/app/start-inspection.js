@@ -12,8 +12,8 @@ import inspectionSchema4W from "../reecomm_inspection_4W.json";
 // ── Normalizers ────────────────────────────────────────────────────────────────
 const normalizeCategory = (vehicleType) => {
   const t = (vehicleType || "").toUpperCase();
-  if (t.includes("FOUR") || t === "4W") return "4W";
-  if (t.includes("TWO") || t === "2W") return "2W";
+  if (t.includes("FOUR") || t === "4W" || t.includes("4")) return "4W";
+  if (t.includes("TWO") || t === "2W" || t.includes("2")) return "2W";
   return "4W";
 };
 
@@ -55,24 +55,27 @@ export default function StartInspectionScreen() {
 
   // Normalize values from API params
   const resolvedCategory = normalizeCategory(params.vehicleCategory || params.vehicleType);
-  const resolvedSubtype  = normalizeSubtype(params.vehicleSubtype || params.vehicleSubType, resolvedCategory);
+  const resolvedSubtype = normalizeSubtype(params.vehicleSubtype || params.vehicleSubType, resolvedCategory);
   const resolvedFuelType = normalizeFuelType(params.fuelType);
 
-  const hasPrefilledData = !!(params.vehicleSubtype || params.vehicleSubType) && !!params.fuelType;
+  const isElectric = (params.fuelType || "").toUpperCase().includes("ELECTRIC") || (params.fuelType || "").toUpperCase() === "EV";
+  const hasPrefilledData = isElectric 
+    ? !!params.fuelType 
+    : (!!(params.vehicleSubtype || params.vehicleSubType) && !!params.fuelType);
 
   const schema = resolvedCategory === "4W" ? inspectionSchema4W : inspectionSchema2W;
 
   // Manual selection state (fallback only when data not pre-filled)
   const [vehicleSubtype, setVehicleSubtype] = useState(hasPrefilledData ? resolvedSubtype : null);
-  const [fuelType, setFuelType]             = useState(hasPrefilledData ? resolvedFuelType : null);
-  const [currentStep, setCurrentStep]       = useState(hasPrefilledData ? "inspection_form" : "vehicle_selection");
+  const [fuelType, setFuelType] = useState(hasPrefilledData ? resolvedFuelType : null);
+  const [currentStep, setCurrentStep] = useState(hasPrefilledData ? "inspection_form" : "vehicle_selection");
   const [sectionProgress, setSectionProgress] = useState({});
-  const [submitting, setSubmitting]           = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const vehicleDisplay = {
-    makerName:  params.makerName  || "",
-    modelName:  params.modelName  || "",
-    regNumber:  params.regNumber  || "",
+    makerName: params.makerName || "",
+    modelName: params.modelName || "",
+    regNumber: params.regNumber || "",
   };
 
   useEffect(() => {
@@ -97,8 +100,8 @@ export default function StartInspectionScreen() {
 
   // ── Section List ──────────────────────────────────────────────────────────────
   const getSections = () => {
-    const isEV  = (fuelType || resolvedFuelType) === "EV (Electric)";
-    const is4W  = resolvedCategory === "4W";
+    const isEV = (fuelType || resolvedFuelType) === "EV (Electric)";
+    const is4W = resolvedCategory === "4W";
 
     const list = [
       {
@@ -107,8 +110,8 @@ export default function StartInspectionScreen() {
         label: isEV ? "Battery & EV Powertrain" : "Engine & Powertrain",
         icon: isEV ? "flash" : "settings",
       },
-      { id: "section_2", key: "section_2_mechanical",             label: "Mechanical Components",   icon: "construct" },
-      { id: "section_3", key: "section_3_exterior_panels",        label: "Exterior Panels",          icon: "car-sport" },
+      { id: "section_2", key: "section_2_mechanical", label: "Mechanical Components", icon: "construct" },
+      { id: "section_3", key: "section_3_exterior_panels", label: "Exterior Panels", icon: "car-sport" },
       {
         id: "section_4",
         key: "section_4_glass_exterior_electronics",
@@ -121,11 +124,11 @@ export default function StartInspectionScreen() {
         label: is4W ? "Interior & Cabin" : "Comfort & Electronics",
         icon: is4W ? "home" : "phone-portrait",
       },
-      { id: "section_6", key: "section_6_structural_history",     label: "Structural History",       icon: "shield-checkmark" },
-      { id: "section_7", key: "section_7_tyres",                  label: "Tyres",                    icon: "ellipse" },
+      { id: "section_6", key: "section_6_structural_history", label: "Structural History", icon: "shield-checkmark" },
+      { id: "section_7", key: "section_7_tyres", label: "Tyres", icon: "ellipse" },
       ...(!isEV ? [{ id: "section_8", key: "section_8_obd_diagnostics", label: "OBD / Diagnostics", icon: "hardware-chip" }] : []),
-      { id: "section_9",  key: "section_9_modifications", label: "Modification Check",      icon: "build" },
-      { id: "section_10", key: "section_10_media",        label: "Media & Documentation",   icon: "images" },
+      { id: "section_9", key: "section_9_modifications", label: "Modification Check", icon: "build" },
+      { id: "section_10", key: "section_10_media", label: "Media & Documentation", icon: "images" },
     ];
     return list;
   };
@@ -150,8 +153,12 @@ export default function StartInspectionScreen() {
   const doSubmit = async () => {
     try {
       setSubmitting(true);
-      await inspectionAPI.submitInspection(inspectionId);
-      
+      if (resolvedCategory === "2W") {
+        await inspectionAPI.submitInspection2W(inspectionId);
+      } else {
+        await inspectionAPI.submitInspection(inspectionId);
+      }
+
       // Clear local storage for this inspection
       try {
         const sections = getSections();
@@ -177,7 +184,7 @@ export default function StartInspectionScreen() {
 
   // ── Vehicle Selection (manual fallback) ───────────────────────────────────────
   const renderVehicleSelection = () => {
-    const subtypes  = schema.supported_subtypes  || [];
+    const subtypes = schema.supported_subtypes || [];
     const fuelTypes = schema.supported_fuel_types || [];
 
     return (
@@ -274,11 +281,11 @@ export default function StartInspectionScreen() {
 
   // ── Inspection Form (section list) ────────────────────────────────────────────
   const renderInspectionForm = () => {
-    const sections       = getSections();
+    const sections = getSections();
     const completedCount = sections.filter((s) => sectionProgress[s.key] === "completed").length;
-    const progressPct    = Math.round((completedCount / sections.length) * 100);
+    const progressPct = Math.round((completedCount / sections.length) * 100);
     const activeFuelType = fuelType || resolvedFuelType;
-    const activeSubtype  = vehicleSubtype || resolvedSubtype;
+    const activeSubtype = vehicleSubtype || resolvedSubtype;
 
     return (
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -359,9 +366,9 @@ export default function StartInspectionScreen() {
           })}
         </View>
 
-        <TouchableOpacity 
-          style={[styles.submitButton, submitting && { opacity: 0.7 }]} 
-          onPress={handleSubmit} 
+        <TouchableOpacity
+          style={[styles.submitButton, submitting && { opacity: 0.7 }]}
+          onPress={handleSubmit}
           activeOpacity={0.7}
           disabled={submitting}
         >

@@ -14,8 +14,8 @@ import { inspectionAPI } from "../services/api/inspectionAPI";
 // ── Normalizers ────────────────────────────────────────────────────────────────
 const normalizeCategory = (vehicleType) => {
   const t = (vehicleType || "").toUpperCase();
-  if (t.includes("FOUR") || t === "4W") return "4W";
-  if (t.includes("TWO") || t === "2W") return "2W";
+  if (t.includes("FOUR") || t === "4W" || t.includes("4")) return "4W";
+  if (t.includes("TWO") || t === "2W" || t.includes("2")) return "2W";
   return "4W";
 };
 
@@ -59,11 +59,11 @@ export default function InspectionSectionScreen() {
       setLoading(true);
       try {
         if (isReadOnly) {
-          const res = await inspectionAPI.getInspectionReport(inspectionId);
+          const res = await inspectionAPI.getInspectionReport(inspectionId, vehicleCategory);
           const report = res.data || res;
           if (report.fuelType) setFuelType(normalizeFuelType(report.fuelType));
           if (report.vehicleSubType) setSubType(report.vehicleSubType);
-          const mappedData = mapReportToSectionState(report, sectionKey);
+          const mappedData = mapReportToSectionState(report, sectionKey, vehicleCategory);
           setFormData(mappedData);
         } else {
           const saved = await AsyncStorage.getItem(storageKey);
@@ -85,9 +85,38 @@ export default function InspectionSectionScreen() {
     return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
   };
 
-  const mapReportToSectionState = (report, key) => {
+  const mapReportToSectionState = (report, key, category) => {
     if (key === "section_1_engine_powertrain") {
       const s = report.engineAndPowertrain || {};
+      if (category === "2W") {
+        return {
+          engine_sound_video: s.engineSoundVideo,
+          overheating: normalizeEnum(s.overheating),
+          misfiring_smoke: normalizeEnum(s.misfiringSmoke),
+          back_compression: normalizeEnum(s.backCompression),
+          oil_leakage: normalizeEnum(s.oilLeakage),
+          coolant_leakage: normalizeEnum(s.coolantLeakage),
+          engine_mount_condition: normalizeEnum(s.engineMountCondition),
+          exhaust_leaks: normalizeEnum(s.exhaustLeaks),
+          fuel_lines: normalizeEnum(s.fuelLines),
+          fuel_tank: normalizeEnum(s.fuelTank),
+          gaskets_and_seals: normalizeEnum(s.gasketsAndSeals),
+          wiring_harness: normalizeEnum(s.wiringHarness),
+          wiring_harness_photo: s.wiringHarnessPhoto || null,
+          battery_voltage: normalizeEnum(s.batteryVoltage),
+          battery_voltage_value: s.batteryVoltageValue?.toString(),
+          alternator_starter: normalizeEnum(s.alternatorStarter),
+          gear_shifting: normalizeEnum(s.gearShifting),
+          gearbox_leaks: normalizeEnum(s.gearboxLeaks),
+          clutch_life_percent: s.clutchLifePercent,
+          exhaust_condition: normalizeEnum(s.exhaustCondition),
+          carburetor_or_injector: normalizeEnum(s.carburetorOrInjector),
+          battery_and_voltage: normalizeEnum(s.batteryAndVoltage),
+          self_start_functioning: normalizeEnum(s.selfStartFunctioning),
+          chain_sprocket_condition: normalizeEnum(s.chainSprocketCondition),
+          clutch_condition: normalizeEnum(s.clutchCondition)
+        };
+      }
       return {
         engine_sound_video: s.engineSoundVideo,
         overheating: normalizeEnum(s.overheating),
@@ -104,6 +133,7 @@ export default function InspectionSectionScreen() {
         fuel_lines: normalizeEnum(s.fuelLines),
         fuel_rails_injectors: normalizeEnum(s.fuelRailsInjectors),
         wiring_harness: normalizeEnum(s.wiringHarness),
+        wiring_harness_photo: s.wiringHarnessPhoto || null,
         battery_voltage: normalizeEnum(s.batteryVoltage),
         battery_voltage_value: s.batteryVoltageValue?.toString(),
         alternator_starter: normalizeEnum(s.alternatorStarter),
@@ -122,24 +152,43 @@ export default function InspectionSectionScreen() {
         battery_pack_condition: normalizeEnum(s.batteryPackCondition),
         battery_thermal_cooling: normalizeEnum(s.batteryThermalCooling),
         charging_port_condition: normalizeEnum(s.chargingPortCondition),
+        charging_port_condition_photo: s.chargingPortPhoto || null,
         bms_warning_light: normalizeEnum(s.bmsWarningLight),
         range_indicator_functional: normalizeEnum(s.rangeIndicatorFunctional),
         motor_noise_vibration: normalizeEnum(s.motorNoiseVibration),
         regenerative_braking_active: normalizeEnum(s.regenerativeBrakingActive),
         hv_wiring_harness: normalizeEnum(s.hvWiringHarness),
+        hv_wiring_harness_photo: s.hvWiringHarnessPhoto || null,
         dc_dc_converter: normalizeEnum(s.dcDcConverter),
         onboard_charger_status: normalizeEnum(s.onboardChargerStatus)
       };
     }
     if (key === "section_2_mechanical") {
       const s = report.mechanical || {};
+      if (category === "2W") {
+        return {
+          steering_performance: normalizeEnum(s.steeringPerformance),
+          front_fork_condition: normalizeEnum(s.frontForkCondition),
+          rear_shock_condition: normalizeEnum(s.rearShockCondition),
+          rear_shock_condition_photo: s.rearShockConditionPhoto || null,
+          swingarm_bushings: normalizeEnum(s.swingarmBushings),
+          suspension_noise: normalizeEnum(s.suspensionNoise),
+          front_brake_condition: normalizeEnum(s.frontBrakeCondition),
+          front_brake_condition_photo: s.frontBrakeConditionPhoto || null,
+          rear_brake_condition: normalizeEnum(s.rearBrakeCondition),
+          brake_pad_life_percent: s.brakePadLifePercent,
+          brake_cables_or_lines: normalizeEnum(s.brakeCablesOrLines)
+        };
+      }
       return {
         steering_performance: normalizeEnum(s.steeringPerformance),
         steering_rack_leakage: normalizeEnum(s.steeringRackLeakage),
         shocks_struts: normalizeEnum(s.shocksStruts),
+        shocks_struts_photo: s.shocksStrutsPhoto || null,
         ball_joints_bushes: normalizeEnum(s.ballJointsBushes),
         suspension_noise: normalizeEnum(s.suspensionNoise),
         disc_drum_brake_condition: normalizeEnum(s.discDrumBrakeCondition),
+        disc_drum_brake_condition_photo: s.discDrumBrakePhoto || null,
         brake_pad_life_percent: s.brakePadLifePercent,
         brake_fluid_lines: normalizeEnum(s.brakeFluidLines),
         abs_warning_light: normalizeEnum(s.absWarningLight)
@@ -162,17 +211,38 @@ export default function InspectionSectionScreen() {
     }
     if (key === "section_4_glass_exterior_electronics") {
       const s = report.glassAndExteriorElectronics || {};
+      if (category === "2W") {
+        return {
+          headlight_condition: normalizeEnum(s.headlightCondition),
+          tail_light_indicators: normalizeEnum(s.tailLightIndicators),
+          speedometer_cluster: normalizeEnum(s.speedometerCluster),
+          mirrors: normalizeEnum(s.mirrors),
+          visor_windshield: normalizeEnum(s.visorWindshield)
+        };
+      }
       return {
         glass_scratches: normalizeEnum(s.glassScratches),
         glass_cracks_chips: normalizeEnum(s.glassCracksChips),
+        glass_cracks_chips_photo: s.glassCracksChipsPhoto || null,
         side_mirrors: normalizeEnum(s.sideMirrors),
         parking_sensors: normalizeEnum(s.parkingSensors),
         exterior_lights_all: normalizeEnum(s.exteriorLightsAll),
         wipers_washers: normalizeEnum(s.wipersWashers)
       };
     }
-    if (key === "section_5_interior_cabin") {
-      const s = report.interiorAndCabin || {};
+    if (key === "section_5_interior_cabin" || key === "section_5_comfort_electronics") {
+      const s = report.interiorAndCabin || report.comfortAndElectronics || {};
+      if (category === "2W") {
+        return {
+          horn: normalizeEnum(s.horn),
+          usb_charging_port: normalizeEnum(s.usbChargingPort),
+          instrument_cluster_display: normalizeEnum(s.instrumentClusterDisplay),
+          mobile_connectivity_tft: normalizeEnum(s.mobileConnectivityTft),
+          seat_condition: normalizeEnum(s.seatCondition),
+          grab_rail_pillion: normalizeEnum(s.grabRailPillion),
+          storage_box_underseat: normalizeEnum(s.storageBoxUnderseat)
+        };
+      }
       return {
         ac_cooling_heating: normalizeEnum(s.acCoolingHeating),
         ac_compressor: normalizeEnum(s.acCompressor),
@@ -186,15 +256,30 @@ export default function InspectionSectionScreen() {
         reverse_camera_sensors: normalizeEnum(s.reverseCameraSensors),
         seat_condition: normalizeEnum(s.seatCondition),
         dashboard_condition: normalizeEnum(s.dashboardCondition),
-        water_flood_damage_signs: normalizeEnum(s.waterFloodDamageSigns)
+        water_flood_damage_signs: normalizeEnum(s.waterFloodDamageSigns),
+        water_flood_damage_signs_photo: s.waterFloodDamagePhoto || null
       };
     }
     if (key === "section_6_structural_history") {
       const s = report.structuralHistory || {};
+      if (category === "2W") {
+        return {
+          frame_condition: normalizeEnum(s.frameCondition),
+          frame_condition_photo: s.frameConditionPhoto || null,
+          accident_repair_visible: normalizeEnum(s.accidentRepairVisible),
+          flood_damage_confirmed: normalizeEnum(s.floodDamageConfirmed),
+          chassis_number_intact: normalizeEnum(s.chassisNumberIntact),
+          chassis_number_intact_photo: s.chassisNumberIntactPhoto || null,
+          engine_number_intact: normalizeEnum(s.engineNumberIntact),
+          engine_number_intact_photo: s.engineNumberIntactPhoto || null
+        };
+      }
       return {
         structural_damage: normalizeEnum(s.structuralDamage),
+        structural_damage_photo: s.structuralDamagePhoto || null,
         flood_damage_confirmed: normalizeEnum(s.floodDamageConfirmed),
         underbody_condition: normalizeEnum(s.underbodyCondition),
+        underbody_condition_photo: s.underbodyConditionPhoto || null,
         chassis_alignment: normalizeEnum(s.chassisAlignment)
       };
     }
@@ -261,8 +346,12 @@ export default function InspectionSectionScreen() {
       return {
         engine_or_motor_running_video: s.engineOrMotorRunningVideo,
         test_drive_video: s.testDriveVideo,
+        test_ride_video: s.testRideVideo,
         underbody_photos: s.underbodyPhotos || [],
-        major_dent_photos: s.majorDentPhotos || []
+        major_dent_photos: s.majorDentPhotos || [],
+        chassis_number_photo: s.chassisNumberPhoto,
+        engine_number_photo: s.engineNumberPhoto,
+        full_vehicle_walkaround_photos: s.fullVehicleWalkaroundPhotos || []
       };
     }
     return {};
@@ -283,8 +372,36 @@ export default function InspectionSectionScreen() {
     return val.toUpperCase();
   };
 
-  const mapEngineData = (data) => {
-
+  const mapEngineData = (data, category) => {
+    if (category === "2W") {
+      return {
+        engineSoundVideo: data.engine_sound_video || null,
+        overheating: mapEnum(data.overheating),
+        misfiringSmoke: mapEnum(data.misfiring_smoke),
+        backCompression: mapEnum(data.back_compression),
+        oilLeakage: mapEnum(data.oil_leakage),
+        coolantLeakage: mapEnum(data.coolant_leakage),
+        engineMountCondition: mapEnum(data.engine_mount_condition),
+        exhaustLeaks: mapEnum(data.exhaust_leaks),
+        fuelLines: mapEnum(data.fuel_lines),
+        fuelTank: mapEnum(data.fuel_tank),
+        gasketsAndSeals: mapEnum(data.gaskets_and_seals),
+        wiringHarness: mapEnum(data.wiring_harness),
+        wiringHarnessPhoto: data.wiring_harness_photo || null,
+        batteryVoltage: mapEnum(data.battery_voltage),
+        batteryVoltageValue: data.battery_voltage_value ? parseFloat(data.battery_voltage_value) : null,
+        alternatorStarter: mapEnum(data.alternator_starter),
+        gearShifting: mapEnum(data.gear_shifting),
+        gearboxLeaks: mapEnum(data.gearbox_leaks),
+        clutchLifePercent: data.clutch_life_percent ? parseInt(data.clutch_life_percent) : null,
+        exhaustCondition: mapEnum(data.exhaust_condition),
+        carburetorOrInjector: mapEnum(data.carburetor_or_injector),
+        batteryAndVoltage: mapEnum(data.battery_and_voltage),
+        selfStartFunctioning: mapEnum(data.self_start_functioning),
+        chainSprocketCondition: mapEnum(data.chain_sprocket_condition),
+        clutchCondition: mapEnum(data.clutch_condition)
+      };
+    }
     return {
       engineSoundVideo: data.engine_sound_video || null,
       overheating: mapEnum(data.overheating),
@@ -301,6 +418,7 @@ export default function InspectionSectionScreen() {
       fuelLines: mapEnum(data.fuel_lines),
       fuelRailsInjectors: mapEnum(data.fuel_rails_injectors),
       wiringHarness: mapEnum(data.wiring_harness),
+      wiringHarnessPhoto: data.wiring_harness_photo || null,
       batteryVoltage: mapEnum(data.battery_voltage),
       batteryVoltageValue: data.battery_voltage_value ? parseFloat(data.battery_voltage_value) : null,
       alternatorStarter: mapEnum(data.alternator_starter),
@@ -320,24 +438,43 @@ export default function InspectionSectionScreen() {
       batteryPackCondition: mapEnum(data.battery_pack_condition),
       batteryThermalCooling: mapEnum(data.battery_thermal_cooling),
       chargingPortCondition: mapEnum(data.charging_port_condition),
+      chargingPortPhoto: data.charging_port_condition_photo || null,
       bmsWarningLight: mapEnum(data.bms_warning_light),
       rangeIndicatorFunctional: mapEnum(data.range_indicator_functional),
       motorNoiseVibration: mapEnum(data.motor_noise_vibration),
       regenerativeBrakingActive: mapEnum(data.regenerative_braking_active),
       hvWiringHarness: mapEnum(data.hv_wiring_harness),
+      hvWiringHarnessPhoto: data.hv_wiring_harness_photo || null,
       dcDcConverter: mapEnum(data.dc_dc_converter),
       onboardChargerStatus: mapEnum(data.onboard_charger_status)
     };
   };
 
-  const mapMechanicalData = (data) => {
+  const mapMechanicalData = (data, category) => {
+    if (category === "2W") {
+      return {
+        steeringPerformance: mapEnum(data.steering_performance),
+        frontForkCondition: mapEnum(data.front_fork_condition),
+        rearShockCondition: mapEnum(data.rear_shock_condition),
+        rearShockConditionPhoto: data.rear_shock_condition_photo || null,
+        swingarmBushings: mapEnum(data.swingarm_bushings),
+        suspensionNoise: mapEnum(data.suspension_noise),
+        frontBrakeCondition: mapEnum(data.front_brake_condition),
+        frontBrakeConditionPhoto: data.front_brake_condition_photo || null,
+        rearBrakeCondition: mapEnum(data.rear_brake_condition),
+        brakePadLifePercent: data.brake_pad_life_percent ? parseInt(data.brake_pad_life_percent) : null,
+        brakeCablesOrLines: mapEnum(data.brake_cables_or_lines)
+      };
+    }
     return {
       steeringPerformance: mapEnum(data.steering_performance),
       steeringRackLeakage: mapEnum(data.steering_rack_leakage),
       shocksStruts: mapEnum(data.shocks_struts),
+      shocksStrutsPhoto: data.shocks_struts_photo || null,
       ballJointsBushes: mapEnum(data.ball_joints_bushes),
       suspensionNoise: mapEnum(data.suspension_noise),
       discDrumBrakeCondition: mapEnum(data.disc_drum_brake_condition),
+      discDrumBrakePhoto: data.disc_drum_brake_condition_photo || null,
       brakePadLifePercent: data.brake_pad_life_percent ? parseInt(data.brake_pad_life_percent) : null,
       brakeFluidLines: mapEnum(data.brake_fluid_lines),
       absWarningLight: mapEnum(data.abs_warning_light)
@@ -370,10 +507,20 @@ export default function InspectionSectionScreen() {
     return { panels, photos };
   };
 
-  const mapGlassExteriorData = (data) => {
+  const mapGlassExteriorData = (data, category) => {
+    if (category === "2W") {
+      return {
+        headlightCondition: mapEnum(data.headlight_condition),
+        tailLightIndicators: mapEnum(data.tail_light_indicators),
+        speedometerCluster: mapEnum(data.speedometer_cluster),
+        mirrors: mapEnum(data.mirrors),
+        visorWindshield: mapEnum(data.visor_windshield)
+      };
+    }
     return {
       glassScratches: mapEnum(data.glass_scratches),
       glassCracksChips: mapEnum(data.glass_cracks_chips),
+      glassCracksChipsPhoto: data.glass_cracks_chips_photo || null,
       sideMirrors: mapEnum(data.side_mirrors),
       parkingSensors: mapEnum(data.parking_sensors),
       exteriorLightsAll: mapEnum(data.exterior_lights_all),
@@ -381,7 +528,18 @@ export default function InspectionSectionScreen() {
     };
   };
 
-  const mapInteriorCabinData = (data) => {
+  const mapInteriorCabinData = (data, category) => {
+    if (category === "2W") {
+      return {
+        horn: mapEnum(data.horn),
+        usbChargingPort: mapEnum(data.usb_charging_port),
+        instrumentClusterDisplay: mapEnum(data.instrument_cluster_display),
+        mobileConnectivityTft: mapEnum(data.mobile_connectivity_tft),
+        seatCondition: mapEnum(data.seat_condition),
+        grabRailPillion: mapEnum(data.grab_rail_pillion),
+        storageBoxUnderseat: mapEnum(data.storage_box_underseat)
+      };
+    }
     return {
       acCoolingHeating: mapEnum(data.ac_cooling_heating),
       acCompressor: mapEnum(data.ac_compressor),
@@ -395,15 +553,30 @@ export default function InspectionSectionScreen() {
       reverseCameraSensors: mapEnum(data.reverse_camera_sensors),
       seatCondition: mapEnum(data.seat_condition),
       dashboardCondition: mapEnum(data.dashboard_condition),
-      waterFloodDamageSigns: mapEnum(data.water_flood_damage_signs)
+      waterFloodDamageSigns: mapEnum(data.water_flood_damage_signs),
+      waterFloodDamagePhoto: data.water_flood_damage_signs_photo || null
     };
   };
 
-  const mapStructuralHistoryData = (data) => {
+  const mapStructuralHistoryData = (data, category) => {
+    if (category === "2W") {
+      return {
+        frameCondition: mapEnum(data.frame_condition),
+        frameConditionPhoto: data.frame_condition_photo || null,
+        accidentRepairVisible: mapEnum(data.accident_repair_visible),
+        floodDamageConfirmed: mapEnum(data.flood_damage_confirmed),
+        chassisNumberIntact: mapEnum(data.chassis_number_intact),
+        chassisNumberIntactPhoto: data.chassis_number_intact_photo || null,
+        engineNumberIntact: mapEnum(data.engine_number_intact),
+        engineNumberIntactPhoto: data.engine_number_intact_photo || null
+      };
+    }
     return {
       structuralDamage: mapEnum(data.structural_damage),
+      structuralDamagePhoto: data.structural_damage_photo || null,
       floodDamageConfirmed: mapEnum(data.flood_damage_confirmed),
       underbodyCondition: mapEnum(data.underbody_condition),
+      underbodyConditionPhoto: data.underbody_condition_photo || null,
       chassisAlignment: mapEnum(data.chassis_alignment)
     };
   };
@@ -413,7 +586,9 @@ export default function InspectionSectionScreen() {
       "Front Left": "frontLeft",
       "Front Right": "frontRight",
       "Rear Left": "rearLeft",
-      "Rear Right": "rearRight"
+      "Rear Right": "rearRight",
+      "Front": "front",
+      "Rear": "rear"
     };
 
     const payload = {
@@ -435,7 +610,7 @@ export default function InspectionSectionScreen() {
   const mapObdData = (data) => {
     return {
       obdScanDone: mapEnum(data.obd_scan_done),
-      errorCodesPresent: !!data.error_codes_present,
+      errorCodesPresent: data.error_codes_present === true,
       errorCodeDetails: data.error_code_details || null,
       emissionStatus: mapEnum(data.emission_status)
     };
@@ -475,7 +650,20 @@ export default function InspectionSectionScreen() {
     };
   };
 
-  const mapMediaData = (data) => {
+  const mapMediaData = (data, category) => {
+    if (category === "2W") {
+      return {
+        engineOrMotorRunningVideo: data.engine_or_motor_running_video || null,
+        testRideVideo: data.test_ride_video || null,
+        chassisNumberPhoto: data.chassis_number_photo || null,
+        engineNumberPhoto: data.engine_number_photo || null,
+        fullVehicleWalkaroundPhotos: data.full_vehicle_walkaround_photos
+          ? (Array.isArray(data.full_vehicle_walkaround_photos)
+              ? data.full_vehicle_walkaround_photos
+              : [data.full_vehicle_walkaround_photos])
+          : []
+      };
+    }
     return {
       engineOrMotorRunningVideo: data.engine_or_motor_running_video || null,
       testDriveVideo: data.test_drive_video || null,
@@ -490,40 +678,51 @@ export default function InspectionSectionScreen() {
       // 1. Save to local storage for persistence
       await AsyncStorage.setItem(storageKey, JSON.stringify(formData));
 
-      // 2. Call API if it's section_1_engine_powertrain or section_1_ev_battery
-      if (sectionKey === "section_1_engine_powertrain" && vehicleCategory === "4W") {
-        const payload = mapEngineData(formData);
-        await inspectionAPI.saveSectionEngine(inspectionId, payload);
-      } else if (sectionKey === "section_1_ev_battery" && vehicleCategory === "4W") {
+      // 2. Call API based on sectionKey
+      if (sectionKey === "section_1_engine_powertrain") {
+        const payload = mapEngineData(formData, vehicleCategory);
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionEngine2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionEngine(inspectionId, payload);
+      } else if (sectionKey === "section_1_ev_battery") {
         const payload = mapEvBatteryData(formData);
-        await inspectionAPI.saveSectionEvBattery(inspectionId, payload);
-      } else if (sectionKey === "section_2_mechanical" && vehicleCategory === "4W") {
-        const payload = mapMechanicalData(formData);
-        await inspectionAPI.saveSectionMechanical(inspectionId, payload);
-      } else if (sectionKey === "section_3_exterior_panels" && vehicleCategory === "4W") {
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionEvBattery2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionEvBattery(inspectionId, payload);
+      } else if (sectionKey === "section_2_mechanical") {
+        const payload = mapMechanicalData(formData, vehicleCategory);
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionMechanical2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionMechanical(inspectionId, payload);
+      } else if (sectionKey === "section_3_exterior_panels") {
         const payload = mapExteriorPanelsData(formData, sectionData.panels);
-        await inspectionAPI.saveSectionExteriorPanels(inspectionId, payload);
-      } else if (sectionKey === "section_4_glass_exterior_electronics" && vehicleCategory === "4W") {
-        const payload = mapGlassExteriorData(formData);
-        await inspectionAPI.saveSectionGlassExterior(inspectionId, payload);
-      } else if (sectionKey === "section_5_interior_cabin" && vehicleCategory === "4W") {
-        const payload = mapInteriorCabinData(formData);
-        await inspectionAPI.saveSectionInteriorCabin(inspectionId, payload);
-      } else if (sectionKey === "section_6_structural_history" && vehicleCategory === "4W") {
-        const payload = mapStructuralHistoryData(formData);
-        await inspectionAPI.saveSectionStructuralHistory(inspectionId, payload);
-      } else if (sectionKey === "section_7_tyres" && vehicleCategory === "4W") {
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionExteriorPanels2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionExteriorPanels(inspectionId, payload);
+      } else if (sectionKey === "section_4_glass_exterior_electronics") {
+        const payload = mapGlassExteriorData(formData, vehicleCategory);
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionGlassExterior2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionGlassExterior(inspectionId, payload);
+      } else if (sectionKey === "section_5_interior_cabin" || sectionKey === "section_5_comfort_electronics") {
+        const payload = mapInteriorCabinData(formData, vehicleCategory);
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionInteriorCabin2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionInteriorCabin(inspectionId, payload);
+      } else if (sectionKey === "section_6_structural_history") {
+        const payload = mapStructuralHistoryData(formData, vehicleCategory);
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionStructuralHistory2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionStructuralHistory(inspectionId, payload);
+      } else if (sectionKey === "section_7_tyres") {
         const payload = mapTyresData(formData);
-        await inspectionAPI.saveSectionTyres(inspectionId, payload);
-      } else if (sectionKey === "section_8_obd_diagnostics" && vehicleCategory === "4W") {
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionTyres2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionTyres(inspectionId, payload);
+      } else if (sectionKey === "section_8_obd_diagnostics") {
         const payload = mapObdData(formData);
-        await inspectionAPI.saveSectionObd(inspectionId, payload);
-      } else if (sectionKey === "section_9_modifications" && vehicleCategory === "4W") {
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionObd2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionObd(inspectionId, payload);
+      } else if (sectionKey === "section_9_modifications") {
         const payload = mapModificationsData(formData);
-        await inspectionAPI.saveSectionModifications(inspectionId, payload);
-      } else if (sectionKey === "section_10_media" && vehicleCategory === "4W") {
-        const payload = mapMediaData(formData);
-        await inspectionAPI.saveSectionMedia(inspectionId, payload);
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionModifications2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionModifications(inspectionId, payload);
+      } else if (sectionKey === "section_10_media") {
+        const payload = mapMediaData(formData, vehicleCategory);
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionMedia2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionMedia(inspectionId, payload);
       }
 
       // 3. Update progress locally
@@ -590,11 +789,15 @@ export default function InspectionSectionScreen() {
     // 3. Conditional Show check
     if (fieldConfig.conditional_show) {
       try {
-        const parts = fieldConfig.conditional_show.split(" ");
+        const parts = fieldConfig.conditional_show.split(/\s+/);
         if (parts.length === 3) {
           const [condField, condOp, condVal] = parts;
           const actualVal = formData[condField];
           
+          if (fieldName === "error_code_details") {
+            console.log("[OBD Debug] field:", fieldName, "condField:", condField, "actualVal:", actualVal, "type:", typeof actualVal, "parts:", parts);
+          }
+
           if (condOp === "===") {
             // Handle boolean strings in schema
             let target = condVal;
@@ -604,6 +807,10 @@ export default function InspectionSectionScreen() {
 
             const normActual = String(actualVal !== undefined && actualVal !== null ? actualVal : "").trim().toLowerCase();
             const normTarget = String(target !== undefined && target !== null ? target : "").trim().toLowerCase();
+
+            if (fieldName === "error_code_details") {
+              console.log("[OBD Debug] normActual:", normActual, "normTarget:", normTarget, "match:", normActual === normTarget);
+            }
 
             if (normActual !== normTarget) return false;
           }
@@ -617,36 +824,36 @@ export default function InspectionSectionScreen() {
   }, [fuelType, subType, vehicleCategory, formData]);
 
   // ── Generic field renderer ────────────────────────────────────────────────────
-  const renderField = useCallback((fieldName, fieldConfig, value, onChange) => {
+  const renderField = useCallback((fieldName, fieldConfig, value, onChange, photoValue, onPhotoChange) => {
     if (!shouldShowField(fieldName, fieldConfig)) return null;
 
     const label = toLabel(fieldName);
     const isVideo = fieldName.toLowerCase().includes("video") || fieldConfig.description?.toLowerCase().includes("video");
 
+    let inputComponent = null;
+
     if (fieldConfig.type === "media_url") {
-      return (
+      inputComponent = (
         <MediaUpload key={fieldName} label={label} value={value} onChange={onChange}
           required={fieldConfig.required}
           type={isVideo ? "video" : "photo"}
           maxCount={isVideo ? 1 : undefined}
           isReadOnly={isReadOnly} />
       );
-    }
-    if (fieldConfig.type === "array" && fieldConfig.items?.type === "media_url") {
-      return (
+    } else if (fieldConfig.type === "array" && fieldConfig.items?.type === "media_url") {
+      inputComponent = (
         <MediaUpload key={fieldName} label={label} value={value} onChange={onChange}
           required={fieldConfig.required} type="photo"
           isReadOnly={isReadOnly} />
       );
-    }
-    if (fieldConfig.input_ui === "tap_buttons") {
+    } else if (fieldConfig.input_ui === "tap_buttons") {
       const isBool = fieldConfig.type === "boolean";
       const opts = isBool ? ["True", "False", "N/A"] : ["Pass", "Fail", "N/A"];
       const displayVal = isBool 
         ? (value === true ? "True" : value === false ? "False" : (value === "NA" ? "N/A" : value))
         : value;
 
-      return (
+      inputComponent = (
         <TapButtons 
           key={fieldName} 
           label={label} 
@@ -662,31 +869,55 @@ export default function InspectionSectionScreen() {
           required={fieldConfig.required} 
         />
       );
-    }
-    if (fieldConfig.input_ui === "condition_buttons") {
-      return <ConditionButtons key={fieldName} label={label} value={value} onChange={onChange} required={fieldConfig.required} />;
-    }
-    if (fieldConfig.input_ui === "mini_buttons" || (fieldConfig.enum && !fieldConfig.input_ui)) {
-      return (
+    } else if (fieldConfig.input_ui === "condition_buttons") {
+      inputComponent = <ConditionButtons key={fieldName} label={label} value={value} onChange={onChange} required={fieldConfig.required} />;
+    } else if (fieldConfig.input_ui === "mini_buttons" || (fieldConfig.enum && !fieldConfig.input_ui)) {
+      inputComponent = (
         <View key={fieldName} style={styles.fieldWrap}>
           <Text style={styles.fieldLabel}>{label}{fieldConfig.required && <Text style={{ color: "#EF4444" }}> *</Text>}</Text>
           <EnumRow options={fieldConfig.enum} value={value} onChange={onChange} />
         </View>
       );
+    } else if (fieldConfig.input_ui === "mini_toggle" || fieldConfig.type === "boolean") {
+      inputComponent = <MiniToggle key={fieldName} label={label} value={value} onChange={onChange} />;
+    } else if (fieldConfig.input_ui === "slider") {
+      inputComponent = <SliderInput key={fieldName} label={label} value={value} onChange={onChange} unit={fieldConfig.unit || "%"} />;
+    } else if (fieldConfig.input_ui === "number_input" || fieldConfig.type === "number" || fieldConfig.type === "integer") {
+      inputComponent = <NumberInput key={fieldName} label={label} value={value} onChange={onChange} unit={fieldConfig.unit || ""} isReadOnly={isReadOnly} />;
+    } else if (fieldConfig.input_ui === "textarea" || fieldConfig.type === "string") {
+      inputComponent = <TextArea key={fieldName} label={label} value={value} onChange={onChange} placeholder={fieldConfig.description || ""} isReadOnly={isReadOnly} />;
     }
-    if (fieldConfig.input_ui === "mini_toggle" || fieldConfig.type === "boolean") {
-      return <MiniToggle key={fieldName} label={label} value={value} onChange={onChange} />;
+
+    // Determine if conditional photo is required
+    let showPhotoUpload = false;
+    if (fieldConfig.photo_required === true) {
+      showPhotoUpload = true;
+    } else if (fieldConfig.photo_required_on_fail === true) {
+      showPhotoUpload = value === "Fail" || value === "Minor" || value === "Major";
+    } else if (fieldConfig.photo_required_if_not_none === true) {
+      showPhotoUpload = value !== undefined && value !== null && value !== "" && value !== "None";
+    } else if (fieldConfig.photo_required_if_true === true) {
+      showPhotoUpload = value === true;
     }
-    if (fieldConfig.input_ui === "slider") {
-      return <SliderInput key={fieldName} label={label} value={value} onChange={onChange} unit={fieldConfig.unit || "%"} />;
+
+    if (showPhotoUpload && onPhotoChange) {
+      const photoLabel = `Photo - ${label}`;
+      return (
+        <View key={fieldName} style={{ marginBottom: 12 }}>
+          {inputComponent}
+          <MediaUpload
+            label={photoLabel}
+            value={photoValue}
+            onChange={onPhotoChange}
+            required={true}
+            type="photo"
+            isReadOnly={isReadOnly}
+          />
+        </View>
+      );
     }
-    if (fieldConfig.input_ui === "number_input" || fieldConfig.type === "number" || fieldConfig.type === "integer") {
-      return <NumberInput key={fieldName} label={label} value={value} onChange={onChange} unit={fieldConfig.unit || ""} isReadOnly={isReadOnly} />;
-    }
-    if (fieldConfig.input_ui === "textarea" || fieldConfig.type === "string") {
-      return <TextArea key={fieldName} label={label} value={value} onChange={onChange} placeholder={fieldConfig.description || ""} isReadOnly={isReadOnly} />;
-    }
-    return null;
+
+    return inputComponent;
   }, [styles, shouldShowField, isReadOnly]);
 
   // ── Optimized Section Components ─────────────────────────────────────────────
@@ -866,12 +1097,24 @@ export default function InspectionSectionScreen() {
                 </View>
                 {Object.entries(itemFields).map(([fk, fc]) => {
                   const val = item[fk];
-                  return renderField(fk, fc, val, (v) => {
-                    if (isReadOnly) return;
-                    const updated = [...modItems];
-                    updated[idx] = { ...updated[idx], [fk]: v };
-                    update("modification_items", updated);
-                  });
+                  return renderField(
+                    fk, 
+                    fc, 
+                    val, 
+                    (v) => {
+                      if (isReadOnly) return;
+                      const updated = [...modItems];
+                      updated[idx] = { ...updated[idx], [fk]: v };
+                      update("modification_items", updated);
+                    },
+                    item[`${fk}_photo`],
+                    (v) => {
+                      if (isReadOnly) return;
+                      const updated = [...modItems];
+                      updated[idx] = { ...updated[idx], [`${fk}_photo`]: v };
+                      update("modification_items", updated);
+                    }
+                  );
                 })}
               </View>
             ))}
@@ -897,7 +1140,14 @@ export default function InspectionSectionScreen() {
               </View>
               <ScrollView showsVerticalScrollIndicator={false}>
                 {Object.entries(itemFields).map(([fk, fc]) =>
-                  renderField(fk, fc, newMod[fk], (v) => setNewMod(prev => ({ ...prev, [fk]: v })))
+                  renderField(
+                    fk, 
+                    fc, 
+                    newMod[fk], 
+                    (v) => setNewMod(prev => ({ ...prev, [fk]: v })),
+                    newMod[`${fk}_photo`],
+                    (v) => setNewMod(prev => ({ ...prev, [`${fk}_photo`]: v }))
+                  )
                 )}
                 <View style={{ height: 20 }} />
               </ScrollView>
@@ -931,7 +1181,14 @@ export default function InspectionSectionScreen() {
         <View style={styles.formCard}>
           {Object.entries(sectionData.fields).map(([fk, fc]) => (
             <View key={fk}>
-              {renderField(fk, fc, formData[fk], (val) => update(fk, val))}
+              {renderField(
+                fk, 
+                fc, 
+                formData[fk], 
+                (val) => update(fk, val),
+                formData[`${fk}_photo`],
+                (val) => update(`${fk}_photo`, val)
+              )}
               {fc.note && <Text style={styles.fieldNote}>{fc.note}</Text>}
             </View>
           ))}
