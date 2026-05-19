@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../services/api/inspectionAPI";
+import { populateInspectionStorage } from "../utils/reportMapper";
 
 const LoadingImage = ({ uri, style, ...props }) => {
   const [imageLoading, setImageLoading] = useState(false);
@@ -55,6 +56,8 @@ export default function InspectionDetailsScreen() {
         return { bg: "#DCFCE7", text: "#166534" };
       case "REJECTED":
         return { bg: "#FEE2E2", text: "#991B1B" };
+      case "REQUEST_CHANGES":
+        return { bg: "#FFEDD5", text: "#C2410C" };
       default:
         return { bg: "#F3F4F6", text: "#6B7280" };
     }
@@ -139,6 +142,8 @@ export default function InspectionDetailsScreen() {
   };
 
   const handleMainAction = async () => {
+    const isRequestChanges = details.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES";
+
     if (details.assignmentStatus === "ASSIGNED") {
       try {
         setSubmitting(true);
@@ -160,14 +165,25 @@ export default function InspectionDetailsScreen() {
     } else {
       try {
         setSubmitting(true);
+        const t = (details.vehicleType || "").toUpperCase();
+        const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
+
         // Only call the START api if the status is ACCEPTED
         if (details.assignmentStatus?.toUpperCase() === "ACCEPTED") {
-          const t = (details.vehicleType || "").toUpperCase();
-          const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
           if (cat === "2W") {
             await inspectionAPI.startInspection2W(details.id);
           } else {
             await inspectionAPI.startInspection(details.id);
+          }
+        }
+
+        // Pre-populate AsyncStorage if editing an inspection under REQUEST_CHANGES
+        if (isRequestChanges) {
+          try {
+            await populateInspectionStorage(inspectionAPI, details.id, cat, details.fuelType);
+          } catch (populateErr) {
+            console.error("AsyncStorage populate error:", populateErr);
+            Alert.alert("Error", "Failed to load prefilled inspection report details. Starting with a blank form.");
           }
         }
         
@@ -492,6 +508,23 @@ export default function InspectionDetailsScreen() {
           >
             <Ionicons name="document-text" size={22} color="#fff" />
             <Text style={styles.acceptButtonText}>View Inspection Report</Text>
+          </TouchableOpacity>
+        )}
+
+        {details.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES" && (
+          <TouchableOpacity 
+            style={[styles.acceptButton, { marginLeft: 0, backgroundColor: "#D97706" }]} 
+            onPress={handleMainAction}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="create-outline" size={22} color="#fff" />
+                <Text style={styles.acceptButtonText}>Edit & Resubmit</Text>
+              </>
+            )}
           </TouchableOpacity>
         )}
 

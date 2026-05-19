@@ -8,6 +8,7 @@ import {
   Alert,
   ScrollView,
   Modal,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -337,7 +338,34 @@ export const MediaUpload = ({
           <ScrollView horizontal={!isReadOnly} showsHorizontalScrollIndicator={false} style={styles.previewRow}>
             {uris.map((uri, index) => (
               <View key={index} style={[styles.previewContainer, isReadOnly && styles.previewContainerReadOnly]}>
-                <Image source={{ uri }} style={[styles.previewImage, isReadOnly && styles.previewImageReadOnly]} />
+                {isVideo ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (uri) {
+                        Linking.openURL(uri).catch((err) =>
+                          Alert.alert("Error", "Cannot open video link")
+                        );
+                      }
+                    }}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.previewImage,
+                      isReadOnly && styles.previewImageReadOnly,
+                      {
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "#111827",
+                        borderWidth: 1,
+                        borderColor: "#374151",
+                      },
+                    ]}
+                  >
+                    <Ionicons name="play-circle" size={32} color="#1E56A0" />
+                    <Text style={{ color: "#E5E7EB", fontSize: 10, marginTop: 4, fontWeight: "600" }}>Play Video</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Image source={{ uri }} style={[styles.previewImage, isReadOnly && styles.previewImageReadOnly]} />
+                )}
                 {!isReadOnly && (
                   <TouchableOpacity style={styles.removeButton} onPress={() => removeMedia(index)}>
                     <Ionicons name="close-circle" size={20} color="#DC2626" />

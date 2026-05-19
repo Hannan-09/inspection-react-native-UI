@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
+import { populateInspectionStorage } from "../../utils/reportMapper";
 
 export default function InspectionsTab() {
   const router = useRouter();
@@ -48,6 +49,7 @@ export default function InspectionsTab() {
     submitted: "SUBMITTED",
     completed: "COMPLETED",
     rejected: "REJECTED",
+    request_changes: "REQUEST_CHANGES",
   };
 
   // Refresh when tab changes OR when screen comes into focus
@@ -157,18 +159,30 @@ export default function InspectionsTab() {
 
   const handleStartInspection = async (item) => {
     const isAccepted = item.assignmentStatus?.toUpperCase() === "ACCEPTED";
+    const isRequestChanges = item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES";
     
     try {
       setSubmittingId(item.id);
       
+      const t = (item.vehicleType || "").toUpperCase();
+      const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
+
       // Only call START api if the status is ACCEPTED
       if (isAccepted) {
-        const t = (item.vehicleType || "").toUpperCase();
-        const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
         if (cat === "2W") {
           await inspectionAPI.startInspection2W(item.id);
         } else {
           await inspectionAPI.startInspection(item.id);
+        }
+      }
+
+      // Pre-populate AsyncStorage if editing an inspection under REQUEST_CHANGES
+      if (isRequestChanges) {
+        try {
+          await populateInspectionStorage(inspectionAPI, item.id, cat, item.fuelType);
+        } catch (populateErr) {
+          console.error("AsyncStorage populate error:", populateErr);
+          Alert.alert("Error", "Failed to load prefilled inspection report details. Starting with a blank form.");
         }
       }
       
@@ -217,17 +231,19 @@ export default function InspectionsTab() {
     submitted: 0,
     completed: 0,
     rejected: 0,
+    request_changes: 0,
   });
 
   const loadTabCounts = async () => {
     try {
-      const [pRes, aRes, oRes, sRes, cRes, rRes] = await Promise.all([
+      const [pRes, aRes, oRes, sRes, cRes, rRes, rcRes] = await Promise.all([
         inspectionAPI.getAssignedInspections(1, 1, "ASSIGNED"),
         inspectionAPI.getAssignedInspections(1, 1, "ACCEPTED"),
         inspectionAPI.getAssignedInspections(1, 1, "IN_PROGRESS"),
         inspectionAPI.getAssignedInspections(1, 1, "SUBMITTED"),
         inspectionAPI.getAssignedInspections(1, 1, "COMPLETED"),
         inspectionAPI.getAssignedInspections(1, 1, "REJECTED"),
+        inspectionAPI.getAssignedInspections(1, 1, "REQUEST_CHANGES"),
       ]);
 
       setTabCounts({
@@ -237,6 +253,7 @@ export default function InspectionsTab() {
         submitted: sRes?.pageResponse?.totalElements || 0,
         completed: cRes?.pageResponse?.totalElements || 0,
         rejected: rRes?.pageResponse?.totalElements || 0,
+        request_changes: rcRes?.pageResponse?.totalElements || 0,
       });
     } catch (error) {
       console.log("Error loading tab counts:", error);
@@ -249,7 +266,8 @@ export default function InspectionsTab() {
     ongoing: ongoingCount, 
     submitted: submittedCount, 
     completed: completedCount, 
-    rejected: rejectedCount 
+    rejected: rejectedCount,
+    request_changes: requestChangesCount
   } = tabCounts;
 
   const getStatusColor = (status) => {
@@ -269,6 +287,8 @@ export default function InspectionsTab() {
         return { bg: "#F0FDF4", text: "#15803D", icon: "send-outline" };
       case "rejected":
         return { bg: "#FEE2E2", text: "#991B1B", icon: "close-circle" };
+      case "request_changes":
+        return { bg: "#FFEDD5", text: "#C2410C", icon: "alert-circle-outline" };
       default:
         return { bg: "#F3F4F6", text: "#6B7280", icon: "help-circle" };
     }
@@ -384,14 +404,14 @@ export default function InspectionsTab() {
             </>
           )}
           
-          {((item.assignmentStatus?.toUpperCase() === "IN_PROGRESS") || (item.assignmentStatus?.toUpperCase() === "ACCEPTED")) && (
+          {((item.assignmentStatus?.toUpperCase() === "IN_PROGRESS") || (item.assignmentStatus?.toUpperCase() === "ACCEPTED") || (item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES")) && (
             <>
-              <TouchableOpacity 
+              {/* <TouchableOpacity 
                 style={styles.cardRejectButton} 
                 onPress={() => handleRejectPress(item.id)}
               >
                 <Text style={styles.cardRejectButtonText}>Reject</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity 
                 style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]} 
                 onPress={() => handleStartInspection(item)}
@@ -401,7 +421,11 @@ export default function InspectionsTab() {
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <Text style={styles.cardAcceptButtonText}>
-                    {item.assignmentStatus?.toUpperCase() === "IN_PROGRESS" ? "Continue to Inspection" : "Start Inspection"}
+                    {item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES" 
+                      ? "Edit & Resubmit" 
+                      : item.assignmentStatus?.toUpperCase() === "IN_PROGRESS" 
+                        ? "Continue to Inspection" 
+                        : "Start Inspection"}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -444,6 +468,20 @@ export default function InspectionsTab() {
             <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
             <Text className="ml-2 flex-1" style={styles.rejectionText}>
               {item.rejectionReason || "No reason provided"}
+            </Text>
+          </View>
+        )}
+
+        {/* Request Changes Remarks */}
+        {activeTab === "request_changes" && item.assignmentStatus === "REQUEST_CHANGES" && (
+          <View
+            className="mt-3 flex-row items-start"
+            style={styles.remarksBox}
+          >
+            <Ionicons name="alert-circle-outline" size={16} color="#D97706" />
+            <Text className="ml-2 flex-1" style={styles.remarksText}>
+              <Text style={{ fontWeight: "bold" }}>Remarks: </Text>
+              {item.remark || "No remarks provided"}
             </Text>
           </View>
         )}
@@ -590,6 +628,38 @@ export default function InspectionsTab() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              onPress={() => setActiveTab("request_changes")}
+              style={[styles.tab, activeTab === "request_changes" && styles.activeTab]}
+            >
+              <Text
+                className="font-semibold"
+                style={[
+                  styles.tabText,
+                  activeTab === "request_changes" && styles.activeTabText,
+                ]}
+              >
+                Request Change
+              </Text>
+              {requestChangesCount > 0 && (
+                <View
+                  style={[
+                    styles.badge,
+                    activeTab === "request_changes" && styles.activeBadge,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      activeTab === "request_changes" && styles.activeBadgeText,
+                    ]}
+                  >
+                    {requestChangesCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
               onPress={() => setActiveTab("submitted")}
               style={[styles.tab, activeTab === "submitted" && styles.activeTab]}
             >
@@ -713,9 +783,12 @@ export default function InspectionsTab() {
     [
       activeTab,
       pendingCount,
+      acceptedCount,
       ongoingCount,
+      submittedCount,
       completedCount,
       rejectedCount,
+      requestChangesCount,
       scrollMetrics,
     ],
   );
@@ -999,6 +1072,17 @@ const styles = StyleSheet.create({
   rejectionText: {
     fontSize: 12,
     color: "#991B1B",
+  },
+  remarksBox: {
+    backgroundColor: "#FFFBEB",
+    borderRadius: 8,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: "#D97706",
+  },
+  remarksText: {
+    fontSize: 12,
+    color: "#B45309",
   },
   loadingText: {
     fontSize: 16,
