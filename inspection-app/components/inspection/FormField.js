@@ -11,7 +11,7 @@ import {
   Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { useVideoPlayer, VideoView } from "expo-video";
 
@@ -39,7 +39,13 @@ export const TapButtons = ({ value, onChange, label, required, options = ["Pass"
                 isPassType && isSelected && styles.passSelected,
                 isFailType && isSelected && styles.failSelected,
               ]}
-              onPress={() => onChange(option)}
+              onPress={() => {
+                if (value === option) {
+                  onChange(null);
+                } else {
+                  onChange(option);
+                }
+              }}
               activeOpacity={0.7}
             >
               <Text
@@ -80,7 +86,13 @@ export const ConditionButtons = ({ value, onChange, label, required }) => {
               option === "Minor" && value === option && styles.minorSelected,
               option === "Major" && value === option && styles.majorSelected,
             ]}
-            onPress={() => onChange(option)}
+            onPress={() => {
+              if (value === option) {
+                onChange(null);
+              } else {
+                onChange(option);
+              }
+            }}
             activeOpacity={0.7}
           >
             <Text
@@ -149,6 +161,30 @@ export const NumberInput = ({
   unit = "",
   isReadOnly,
 }) => {
+  const [localText, setLocalText] = useState(value !== undefined && value !== null ? value.toString() : "");
+
+  // Sync from prop changes (e.g. initial load)
+  useEffect(() => {
+    const propStr = value !== undefined && value !== null ? value.toString() : "";
+    const propNum = parseFloat(propStr);
+    const localNum = parseFloat(localText);
+    if ((isNaN(propNum) && localText !== "") || propNum !== localNum) {
+      setLocalText(propStr);
+    }
+  }, [value]);
+
+  const handleChangeText = (text) => {
+    setLocalText(text);
+    if (text === "") {
+      onChange(null);
+    } else {
+      const num = parseFloat(text);
+      if (!isNaN(num)) {
+        onChange(num);
+      }
+    }
+  };
+
   return (
     <View style={styles.fieldContainer}>
       <Text style={styles.fieldLabel}>
@@ -158,8 +194,8 @@ export const NumberInput = ({
       <View style={[styles.numberInputContainer, isReadOnly && { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" }]}>
         <TextInput
           style={[styles.numberInput, isReadOnly && { color: "#374151" }]}
-          value={value?.toString() || ""}
-          onChangeText={(text) => onChange(parseFloat(text) || 0)}
+          value={localText}
+          onChangeText={handleChangeText}
           keyboardType="decimal-pad"
           placeholder="Enter value"
           editable={!isReadOnly}
@@ -332,40 +368,20 @@ export const MediaUpload = ({
 
       {/* Uploaded previews / video player */}
       {uris.length > 0 && (
-        isReadOnly && isVideo ? (
-          <ReadOnlyVideoPlayer uri={uris[0]} />
+        isVideo ? (
+          <View style={styles.videoPlayerWrapper}>
+            <ReadOnlyVideoPlayer uri={uris[0]} />
+            {!isReadOnly && (
+              <TouchableOpacity style={styles.videoRemoveButton} onPress={() => removeMedia(0)}>
+                <Ionicons name="close-circle" size={26} color="#DC2626" />
+              </TouchableOpacity>
+            )}
+          </View>
         ) : (
           <ScrollView horizontal={!isReadOnly} showsHorizontalScrollIndicator={false} style={styles.previewRow}>
             {uris.map((uri, index) => (
               <View key={index} style={[styles.previewContainer, isReadOnly && styles.previewContainerReadOnly]}>
-                {isVideo ? (
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (uri) {
-                        Linking.openURL(uri).catch((err) =>
-                          Alert.alert("Error", "Cannot open video link")
-                        );
-                      }
-                    }}
-                    activeOpacity={0.7}
-                    style={[
-                      styles.previewImage,
-                      isReadOnly && styles.previewImageReadOnly,
-                      {
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: "#111827",
-                        borderWidth: 1,
-                        borderColor: "#374151",
-                      },
-                    ]}
-                  >
-                    <Ionicons name="play-circle" size={32} color="#1E56A0" />
-                    <Text style={{ color: "#E5E7EB", fontSize: 10, marginTop: 4, fontWeight: "600" }}>Play Video</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <Image source={{ uri }} style={[styles.previewImage, isReadOnly && styles.previewImageReadOnly]} />
-                )}
+                <Image source={{ uri }} style={[styles.previewImage, isReadOnly && styles.previewImageReadOnly]} />
                 {!isReadOnly && (
                   <TouchableOpacity style={styles.removeButton} onPress={() => removeMedia(index)}>
                     <Ionicons name="close-circle" size={20} color="#DC2626" />
@@ -424,17 +440,6 @@ export const MediaUpload = ({
               <View style={styles.pickerOptionText}>
                 <Text style={styles.pickerOptionTitle}>Camera</Text>
                 <Text style={styles.pickerOptionSub}>{isVideo ? "Record a new video" : "Take a new photo"}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.pickerOption} onPress={pickFromLibrary} activeOpacity={0.7}>
-              <View style={[styles.pickerOptionIcon, { backgroundColor: "#F0FDF4" }]}>
-                <Ionicons name={isVideo ? "film-outline" : "images-outline"} size={22} color="#16A34A" />
-              </View>
-              <View style={styles.pickerOptionText}>
-                <Text style={styles.pickerOptionTitle}>{isVideo ? "Video Library" : "Photo Library"}</Text>
-                <Text style={styles.pickerOptionSub}>Choose from your device</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
             </TouchableOpacity>
@@ -794,6 +799,25 @@ const styles = StyleSheet.create({
   videoPlayer: {
     width: "100%",
     height: "100%",
+  },
+  videoPlayerWrapper: {
+    position: "relative",
+    width: "100%",
+    marginBottom: 10,
+  },
+  videoRemoveButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 10,
   },
   previewContainerReadOnly: {
     marginRight: 0,

@@ -27,8 +27,40 @@ const normalizeFuelType = (fuelType) => {
   if (f === "LPG") return "LPG";
   if (f === "HYBRID") return "Hybrid";
   if (f.includes("ELECTRIC") || f === "EV") return "EV (Electric)";
-  return fuelType || "Petrol";
 };
+
+// ── Optimized Section Components ─────────────────────────────────────────────
+const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, renderField }) => {
+  return (
+    <View style={styles.panelCard}>
+      <View style={styles.panelHeader}>
+        <View style={styles.panelHeaderIcon}>
+          <Ionicons name="car-sport-outline" size={18} color="#1E56A0" />
+        </View>
+        <Text style={styles.panelTitle}>{panelName}</Text>
+      </View>
+      {Object.entries(perPanelFields).map(([fk, fc]) =>
+        renderField(fk, fc, panelData[fk], (val) => onUpdate(fk, val))
+      )}
+    </View>
+  );
+});
+
+const TyreCard = memo(({ pos, tyreData, perTyreFields, onUpdate, renderField }) => {
+  return (
+    <View style={styles.panelCard}>
+      <View style={styles.panelHeader}>
+        <View style={[styles.panelHeaderIcon, { backgroundColor: "#FEF3C7" }]}>
+          <Ionicons name="ellipse-outline" size={18} color="#F59E0B" />
+        </View>
+        <Text style={styles.panelTitle}>{pos} Tyre</Text>
+      </View>
+      {Object.entries(perTyreFields).map(([fk, fc]) =>
+        renderField(fk, fc, tyreData[fk], (val) => onUpdate(fk, val))
+      )}
+    </View>
+  );
+});
 
 export default function InspectionSectionScreen() {
   const params = useLocalSearchParams();
@@ -751,7 +783,7 @@ export default function InspectionSectionScreen() {
           <TouchableOpacity
             key={opt}
             style={[styles.enumBtn, sel && { backgroundColor: color || "#1E56A0", borderColor: color || "#1E56A0" }]}
-            onPress={() => !isReadOnly && onChange(opt)}
+            onPress={() => !isReadOnly && onChange(sel ? null : opt)}
             activeOpacity={isReadOnly ? 1 : 0.7}
           >
             <Text style={[styles.enumBtnText, sel && { color: "#fff" }]}>{opt}</Text>
@@ -860,7 +892,9 @@ export default function InspectionSectionScreen() {
           options={opts}
           value={displayVal} 
           onChange={(v) => {
-            if (isBool) {
+            if (v === null) {
+              onChange(null);
+            } else if (isBool) {
               onChange(v === "True" ? true : v === "False" ? false : "NA");
             } else {
               onChange(v);
@@ -920,38 +954,7 @@ export default function InspectionSectionScreen() {
     return inputComponent;
   }, [styles, shouldShowField, isReadOnly]);
 
-  // ── Optimized Section Components ─────────────────────────────────────────────
-  const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, renderField }) => {
-    return (
-      <View style={styles.panelCard}>
-        <View style={styles.panelHeader}>
-          <View style={styles.panelHeaderIcon}>
-            <Ionicons name="car-sport-outline" size={18} color="#1E56A0" />
-          </View>
-          <Text style={styles.panelTitle}>{panelName}</Text>
-        </View>
-        {Object.entries(perPanelFields).map(([fk, fc]) =>
-          renderField(fk, fc, panelData[fk], (val) => onUpdate(fk, val))
-        )}
-      </View>
-    );
-  });
 
-  const TyreCard = memo(({ pos, tyreData, perTyreFields, onUpdate, renderField }) => {
-    return (
-      <View style={styles.panelCard}>
-        <View style={styles.panelHeader}>
-          <View style={[styles.panelHeaderIcon, { backgroundColor: "#FEF3C7" }]}>
-            <Ionicons name="ellipse-outline" size={18} color="#F59E0B" />
-          </View>
-          <Text style={styles.panelTitle}>{pos} Tyre</Text>
-        </View>
-        {Object.entries(perTyreFields).map(([fk, fc]) =>
-          renderField(fk, fc, tyreData[fk], (val) => onUpdate(fk, val))
-        )}
-      </View>
-    );
-  });
 
   // ── Section 3: Panel Inspection ───────────────────────────────────────────────
   const renderPanelSection = () => {
