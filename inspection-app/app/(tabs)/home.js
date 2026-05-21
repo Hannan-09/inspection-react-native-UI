@@ -15,6 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
+import { apiService } from "../../services/api/api";
+import { COLORS } from "../../constants";
 
 export default function HomeTab() {
   const router = useRouter();
@@ -33,9 +35,36 @@ export default function HomeTab() {
   const [rejectReason, setRejectReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // User profile states
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+
   useEffect(() => {
     loadData();
+    fetchUserData();
   }, []);
+
+  const fetchUserData = async () => {
+    try {
+      // 1. Try cached data first
+      const cached = await apiService.getUserData();
+      if (cached) {
+        setFirstName(cached.firstname || "");
+        setLastName(cached.lastname || "");
+      }
+
+      // 2. Refresh from API
+      const fresh = await apiService.get("/api/v1/website/vehicle/inspector/profile");
+      if (fresh?.data) {
+        const profile = fresh.data;
+        setFirstName(profile.firstname || "");
+        setLastName(profile.lastname || "");
+        await apiService.setUserData(profile);
+      }
+    } catch (error) {
+      console.log("Error loading user profile in home:", error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -266,18 +295,20 @@ export default function HomeTab() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#1E56A0"]}
-            tintColor="#1E56A0"
+            colors={[COLORS.fourth]}
+            tintColor={COLORS.fourth}
           />
         }
       >
         {/* Stylish Greeting */}
         <View style={styles.greetingSection}>
           <View style={styles.greetingCard}>
-            <Text style={styles.welcomeText}>Welcome to</Text>
+            <Text style={styles.welcomeText}>Welcome Back</Text>
             <View style={styles.brandContainer}>
-              <Text style={styles.brandTextPrimary}>Reecomm</Text>
-              <Text style={styles.brandTextSecondary}>Inspections</Text>
+              <Text style={styles.brandTextPrimary}>{firstName || "Inspector"}</Text>
+              {lastName ? (
+                <Text style={styles.brandTextSecondary}>{lastName}</Text>
+              ) : null}
             </View>
             <View style={styles.decorativeLine} />
           </View>
@@ -380,36 +411,36 @@ export default function HomeTab() {
 const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalContent: { backgroundColor: "#fff", borderRadius: 16, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 16 },
-  modalLabel: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 8 },
-  modalInput: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
+  modalContent: { backgroundColor: COLORS.primary, borderRadius: 16, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: COLORS.secondary, marginBottom: 16 },
+  modalLabel: { fontSize: 14, fontWeight: "600", color: COLORS.secondary, marginBottom: 8 },
+  modalInput: { borderWidth: 1, borderColor: COLORS.third, borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
   modalCancel: { flex: 1, height: 48, justifyContent: "center", alignItems: "center" },
-  modalCancelText: { fontSize: 16, fontWeight: "bold", color: "#6B7280" },
-  modalConfirm: { flex: 2, height: 48, backgroundColor: "#DC2626", borderRadius: 12, justifyContent: "center", alignItems: "center" },
-  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+  modalCancelText: { fontSize: 16, fontWeight: "bold", color: COLORS.gray600 },
+  modalConfirm: { flex: 2, height: 48, backgroundColor: COLORS.danger, borderRadius: 12, justifyContent: "center", alignItems: "center" },
+  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary },
   
   // Card Actions
   cardActions: { flexDirection: "row", marginTop: 12, gap: 10 },
-  cardRejectButton: { flex: 1, height: 36, backgroundColor: "#F3F4F6", borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardRejectButtonText: { color: "#4B5563", fontSize: 13, fontWeight: "600" },
-  cardAcceptButton: { flex: 1, height: 36, backgroundColor: "#1E56A0", borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardAcceptButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  cardRejectButton: { flex: 1, height: 36, backgroundColor: COLORS.gray100, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardRejectButtonText: { color: COLORS.gray700, fontSize: 13, fontWeight: "600" },
+  cardAcceptButton: { flex: 1, height: 36, backgroundColor: COLORS.fourth, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardAcceptButtonText: { color: COLORS.primary, fontSize: 13, fontWeight: "600" },
 
   container: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.gray50,
   },
   greetingSection: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.gray50,
   },
   greetingCard: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderRadius: 24,
     padding: 24,
-    shadowColor: "#1E56A0",
+    shadowColor: COLORS.fourth,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -417,7 +448,7 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: COLORS.third,
     fontWeight: "600",
     letterSpacing: 2,
     textTransform: "uppercase",
@@ -429,21 +460,21 @@ const styles = StyleSheet.create({
   brandTextPrimary: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#1E56A0",
+    color: COLORS.secondary,
     letterSpacing: -0.5,
     lineHeight: 42,
   },
   brandTextSecondary: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#3B82F6",
+    color: COLORS.fourth,
     letterSpacing: -0.5,
     lineHeight: 42,
   },
   decorativeLine: {
     width: 60,
     height: 4,
-    backgroundColor: "#F59E0B",
+    backgroundColor: COLORS.warning,
     borderRadius: 2,
     marginTop: 12,
   },
@@ -470,12 +501,12 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 13,
-    color: "#6B7280",
+    color: COLORS.gray600,
     fontWeight: "600",
   },
   sectionHeader: {
@@ -489,18 +520,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   viewAllText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1E56A0",
+    color: COLORS.fourth,
   },
   recentInspections: {
     paddingHorizontal: 16,
   },
   inspectionCard: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -513,12 +544,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   cardNumber: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#1E56A0",
+    color: COLORS.fourth,
     marginTop: 2,
   },
   pendingBadge: {
@@ -551,7 +582,7 @@ const styles = StyleSheet.create({
   },
   cardDetail: {
     fontSize: 12,
-    color: "#6B7280",
+    color: COLORS.gray600,
     marginLeft: 6,
     flex: 1,
   },
@@ -562,7 +593,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: COLORS.third,
     marginTop: 12,
   },
 });

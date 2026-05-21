@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { authAPI } from "../services/api/authAPI";
+import { COLORS } from "../constants";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -92,7 +93,7 @@ export default function LoginScreen() {
                 className="items-center justify-center"
                 style={styles.logoBorder}
               >
-                <Ionicons name="clipboard-outline" size={50} color="#1E56A0" />
+                <Ionicons name="clipboard-outline" size={50} color={COLORS.fourth} />
               </View>
               <Text className="font-semibold" style={styles.welcomeText}>
                 Reecomm Inspector
@@ -146,7 +147,7 @@ export default function LoginScreen() {
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
                   size={22}
-                  color="#999"
+                  color={COLORS.third}
                 />
               </TouchableOpacity>
             </View>
@@ -159,7 +160,7 @@ export default function LoginScreen() {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={COLORS.primary} size="small" />
               ) : (
                 <Text
                   className="text-white font-bold"
@@ -189,7 +190,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#E9EEF7",
+    backgroundColor: COLORS.gray100,
   },
   scrollContent: {
     flexGrow: 1,
@@ -207,17 +208,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 20,
     elevation: 10,
+    backgroundColor: COLORS.primary,
   },
   logoBorder: {
     width: 100,
     height: 100,
     borderRadius: 50,
     borderWidth: 5,
-    borderColor: "#1E56A0",
+    borderColor: COLORS.fourth,
   },
   welcomeText: {
     fontSize: 30,
-    color: "#111",
+    color: COLORS.secondary,
     marginTop: 25,
   },
   tabButton: {
@@ -225,10 +227,10 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 16,
-    color: "#666",
+    color: COLORS.textSecondary,
   },
   tabTextActive: {
-    color: "#1E56A0",
+    color: COLORS.fourth,
   },
   tabIndicator: {
     position: "absolute",
@@ -236,28 +238,28 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: "#1E56A0",
+    backgroundColor: COLORS.fourth,
   },
   inputContainer: {
-    backgroundColor: "#F5F6FA",
+    backgroundColor: COLORS.gray50,
     borderRadius: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: "#ECECEC",
+    borderColor: COLORS.gray200,
   },
   input: {
     height: 55,
     fontSize: 16,
-    color: "#111",
+    color: COLORS.secondary,
   },
   passwordInput: {
     flex: 1,
     height: 55,
     fontSize: 16,
-    color: "#111",
+    color: COLORS.secondary,
   },
   loginButton: {
-    backgroundColor: "#1E56A0",
+    backgroundColor: COLORS.fourth,
     height: 55,
     borderRadius: 12,
   },
@@ -266,10 +268,11 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     fontSize: 16,
+    color: COLORS.primary,
     letterSpacing: 1,
   },
   forgotText: {
-    color: "#1E56A0",
+    color: COLORS.fourth,
     textAlign: "center",
   },
 });

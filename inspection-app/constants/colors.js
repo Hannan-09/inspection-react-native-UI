@@ -1,45 +1,49 @@
 // Color constants
 export const COLORS = {
-  // Primary colors
-  primary: "#f4511e",
-  primaryLight: "#ff7f4f",
-  primaryDark: "#b91400",
+  // Theme colors from user request
+  primary: "#ffffff",     // --color-primary
+  secondary: "#121212",   // --color-secondary
+  third: "#BEBEBE",       // --color-third
+  fourth: "#007BFF",      // --color-fourth
+
+  // Primary colors (Legacy mappings for backward compatibility if any)
+  primaryLight: "#ffffff",
+  primaryDark: "#121212",
 
   // Secondary colors
-  secondary: "#2196F3",
-  secondaryLight: "#6ec6ff",
-  secondaryDark: "#0069c0",
+  secondaryLight: "#BEBEBE",
+  secondaryDark: "#007BFF",
 
   // Status colors
-  success: "#4CAF50",
+  success: "#16A34A",
   warning: "#FF9800",
-  danger: "#F44336",
-  info: "#00BCD4",
+  danger: "#EF4444",
+  info: "#007BFF",
 
   // Neutral colors
-  white: "#FFFFFF",
-  black: "#000000",
+  white: "#ffffff",
+  black: "#121212",
   gray50: "#FAFAFA",
   gray100: "#F5F5F5",
   gray200: "#EEEEEE",
   gray300: "#E0E0E0",
-  gray400: "#BDBDBD",
+  gray400: "#BEBEBE",
   gray500: "#9E9E9E",
   gray600: "#757575",
   gray700: "#616161",
   gray800: "#424242",
-  gray900: "#212121",
+  gray900: "#121212",
 
   // Background colors
-  background: "#F5F5F5",
-  surface: "#FFFFFF",
+  background: "#ffffff",
+  surface: "#ffffff",
 
   // Text colors
-  textPrimary: "#212121",
-  textSecondary: "#757575",
-  textDisabled: "#BDBDBD",
+  textPrimary: "#121212",
+  textSecondary: "#666666",
+  textDisabled: "#BEBEBE",
 
   // Border colors
-  border: "#E0E0E0",
-  divider: "#BDBDBD",
+  border: "#BEBEBE",
+  divider: "#BEBEBE",
 };

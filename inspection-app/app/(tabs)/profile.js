@@ -21,6 +21,7 @@ import { useRouter } from "expo-router";
 import { authAPI } from "../../services/api/authAPI";
 import { apiService } from "../../services/api/api";
 import { API_CONFIG } from "../../config/api.config";
+import { COLORS } from "../../constants";
 
 export default function ProfileTab() {
   const router = useRouter();
@@ -267,42 +268,42 @@ export default function ProfileTab() {
       id: 1,
       icon: "person-outline",
       label: "Edit Profile",
-      color: "#1E56A0",
+      color: COLORS.fourth,
       onPress: openEditModal,
     },
     {
       id: 2,
       icon: "document-text-outline",
       label: "My Reports",
-      color: "#1E56A0",
+      color: COLORS.fourth,
       onPress: () => console.log("My Reports"),
     },
     {
       id: 3,
       icon: "wallet-outline",
       label: "Payment History",
-      color: "#1E56A0",
+      color: COLORS.fourth,
       onPress: () => console.log("Payment History"),
     },
     {
       id: 4,
       icon: "settings-outline",
       label: "Settings",
-      color: "#1E56A0",
+      color: COLORS.fourth,
       onPress: () => console.log("Settings"),
     },
     {
       id: 5,
       icon: "help-circle-outline",
       label: "Help & Support",
-      color: "#1E56A0",
+      color: COLORS.fourth,
       onPress: () => console.log("Help & Support"),
     },
     {
       id: 6,
       icon: "information-circle-outline",
       label: "About",
-      color: "#1E56A0",
+      color: COLORS.fourth,
       onPress: () => console.log("About"),
     },
   ];
@@ -310,9 +311,9 @@ export default function ProfileTab() {
   if (!userData && !loggingOut) {
     // Show skeleton / loading state
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F9FAFB" }}>
-        <ActivityIndicator size="large" color="#1E56A0" />
-        <Text style={{ marginTop: 12, color: "#6B7280", fontSize: 14 }}>Loading profile...</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.gray50 }}>
+        <ActivityIndicator size="large" color={COLORS.fourth} />
+        <Text style={{ marginTop: 12, color: COLORS.gray600, fontSize: 14 }}>Loading profile...</Text>
       </View>
     );
   }
@@ -328,7 +329,7 @@ export default function ProfileTab() {
                 {display.initials ? (
                   <Text style={styles.initialsText}>{display.initials}</Text>
                 ) : (
-                  <Ionicons name="person" size={48} color="#fff" />
+                  <Ionicons name="person" size={48} color={COLORS.primary} />
                 )}
               </View>
             </View>
@@ -342,7 +343,7 @@ export default function ProfileTab() {
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <View style={styles.statIconBox}>
-                  <Ionicons name="clipboard" size={24} color="#1E56A0" />
+                  <Ionicons name="clipboard" size={24} color={COLORS.fourth} />
                 </View>
                 <Text style={styles.statNumber}>
                   {display.inspectionsCompleted}
@@ -379,7 +380,7 @@ export default function ProfileTab() {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIconContainer}>
-              <Ionicons name="mail-outline" size={20} color="#1E56A0" />
+              <Ionicons name="mail-outline" size={20} color={COLORS.fourth} />
             </View>
             <View className="flex-1">
               <Text style={styles.infoLabel}>Email</Text>
@@ -391,7 +392,7 @@ export default function ProfileTab() {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIconContainer}>
-              <Ionicons name="call-outline" size={20} color="#1E56A0" />
+              <Ionicons name="call-outline" size={20} color={COLORS.fourth} />
             </View>
             <View className="flex-1">
               <Text style={styles.infoLabel}>Phone</Text>
@@ -406,7 +407,7 @@ export default function ProfileTab() {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIconContainer}>
-              <Ionicons name="location-outline" size={20} color="#1E56A0" />
+              <Ionicons name="location-outline" size={20} color={COLORS.fourth} />
             </View>
             <View className="flex-1">
               <Text style={styles.infoLabel}>Address</Text>
@@ -422,7 +423,7 @@ export default function ProfileTab() {
             onPress={() => handleOpenDoc("aadhar")}
           >
             <View style={styles.infoIconContainer}>
-              <Ionicons name="card-outline" size={20} color="#1E56A0" />
+              <Ionicons name="card-outline" size={20} color={COLORS.fourth} />
             </View>
             <View className="flex-1">
               <Text style={styles.infoLabel}>Aadhar Number</Text>
@@ -439,7 +440,7 @@ export default function ProfileTab() {
             onPress={() => handleOpenDoc("dl")}
           >
             <View style={styles.infoIconContainer}>
-              <Ionicons name="id-card-outline" size={20} color="#1E56A0" />
+              <Ionicons name="id-card-outline" size={20} color={COLORS.fourth} />
             </View>
             <View className="flex-1">
               <Text style={styles.infoLabel}>Driving License</Text>
@@ -452,7 +453,7 @@ export default function ProfileTab() {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIconContainer}>
-              <Ionicons name="wallet-outline" size={20} color="#1E56A0" />
+              <Ionicons name="wallet-outline" size={20} color={COLORS.fourth} />
             </View>
             <View className="flex-1">
               <Text style={styles.infoLabel}>UPI ID</Text>
@@ -519,7 +520,7 @@ export default function ProfileTab() {
                 style={styles.closeButton}
                 onPress={() => setDocModalVisible(false)}
               >
-                <Ionicons name="close" size={24} color="#111827" />
+                <Ionicons name="close" size={24} color={COLORS.secondary} />
               </TouchableOpacity>
             </View>
 
@@ -574,7 +575,7 @@ export default function ProfileTab() {
             <View style={styles.selectorHeader}>
               <Text style={styles.selectorTitle}>Select {selectorType === "state" ? "State" : "City"}</Text>
               <TouchableOpacity onPress={() => setSelectorType(null)}>
-                <Ionicons name="close" size={24} color="#111827" />
+                <Ionicons name="close" size={24} color={COLORS.secondary} />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -599,7 +600,7 @@ export default function ProfileTab() {
                     {item.name}
                   </Text>
                   {(selectorType === "state" ? formData.stateId === item.id.toString() : formData.cityId === item.id.toString()) && (
-                    <Ionicons name="checkmark-circle" size={20} color="#1E56A0" />
+                    <Ionicons name="checkmark-circle" size={20} color={COLORS.fourth} />
                   )}
                 </TouchableOpacity>
               )}
@@ -625,7 +626,7 @@ export default function ProfileTab() {
               <View style={styles.editHeader}>
                 <Text style={styles.editTitle}>Edit Profile</Text>
                 <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                  <Ionicons name="close" size={24} color="#111827" />
+                  <Ionicons name="close" size={24} color={COLORS.secondary} />
                 </TouchableOpacity>
               </View>
 
@@ -740,7 +741,7 @@ export default function ProfileTab() {
                   disabled={updating}
                 >
                   {updating ? (
-                    <ActivityIndicator color="#fff" size="small" />
+                    <ActivityIndicator color={COLORS.primary} size="small" />
                   ) : (
                     <Text style={styles.saveButtonText}>Update Profile</Text>
                   )}
@@ -756,15 +757,15 @@ export default function ProfileTab() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.gray50,
   },
   headerCard: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     padding: 10,
     overflow: "hidden",
   },
   headerBlueSection: {
-    backgroundColor: "#1E56A0",
+    backgroundColor: COLORS.fourth,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 32,
@@ -778,7 +779,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   statsSection: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     paddingVertical: 24,
     paddingHorizontal: 12,
   },
@@ -794,7 +795,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 4,
-    borderColor: "#fff",
+    borderColor: COLORS.primary,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -804,12 +805,12 @@ const styles = StyleSheet.create({
   initialsText: {
     fontSize: 36,
     fontWeight: "bold",
-    color: "#fff",
+    color: COLORS.primary,
   },
   userName: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#fff",
+    color: COLORS.primary,
     marginBottom: 4,
   },
   userRole: {
@@ -837,7 +838,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
-    shadowColor: "#1E56A0",
+    shadowColor: COLORS.fourth,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -846,28 +847,25 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 11,
-    color: "#6B7280",
+    color: COLORS.gray600,
     fontWeight: "600",
     textAlign: "center",
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: COLORS.gray200,
   },
   sectionCard: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     marginHorizontal: 16,
     marginTop: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    borderRadius: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -878,8 +876,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
-    backgroundColor: "#1E56A0",
+    color: COLORS.primary,
+    backgroundColor: COLORS.fourth,
     paddingVertical: 16,
     paddingHorizontal: 16,
     marginBottom: 0,
@@ -894,25 +892,25 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: COLORS.gray100,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
   infoLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: COLORS.gray600,
     fontWeight: "600",
     marginBottom: 2,
   },
   infoValue: {
     fontSize: 14,
-    color: "#111827",
+    color: COLORS.secondary,
     fontWeight: "600",
   },
   divider: {
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: COLORS.gray200,
     marginHorizontal: 16,
   },
   menuItem: {
@@ -925,7 +923,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: COLORS.gray100,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -934,23 +932,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginTop: 16,
     paddingVertical: 16,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    borderWidth: 0,
+    borderRadius: 24,
     backgroundColor: "#FEE2E2",
-    shadowColor: "#DC2626",
+    shadowColor: COLORS.danger,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -959,13 +952,13 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#DC2626",
+    color: COLORS.danger,
     marginLeft: 8,
   },
   versionText: {
     textAlign: "center",
     fontSize: 12,
-    color: "#9CA3AF",
+    color: COLORS.gray400,
     marginTop: 24,
   },
   // Modal Styles
@@ -978,7 +971,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderRadius: 24,
     padding: 24,
     alignItems: "center",
@@ -993,7 +986,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   closeButton: {
     padding: 4,
@@ -1009,16 +1002,16 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: COLORS.gray100,
     borderRadius: 16,
     backfaceVisibility: "hidden",
     position: "absolute",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: COLORS.gray200,
   },
   flipCardBack: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: COLORS.gray100,
   },
   docImage: {
     width: "100%",
@@ -1029,12 +1022,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(30, 86, 160, 0.85)",
+    backgroundColor: "rgba(0, 123, 255, 0.85)",
     paddingVertical: 6,
     alignItems: "center",
   },
   cardLabelText: {
-    color: "#fff",
+    color: COLORS.primary,
     fontSize: 11,
     fontWeight: "bold",
     letterSpacing: 1,
@@ -1043,20 +1036,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1E56A0",
+    backgroundColor: COLORS.fourth,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 16,
     marginTop: 30,
     width: "100%",
-    shadowColor: "#1E56A0",
+    shadowColor: COLORS.fourth,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   flipButtonText: {
-    color: "#fff",
+    color: COLORS.primary,
     fontSize: 15,
     fontWeight: "bold",
     marginLeft: 8,
@@ -1068,7 +1061,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   editContent: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: "90%",
@@ -1083,7 +1076,7 @@ const styles = StyleSheet.create({
   editTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   formGroup: {
     marginBottom: 20,
@@ -1091,22 +1084,22 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#374151",
+    color: COLORS.secondary,
     marginBottom: 8,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: COLORS.gray100,
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
     fontSize: 15,
-    color: "#111827",
+    color: COLORS.secondary,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: COLORS.gray200,
   },
   pickerTrigger: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: COLORS.gray100,
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
@@ -1114,27 +1107,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: COLORS.gray200,
   },
   pickerValue: {
     fontSize: 15,
-    color: "#111827",
+    color: COLORS.secondary,
   },
   saveButton: {
-    backgroundColor: "#1E56A0",
+    backgroundColor: COLORS.fourth,
     borderRadius: 16,
     height: 56,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
-    shadowColor: "#1E56A0",
+    shadowColor: COLORS.fourth,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
   saveButtonText: {
-    color: "#fff",
+    color: COLORS.primary,
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -1145,7 +1138,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   selectorContent: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: "60%",
@@ -1160,7 +1153,7 @@ const styles = StyleSheet.create({
   selectorTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   selectorItem: {
     flexDirection: "row",
@@ -1168,14 +1161,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: COLORS.gray100,
   },
   selectorItemText: {
     fontSize: 16,
-    color: "#374151",
+    color: COLORS.secondary,
   },
   selectorItemActive: {
-    color: "#1E56A0",
+    color: COLORS.fourth,
     fontWeight: "bold",
   },
 });

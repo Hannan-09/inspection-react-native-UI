@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { inspectionAPI } from "../services/api/inspectionAPI";
+import { COLORS } from "../constants";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
@@ -88,7 +89,7 @@ export default function InspectionReportScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E56A0" />
+        <ActivityIndicator size="large" color={COLORS.fourth} />
         <Text style={styles.loadingText}>Fetching Report...</Text>
       </View>
     );
@@ -109,7 +110,7 @@ export default function InspectionReportScreen() {
         <View style={styles.vehicleCard}>
           <View style={styles.vehicleInfo}>
             <View style={styles.iconContainer}>
-              <Ionicons name={is4W ? "car-sport" : "bicycle"} size={32} color="#1E56A0" />
+              <Ionicons name={is4W ? "car-sport" : "bicycle"} size={32} color={COLORS.fourth} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.makerName}>{report.makerName} {report.modelName}</Text>
@@ -161,7 +162,7 @@ export default function InspectionReportScreen() {
                 }}
               >
                 <View style={styles.sectionIcon}>
-                  <Ionicons name={section.icon} size={24} color="#1E56A0" />
+                  <Ionicons name={section.icon} size={24} color={COLORS.fourth} />
                 </View>
                 <View style={styles.sectionText}>
                   <Text style={styles.sectionNumber}>SECTION {index + 1}</Text>
@@ -204,22 +205,22 @@ export default function InspectionReportScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.gray50,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#6B7280",
+    color: COLORS.gray600,
     fontWeight: "500",
   },
   vehicleCard: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     margin: 16,
     borderRadius: 20,
     padding: 20,
@@ -245,13 +246,13 @@ const styles = StyleSheet.create({
   makerName: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   regNumber: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1E56A0",
+    color: COLORS.fourth,
     marginBottom: 8,
   },
   badgeRow: {
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
     color: "#92400E",
   },
   summaryCard: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     marginHorizontal: 16,
     borderRadius: 20,
     padding: 20,
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: COLORS.secondary,
     marginBottom: 16,
   },
   statsRow: {
@@ -297,23 +298,23 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#1E56A0",
+    color: COLORS.fourth,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: COLORS.gray600,
     fontWeight: "500",
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: COLORS.third,
   },
   breakdownTitle: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#111827",
+    color: COLORS.secondary,
     marginTop: 24,
     marginLeft: 20,
     marginBottom: 12,
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   sectionItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
@@ -349,14 +350,14 @@ const styles = StyleSheet.create({
   sectionNumber: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#1E56A0",
+    color: COLORS.fourth,
     letterSpacing: 0.5,
     marginBottom: 2,
   },
   sectionLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   statusIndicator: {
     flexDirection: "row",
@@ -365,14 +366,14 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#9CA3AF",
+    color: COLORS.third,
     marginRight: 4,
   },
   footer: {
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: COLORS.third,
   },
   downloadButton: {
     flexDirection: "row",
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   downloadText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#fff",
+    color: COLORS.primary,
     marginLeft: 8,
   },
 });
@@ -426,7 +427,7 @@ const generatePDFReport = (report) => {
     if (typeof val === "boolean") return val ? "Yes" : "No";
     if (typeof val === "string" && (val.startsWith("http://") || val.startsWith("https://") || val.startsWith("file://") || val.startsWith("content://"))) {
       const escapedUrl = val.replace(/&/g, "&amp;");
-      return `<a href="${escapedUrl}" target="_blank" style="color: #1E56A0; text-decoration: underline; font-size: 12px; word-break: break-all;">View Media Link</a>`;
+      return `<a href="${escapedUrl}" target="_blank" style="color: #007BFF; text-decoration: underline; font-size: 12px; word-break: break-all;">View Media Link</a>`;
     }
     return escapeHtml(String(val));
   };
@@ -774,12 +775,12 @@ const generatePDFReport = (report) => {
           background-color: #ffffff;
         }
         .header-container {
-          border-bottom: 3px solid #1E56A0;
+          border-bottom: 3px solid #007BFF;
           padding-bottom: 15px;
           margin-bottom: 25px;
         }
         .header-container h1 {
-          color: #1E56A0;
+          color: #007BFF;
           margin: 0;
           font-size: 28px;
           font-weight: 800;
@@ -795,7 +796,7 @@ const generatePDFReport = (report) => {
           border-radius: 12px;
           padding: 15px;
           margin-bottom: 25px;
-          border-left: 5px solid #1E56A0;
+          border-left: 5px solid #007BFF;
         }
         .summary-box h2 {
           margin: 0 0 10px 0;
@@ -830,7 +831,7 @@ const generatePDFReport = (report) => {
           margin-bottom: 30px;
         }
         .section-card h3 {
-          color: #1E56A0;
+          color: #007BFF;
           font-size: 18px;
           margin: 0 0 12px 0;
           border-bottom: 2px solid #E5E7EB;
@@ -900,7 +901,7 @@ const generatePDFReport = (report) => {
             <td>
               <div class="summary-item">
                 <div class="label">Inspection Score</div>
-                <div class="value" style="color: #1E56A0;">${report.inspectionScore?.toFixed(1) || "0.0"} / 5.0</div>
+                <div class="value" style="color: #007BFF;">${report.inspectionScore?.toFixed(1) || "0.0"} / 5.0</div>
               </div>
             </td>
             <td>

@@ -10,6 +10,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  Linking,
 } from "react-native";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,8 @@ import { useRouter, useFocusEffect } from "expo-router";
 import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
 import { populateInspectionStorage } from "../../utils/reportMapper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { COLORS } from "../../constants";
 
 export default function InspectionsTab() {
   const router = useRouter();
@@ -32,6 +35,8 @@ export default function InspectionsTab() {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [selectedInspectionId, setSelectedInspectionId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [videoModalVisible, setVideoModalVisible] = useState(false);
+  const [activeItemForVideo, setActiveItemForVideo] = useState(null);
 
   // Animated values for scroll indicator
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -157,6 +162,42 @@ export default function InspectionsTab() {
     }
   };
 
+  const openWhatsApp = (phone) => {
+    if (!phone) {
+      Alert.alert("Required", "No WhatsApp number is available for this vehicle owner.");
+      return;
+    }
+    let cleaned = phone.replace(/[^0-9]/g, "");
+    if (cleaned.length === 10) {
+      cleaned = "91" + cleaned;
+    }
+    const url = `whatsapp://send?phone=${cleaned}`;
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          return Linking.openURL(`https://wa.me/${cleaned}`);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to open WhatsApp:", err);
+        Alert.alert("Error", "Could not launch WhatsApp. Please make sure WhatsApp is installed.");
+      });
+  };
+
+  const navigateToInspectionForm = (item) => {
+    router.push(
+      `/start-inspection?id=${item.id}` +
+      `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
+      `&vehicleSubtype=${encodeURIComponent(item.vehicleSubType || "")}` +
+      `&fuelType=${encodeURIComponent(item.fuelType || "")}` +
+      `&makerName=${encodeURIComponent(item.makerName || "")}` +
+      `&modelName=${encodeURIComponent(item.modelName || "")}` +
+      `&regNumber=${encodeURIComponent(item.regNumber || "")}`
+    );
+  };
+
   const handleStartInspection = async (item) => {
     const isAccepted = item.assignmentStatus?.toUpperCase() === "ACCEPTED";
     const isRequestChanges = item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES";
@@ -186,16 +227,31 @@ export default function InspectionsTab() {
         }
       }
       
-      // Navigate to the start inspection screen
-      router.push(
-        `/start-inspection?id=${item.id}` +
-        `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
-        `&vehicleSubtype=${encodeURIComponent(item.vehicleSubType || "")}` +
-        `&fuelType=${encodeURIComponent(item.fuelType || "")}` +
-        `&makerName=${encodeURIComponent(item.makerName || "")}` +
-        `&modelName=${encodeURIComponent(item.modelName || "")}` +
-        `&regNumber=${encodeURIComponent(item.regNumber || "")}`
-      );
+      const isVideoCall = item.inspectionType?.toUpperCase().includes("VIDEO");
+
+      if (isVideoCall) {
+        const completedVal = await AsyncStorage.getItem(`inspection_${item.id}_video_completed`);
+        if (completedVal === "true") {
+          navigateToInspectionForm(item);
+        } else {
+          let fullDetails = item;
+          const rawPhone = item.whatsappNumber || item.ownerPhone || item.phone;
+          if (!rawPhone) {
+            try {
+              fullDetails = await inspectionAPI.getAssignedInspectionById(item.id);
+            } catch (fetchErr) {
+              console.error("Error fetching inspection details for whatsapp:", fetchErr);
+            }
+          }
+          
+          const phone = fullDetails?.whatsappNumber || fullDetails?.ownerPhone || fullDetails?.phone || rawPhone;
+          openWhatsApp(phone);
+          setActiveItemForVideo(fullDetails);
+          setVideoModalVisible(true);
+        }
+      } else {
+        navigateToInspectionForm(item);
+      }
     } catch (error) {
       console.error("Error starting inspection:", error);
       Alert.alert("Error", "Failed to start inspection. Please try again.");
@@ -279,7 +335,7 @@ export default function InspectionsTab() {
       case "pending":
         return { bg: "#FEF3C7", text: "#92400E", icon: "time-outline" };
       case "accepted":
-        return { bg: "#EFF6FF", text: "#1E56A0", icon: "checkmark-done" };
+        return { bg: "#EFF6FF", text: COLORS.fourth, icon: "checkmark-done" };
       case "in_progress":
       case "ongoing":
         return { bg: "#DBEAFE", text: "#1E40AF", icon: "car-sport" };
@@ -434,7 +490,7 @@ export default function InspectionsTab() {
 
           {(item.assignmentStatus === "COMPLETED" || item.assignmentStatus === "SUBMITTED") && (
             <TouchableOpacity 
-              style={[styles.cardAcceptButton, { backgroundColor: "#1E56A0" }]} 
+              style={[styles.cardAcceptButton, { backgroundColor: COLORS.fourth }]} 
               onPress={() => router.push(
                 `/inspection-report?id=${item.id}` +
                 `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
@@ -799,7 +855,7 @@ export default function InspectionsTab() {
         className="flex-1 items-center justify-center"
         style={styles.container}
       >
-        <Ionicons name="car-sport-outline" size={48} color="#9CA3AF" />
+        <Ionicons name="car-sport-outline" size={48} color={COLORS.third} />
         <Text className="mt-4" style={styles.loadingText}>
           Loading inspections...
         </Text>
@@ -821,7 +877,7 @@ export default function InspectionsTab() {
         ListFooterComponent={
           loadingMore ? (
             <View style={{ paddingVertical: 20 }}>
-              <ActivityIndicator color="#1E56A0" />
+              <ActivityIndicator color={COLORS.fourth} />
             </View>
           ) : null
         }
@@ -829,8 +885,8 @@ export default function InspectionsTab() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#1E56A0"]}
-            tintColor="#1E56A0"
+            colors={[COLORS.fourth]}
+            tintColor={COLORS.fourth}
           />
         }
         ListEmptyComponent={
@@ -839,7 +895,7 @@ export default function InspectionsTab() {
               className="items-center justify-center"
               style={styles.emptyContainer}
             >
-              <Ionicons name="car-outline" size={64} color="#D1D5DB" />
+              <Ionicons name="car-outline" size={64} color={COLORS.third} />
               <Text className="mt-4 font-semibold" style={styles.emptyTitle}>
                 No {activeTab} inspections
               </Text>
@@ -876,6 +932,58 @@ export default function InspectionsTab() {
           </View>
         </View>
       </Modal>
+
+      {/* Video Call Verification Modal */}
+      <Modal visible={videoModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { alignItems: "center", paddingVertical: 30 }]}>
+            <View style={styles.videoIconRing}>
+              <Ionicons name="videocam" size={40} color={COLORS.fourth} />
+            </View>
+            <Text style={styles.modalTitle}>Video Call Status</Text>
+            <Text style={styles.modalSubtitle}>Is the video call with the vehicle owner complete?</Text>
+            
+            <View style={{ width: "100%", marginTop: 24, gap: 12 }}>
+              <TouchableOpacity 
+                style={styles.modalDoneButton} 
+                onPress={async () => {
+                  setVideoModalVisible(false);
+                  if (activeItemForVideo) {
+                    try {
+                      await AsyncStorage.setItem(`inspection_${activeItemForVideo.id}_video_completed`, "true");
+                    } catch (storageErr) {
+                      console.error("Error saving video complete state:", storageErr);
+                    }
+                    navigateToInspectionForm(activeItemForVideo);
+                  }
+                }}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                <Text style={styles.modalDoneButtonText}>Yes, Video Call Complete</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.modalRetryButton} 
+                onPress={() => {
+                  if (activeItemForVideo) {
+                    openWhatsApp(activeItemForVideo.whatsappNumber || activeItemForVideo.ownerPhone || activeItemForVideo.phone);
+                  }
+                }}
+              >
+                <Ionicons name="logo-whatsapp" size={20} color="#16A34A" />
+                <Text style={styles.modalRetryButtonText}>Re-open WhatsApp</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.modalCancelButton} 
+                onPress={() => setVideoModalVisible(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -883,24 +991,80 @@ export default function InspectionsTab() {
 const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalContent: { backgroundColor: "#fff", borderRadius: 16, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 16 },
-  modalLabel: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 8 },
-  modalInput: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
+  modalContent: { backgroundColor: COLORS.primary, borderRadius: 16, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: COLORS.secondary, marginBottom: 16 },
+  modalLabel: { fontSize: 14, fontWeight: "600", color: COLORS.secondary, marginBottom: 8 },
+  modalInput: { borderWidth: 1, borderColor: COLORS.third, borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
   modalCancel: { flex: 1, height: 48, justifyContent: "center", alignItems: "center" },
-  modalCancelText: { fontSize: 16, fontWeight: "bold", color: "#6B7280" },
-  modalConfirm: { flex: 2, height: 48, backgroundColor: "#DC2626", borderRadius: 12, justifyContent: "center", alignItems: "center" },
-  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+  modalCancelText: { fontSize: 16, fontWeight: "bold", color: COLORS.gray600 },
+  modalConfirm: { flex: 2, height: 48, backgroundColor: COLORS.danger, borderRadius: 12, justifyContent: "center", alignItems: "center" },
+  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary },
+  videoIconRing: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#EFF6FF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: COLORS.gray700,
+    textAlign: "center",
+    paddingHorizontal: 20,
+    lineHeight: 20,
+  },
+  modalDoneButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.success,
+    borderRadius: 12,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  modalDoneButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
+  modalRetryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E8F5E9",
+    borderWidth: 1,
+    borderColor: COLORS.success,
+    borderRadius: 12,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  modalRetryButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.success,
+  },
+  modalCancelButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+  },
+  modalCancelButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.gray600,
+  },
 
   // Card Actions
   cardActions: { flexDirection: "row", marginTop: 12, gap: 10 },
-  cardRejectButton: { flex: 1, height: 36, backgroundColor: "#F3F4F6", borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardRejectButtonText: { color: "#4B5563", fontSize: 13, fontWeight: "600" },
-  cardAcceptButton: { flex: 1, height: 36, backgroundColor: "#1E56A0", borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardAcceptButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  cardRejectButton: { flex: 1, height: 36, backgroundColor: COLORS.gray100, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardRejectButtonText: { color: COLORS.gray700, fontSize: 13, fontWeight: "600" },
+  cardAcceptButton: { flex: 1, height: 36, backgroundColor: COLORS.fourth, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardAcceptButtonText: { color: COLORS.primary, fontSize: 13, fontWeight: "600" },
 
   container: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.gray50,
   },
   listContent: {
     paddingBottom: 120,
@@ -914,7 +1078,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 4,
@@ -937,12 +1101,12 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
     marginTop: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: COLORS.gray600,
     marginTop: 2,
   },
   tabsWrapper: {
@@ -951,7 +1115,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tabsScrollView: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -969,14 +1133,14 @@ const styles = StyleSheet.create({
   },
   scrollIndicatorTrack: {
     height: 3,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: COLORS.gray200,
     borderRadius: 2,
     overflow: "hidden",
   },
   scrollIndicatorThumb: {
     height: 3,
     width: 120,
-    backgroundColor: "#1E56A0",
+    backgroundColor: COLORS.fourth,
     borderRadius: 2,
   },
   tab: {
@@ -988,17 +1152,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeTab: {
-    backgroundColor: "#1E56A0",
+    backgroundColor: COLORS.fourth,
   },
   tabText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: COLORS.gray600,
   },
   activeTabText: {
-    color: "#fff",
+    color: COLORS.primary,
   },
   badge: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: COLORS.gray200,
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1012,13 +1176,13 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "bold",
-    color: "#374151",
+    color: COLORS.secondary,
   },
   activeBadgeText: {
-    color: "#fff",
+    color: COLORS.primary,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 16,
@@ -1031,11 +1195,11 @@ const styles = StyleSheet.create({
   },
   carModel: {
     fontSize: 17,
-    color: "#111827",
+    color: COLORS.secondary,
   },
   carNumber: {
     fontSize: 14,
-    color: "#1E56A0",
+    color: COLORS.fourth,
   },
   statusBadge: {
     flexDirection: "row",
@@ -1060,14 +1224,18 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: COLORS.gray600,
+  },
+  cardDetail: {
+    fontSize: 13,
+    color: COLORS.gray600,
   },
   rejectionBox: {
     backgroundColor: "#FEF2F2",
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
-    borderLeftColor: "#DC2626",
+    borderLeftColor: COLORS.danger,
   },
   rejectionText: {
     fontSize: 12,
@@ -1078,7 +1246,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
-    borderLeftColor: "#D97706",
+    borderLeftColor: COLORS.warning,
   },
   remarksText: {
     fontSize: 12,
@@ -1086,7 +1254,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: "#6B7280",
+    color: COLORS.gray500,
   },
   emptyContainer: {
     paddingVertical: 60,
@@ -1094,10 +1262,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    color: "#374151",
+    color: COLORS.secondary,
   },
   emptyText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: COLORS.gray500,
   },
 });

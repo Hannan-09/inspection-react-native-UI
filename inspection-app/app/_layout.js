@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import Toast from "react-native-toast-message";
 import "../global.css";
+import { COLORS } from "../constants";
 
 export default function RootLayout() {
   return (
@@ -10,9 +11,9 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: "#1E56A0",
+            backgroundColor: COLORS.fourth,
           },
-          headerTintColor: "#fff",
+          headerTintColor: COLORS.primary,
           headerTitleStyle: {
             fontWeight: "bold",
           },

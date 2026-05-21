@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Animated } from "react-native";
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { apiService } from "../services/api/api";
+import { COLORS } from "../constants";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -67,21 +68,21 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: COLORS.secondary,
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
     fontSize: 42,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: COLORS.primary,
     letterSpacing: 1.5,
   },
   subtitle: {
     marginTop: 10,
     fontSize: 20,
     fontWeight: "600",
-    color: "#60A5FA",
+    color: COLORS.fourth,
     letterSpacing: 4,
     textTransform: "uppercase",
   },

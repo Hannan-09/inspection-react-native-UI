@@ -10,6 +10,7 @@ import inspectionSchema2W from "../reecomm_inspection_2W.json";
 import inspectionSchema4W from "../reecomm_inspection_4W.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { inspectionAPI } from "../services/api/inspectionAPI";
+import { COLORS } from "../constants";
 
 // ── Normalizers ────────────────────────────────────────────────────────────────
 const normalizeCategory = (vehicleType) => {
@@ -35,7 +36,7 @@ const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, render
     <View style={styles.panelCard}>
       <View style={styles.panelHeader}>
         <View style={styles.panelHeaderIcon}>
-          <Ionicons name="car-sport-outline" size={18} color="#1E56A0" />
+          <Ionicons name="car-sport-outline" size={18} color={COLORS.fourth} />
         </View>
         <Text style={styles.panelTitle}>{panelName}</Text>
       </View>
@@ -782,7 +783,7 @@ export default function InspectionSectionScreen() {
         return (
           <TouchableOpacity
             key={opt}
-            style={[styles.enumBtn, sel && { backgroundColor: color || "#1E56A0", borderColor: color || "#1E56A0" }]}
+            style={[styles.enumBtn, sel && { backgroundColor: color || COLORS.fourth, borderColor: color || COLORS.fourth }]}
             onPress={() => !isReadOnly && onChange(sel ? null : opt)}
             activeOpacity={isReadOnly ? 1 : 0.7}
           >
@@ -1124,7 +1125,7 @@ export default function InspectionSectionScreen() {
 
             {!isReadOnly && (
               <TouchableOpacity style={styles.addModBtn} onPress={() => setAddModModal(true)} activeOpacity={0.7}>
-                <Ionicons name="add-circle" size={20} color="#1E56A0" />
+                <Ionicons name="add-circle" size={20} color={COLORS.fourth} />
                 <Text style={styles.addModBtnText}>Add Modification</Text>
               </TouchableOpacity>
             )}
@@ -1203,14 +1204,14 @@ export default function InspectionSectionScreen() {
   };
 
   if (loading) return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB", justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" color="#1E56A0" />
-      <Text style={{ marginTop: 12, color: "#6B7280" }}>Loading section...</Text>
+    <View style={{ flex: 1, backgroundColor: COLORS.gray50, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator size="large" color={COLORS.fourth} />
+      <Text style={{ marginTop: 12, color: COLORS.gray600 }}>Loading section...</Text>
     </View>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: COLORS.gray50 }}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
@@ -1226,7 +1227,7 @@ export default function InspectionSectionScreen() {
         {/* Note */}
         {sectionData?.note && !isReadOnly && (
           <View style={styles.noteCard}>
-            <Ionicons name="information-circle" size={20} color="#1E56A0" />
+            <Ionicons name="information-circle" size={20} color={COLORS.fourth} />
             <Text style={styles.noteText}>{sectionData.note}</Text>
           </View>
         )}
@@ -1270,52 +1271,52 @@ export default function InspectionSectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: "#1E56A0", paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: "row", alignItems: "center" },
+  header: { backgroundColor: COLORS.fourth, paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: "row", alignItems: "center" },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center", marginRight: 16 },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", marginBottom: 2 },
+  headerTitle: { fontSize: 20, fontWeight: "bold", color: COLORS.primary, marginBottom: 2 },
   headerSubtitle: { fontSize: 13, color: "rgba(255,255,255,0.8)" },
-  noteCard: { flexDirection: "row", backgroundColor: "#EFF6FF", borderLeftWidth: 4, borderLeftColor: "#1E56A0", padding: 16, borderRadius: 12, marginBottom: 16 },
+  noteCard: { flexDirection: "row", backgroundColor: "#EFF6FF", borderLeftWidth: 4, borderLeftColor: COLORS.fourth, padding: 16, borderRadius: 12, marginBottom: 16 },
   noteText: { flex: 1, fontSize: 13, color: "#1E40AF", marginLeft: 12, lineHeight: 18 },
-  formCard: { backgroundColor: "#fff", borderRadius: 16, padding: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
-  fieldNote: { fontSize: 12, color: "#9CA3AF", fontStyle: "italic", marginTop: -10, marginBottom: 14 },
+  formCard: { backgroundColor: COLORS.primary, borderRadius: 16, padding: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  fieldNote: { fontSize: 12, color: COLORS.third, fontStyle: "italic", marginTop: -10, marginBottom: 14 },
   fieldWrap: { marginBottom: 20 },
-  fieldLabel: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 10 },
+  fieldLabel: { fontSize: 14, fontWeight: "600", color: COLORS.secondary, marginBottom: 10 },
 
   // Enum buttons
   enumRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  enumBtn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, backgroundColor: "#F3F4F6", borderWidth: 2, borderColor: "#E5E7EB" },
+  enumBtn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, backgroundColor: "#F3F4F6", borderWidth: 2, borderColor: COLORS.third },
   enumBtnText: { fontSize: 13, fontWeight: "600", color: "#6B7280" },
 
   // Panel / Tyre cards
-  panelCard: { backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  panelCard: { backgroundColor: COLORS.primary, borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   panelHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
   panelHeaderIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#EFF6FF", alignItems: "center", justifyContent: "center", marginRight: 10 },
-  panelTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
+  panelTitle: { fontSize: 15, fontWeight: "700", color: COLORS.secondary },
 
   // Modification section
-  subSectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827", marginTop: 16, marginBottom: 8 },
-  addModBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#1E56A0", borderStyle: "dashed", borderRadius: 14, paddingVertical: 14, marginBottom: 12, gap: 8 },
-  addModBtnText: { fontSize: 14, fontWeight: "700", color: "#1E56A0" },
+  subSectionTitle: { fontSize: 16, fontWeight: "700", color: COLORS.secondary, marginTop: 16, marginBottom: 8 },
+  addModBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: COLORS.fourth, borderStyle: "dashed", borderRadius: 14, paddingVertical: 14, marginBottom: 12, gap: 8 },
+  addModBtnText: { fontSize: 14, fontWeight: "700", color: COLORS.fourth },
   modModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
-  modModalContent: { backgroundColor: "#fff", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, maxHeight: "85%", paddingBottom: 48 },
+  modModalContent: { backgroundColor: COLORS.primary, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, maxHeight: "85%", paddingBottom: 48 },
   modModalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
-  modModalTitle: { fontSize: 20, fontWeight: "800", color: "#111827" },
-  modModalSave: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#1E56A0", borderRadius: 16, paddingVertical: 16, gap: 8, marginTop: 8, shadowColor: "#1E56A0", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  modModalSaveText: { fontSize: 16, fontWeight: "700", color: "#fff" },
+  modModalTitle: { fontSize: 20, fontWeight: "800", color: COLORS.secondary },
+  modModalSave: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: COLORS.fourth, borderRadius: 16, paddingVertical: 16, gap: 8, marginTop: 8, shadowColor: COLORS.fourth, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
+  modModalSaveText: { fontSize: 16, fontWeight: "700", color: COLORS.primary },
 
   // Bottom save bar
-  bottomBar: { backgroundColor: "#fff", paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: "#E5E7EB", shadowColor: "#000", shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 6 },
+  bottomBar: { backgroundColor: COLORS.primary, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: COLORS.third, shadowColor: "#000", shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 6 },
   saveBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#16A34A", paddingVertical: 16, borderRadius: 16, gap: 8, shadowColor: "#16A34A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  saveBtnText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+  saveBtnText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary },
 
   // Success modal
   successOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center", paddingHorizontal: 24 },
-  successModal: { backgroundColor: "#fff", borderRadius: 28, padding: 32, alignItems: "center", width: "100%", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 16 },
+  successModal: { backgroundColor: COLORS.primary, borderRadius: 28, padding: 32, alignItems: "center", width: "100%", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 16 },
   successIconRing: { width: 96, height: 96, borderRadius: 48, backgroundColor: "#DCFCE7", alignItems: "center", justifyContent: "center", marginBottom: 20 },
   successIconInner: { width: 70, height: 70, borderRadius: 35, backgroundColor: "#16A34A", alignItems: "center", justifyContent: "center", shadowColor: "#16A34A", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
-  successTitle: { fontSize: 24, fontWeight: "800", color: "#111827", marginBottom: 8, letterSpacing: -0.3 },
-  successSubtitle: { fontSize: 15, color: "#374151", fontWeight: "600", textAlign: "center", marginBottom: 6, lineHeight: 22 },
-  successHint: { fontSize: 13, color: "#9CA3AF", textAlign: "center", marginBottom: 28 },
-  successButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#1E56A0", paddingVertical: 16, borderRadius: 16, width: "100%", gap: 8, shadowColor: "#1E56A0", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  successButtonText: { fontSize: 16, fontWeight: "700", color: "#fff" },
+  successTitle: { fontSize: 24, fontWeight: "800", color: COLORS.secondary, marginBottom: 8, letterSpacing: -0.3 },
+  successSubtitle: { fontSize: 15, color: COLORS.secondary, fontWeight: "600", textAlign: "center", marginBottom: 6, lineHeight: 22 },
+  successHint: { fontSize: 13, color: COLORS.third, textAlign: "center", marginBottom: 28 },
+  successButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: COLORS.fourth, paddingVertical: 16, borderRadius: 16, width: "100%", gap: 8, shadowColor: COLORS.fourth, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
+  successButtonText: { fontSize: 16, fontWeight: "700", color: COLORS.primary },
 });

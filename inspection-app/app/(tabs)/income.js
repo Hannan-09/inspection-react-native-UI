@@ -4,6 +4,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
+import { COLORS } from "../../constants";
 
 export default function IncomeTab() {
   const [refreshing, setRefreshing] = useState(false);
@@ -107,7 +108,7 @@ export default function IncomeTab() {
 
         {/* Details */}
         <View className="flex-row items-center mt-3">
-          <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+          <Ionicons name="calendar-outline" size={14} color={COLORS.gray400} />
           <Text style={styles.cardDetail}>
             Inspection: {item.inspectionDate}
           </Text>
@@ -165,8 +166,8 @@ export default function IncomeTab() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#1E56A0"]}
-            tintColor="#1E56A0"
+            colors={[COLORS.fourth]}
+            tintColor={COLORS.fourth}
           />
         }
       >
@@ -209,7 +210,7 @@ export default function IncomeTab() {
             incomeData.map((item) => renderIncomeCard(item))
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="wallet-outline" size={64} color="#D1D5DB" />
+              <Ionicons name="wallet-outline" size={64} color={COLORS.third} />
               <Text style={styles.emptyText}>No income history yet</Text>
             </View>
           )}
@@ -224,7 +225,7 @@ export default function IncomeTab() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.gray50,
   },
   statsContainer: {
     flexDirection: "row",
@@ -249,12 +250,12 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: COLORS.gray600,
     fontWeight: "600",
     textAlign: "center",
   },
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     padding: 24,
     marginHorizontal: 16,
     marginTop: 20,
-    shadowColor: "#1E56A0",
+    shadowColor: COLORS.fourth,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -272,20 +273,20 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 14,
-    color: "#6B7280",
+    color: COLORS.gray600,
     fontWeight: "600",
     marginBottom: 8,
   },
   totalAmount: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#1E56A0",
+    color: COLORS.fourth,
   },
   totalIconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -300,18 +301,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   sectionCount: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
+    color: COLORS.gray600,
   },
   incomeList: {
     paddingHorizontal: 16,
   },
   incomeCard: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.primary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -324,12 +325,12 @@ const styles = StyleSheet.create({
   cardCarModel: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   cardCarNumber: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#1E56A0",
+    color: COLORS.fourth,
     marginTop: 2,
   },
   amountBadge: {
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
   },
   cardDetail: {
     fontSize: 12,
-    color: "#6B7280",
+    color: COLORS.gray600,
     marginLeft: 6,
   },
   statusBadge: {
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: "#9CA3AF",
+    color: COLORS.third,
     marginTop: 16,
   },
 });

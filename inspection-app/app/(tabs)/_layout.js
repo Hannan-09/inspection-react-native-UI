@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { useState, useEffect } from "react";
 import { apiService } from "../../services/api/api";
+import { COLORS } from "../../constants";
 
 export default function TabLayout() {
   const [userName, setUserName] = useState("");
@@ -39,11 +40,11 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#1E56A0",
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarActiveTintColor: COLORS.fourth,
+        tabBarInactiveTintColor: COLORS.third,
         headerShown: true,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: COLORS.primary,
           borderTopWidth: 1,
           height: 80,
           paddingBottom: 10,
@@ -74,12 +75,12 @@ export default function TabLayout() {
                 {initials ? (
                   <Text style={styles.initialsText}>{initials}</Text>
                 ) : (
-                  <Ionicons name="person" size={28} color="#1E56A0" />
+                  <Ionicons name="person" size={28} color={COLORS.fourth} />
                 )}
               </View>
               <View style={styles.headerTextContainer}>
-              <Text style={styles.headerGreeting}>Hi, {userName || "Inspector"}</Text>
-                <Text style={styles.headerSubtitle}>How is your day?</Text>
+                <Text style={styles.headerGreeting}>Reecomm</Text>
+                <Text style={styles.headerSubtitle}>Inspections</Text>
               </View>
             </View>
           ),
@@ -94,7 +95,7 @@ export default function TabLayout() {
           tabBarLabel: "Home",
           headerRight: () => (
             <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications" size={24} color="#1E56A0" />
+              <Ionicons name="notifications" size={24} color={COLORS.fourth} />
             </TouchableOpacity>
           ),
         }}
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: COLORS.gray100,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -167,16 +168,17 @@ const styles = StyleSheet.create({
   headerGreeting: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#111827",
+    color: COLORS.secondary,
   },
   initialsText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#1E56A0",
+    color: COLORS.fourth,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: "#6B7280",
+    color: COLORS.fourth,
+    fontWeight: "600",
     marginTop: 2,
   },
   notificationButton: {
@@ -194,13 +196,13 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: "#DC2626",
+    backgroundColor: COLORS.danger,
     alignItems: "center",
     justifyContent: "center",
   },
   notificationBadgeText: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#fff",
+    color: COLORS.primary,
   },
 });
