@@ -8,6 +8,7 @@ import { inspectionAPI } from "../services/api/inspectionAPI";
 import { COLORS } from "../constants";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import ThemeBackground from "../components/ThemeBackground";
 
 export default function InspectionReportScreen() {
   const params = useLocalSearchParams();
@@ -88,23 +89,23 @@ export default function InspectionReportScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.fourth} />
-        <Text style={styles.loadingText}>Fetching Report...</Text>
-      </View>
+      <ThemeBackground style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={[styles.loadingText, { color: "#FFFFFF" }]}>Fetching Report...</Text>
+      </ThemeBackground>
     );
   }
 
   if (!report) return (
-    <View style={styles.loadingContainer}>
-      <Text>Report not found</Text>
-    </View>
+    <ThemeBackground style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "600" }}>Report not found</Text>
+    </ThemeBackground>
   );
 
   const is4W = report.vehicleType === "FOUR_WHEELER" || report.vehicleType === "4W";
 
   return (
-    <View style={styles.container}>
+    <ThemeBackground style={{ flex: 1 }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Vehicle Header Card */}
         <View style={styles.vehicleCard}>
@@ -119,8 +120,8 @@ export default function InspectionReportScreen() {
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{report.vehicleSubType || "SUV"}</Text>
                 </View>
-                <View style={[styles.badge, { backgroundColor: "#DBEAFE" }]}>
-                  <Text style={[styles.badgeText, { color: "#1E40AF" }]}>{report.fuelType}</Text>
+                <View style={[styles.badge, { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: "rgba(59, 130, 246, 0.3)", borderWidth: 1 }]}>
+                  <Text style={[styles.badgeText, { color: "#3B82F6" }]}>{report.fuelType}</Text>
                 </View>
               </View>
             </View>
@@ -157,7 +158,6 @@ export default function InspectionReportScreen() {
                 key={section.id} 
                 style={styles.sectionItem}
                 onPress={() => {
-                  // In a real app, this would open a detailed view of that section
                   router.push(`/inspection-section?sectionKey=${section.key}&vehicleCategory=${is4W ? "4W" : "2W"}&inspectionId=${inspectionId}&readOnly=true&fuelType=${encodeURIComponent(report.fuelType || "")}&vehicleSubType=${encodeURIComponent(report.vehicleSubType || "")}`);
                 }}
               >
@@ -198,37 +198,39 @@ export default function InspectionReportScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.gray50,
+    backgroundColor: "transparent",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.primary,
+    backgroundColor: "transparent",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: COLORS.gray600,
+    color: "#FFFFFF",
     fontWeight: "500",
   },
   vehicleCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
     margin: 16,
     borderRadius: 20,
     padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 0,
   },
   vehicleInfo: {
     flexDirection: "row",
@@ -238,7 +240,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -260,7 +264,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.3)",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -268,18 +274,20 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#92400E",
+    color: "#F59E0B",
   },
   summaryCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
     marginHorizontal: 16,
     borderRadius: 20,
     padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 0,
   },
   sectionHeading: {
     fontSize: 16,
@@ -303,13 +311,13 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.gray600,
+    color: COLORS.third,
     fontWeight: "500",
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: COLORS.third,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   breakdownTitle: {
     fontSize: 17,
@@ -325,21 +333,25 @@ const styles = StyleSheet.create({
   sectionItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 0,
   },
   sectionIcon: {
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -371,9 +383,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 20,
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(26, 25, 25, 0.85)",
     borderTopWidth: 1,
-    borderTopColor: COLORS.third,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
   },
   downloadButton: {
     flexDirection: "row",
@@ -391,7 +403,7 @@ const styles = StyleSheet.create({
   downloadText: {
     fontSize: 16,
     fontWeight: "700",
-    color: COLORS.primary,
+    color: "#FFFFFF",
     marginLeft: 8,
   },
 });
@@ -952,4 +964,3 @@ const generatePDFReport = (report) => {
     </html>
   `;
 };
-

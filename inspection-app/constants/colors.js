@@ -1,49 +1,50 @@
 // Color constants
 export const COLORS = {
   // Theme colors from user request
-  primary: "#ffffff",     // --color-primary
-  secondary: "#121212",   // --color-secondary
-  third: "#BEBEBE",       // --color-third
-  fourth: "#007BFF",      // --color-fourth
+  primary: "#1A1919",     // Elegant dark background color for cards/surfaces
+  secondary: "#ffffff",   // Crisp white for primary text
+  third: "#A1A1AA",       // Muted gray/zinc for secondary text
+  fourth: "#007BFF",      // Beautiful vibrant blue for primary action links
 
   // Primary colors (Legacy mappings for backward compatibility if any)
-  primaryLight: "#ffffff",
-  primaryDark: "#121212",
+  primaryLight: "#262626",
+  primaryDark: "#000000",
 
   // Secondary colors
-  secondaryLight: "#BEBEBE",
+  secondaryLight: "#3F3F46",
   secondaryDark: "#007BFF",
 
   // Status colors
-  success: "#16A34A",
-  warning: "#FF9800",
-  danger: "#EF4444",
+  success: "#10B981",     // Vibrant emerald green
+  warning: "#F59E0B",     // Amber warning yellow
+  danger: "#EF4444",      // Soft red danger
   info: "#007BFF",
 
-  // Neutral colors
+  // Neutral colors (Reversed for dark theme)
   white: "#ffffff",
-  black: "#121212",
-  gray50: "#FAFAFA",
-  gray100: "#F5F5F5",
-  gray200: "#EEEEEE",
-  gray300: "#E0E0E0",
-  gray400: "#BEBEBE",
-  gray500: "#9E9E9E",
-  gray600: "#757575",
-  gray700: "#616161",
-  gray800: "#424242",
-  gray900: "#121212",
+  black: "#000000",
+  gray50: "#000000",      // Fallback screen background
+  gray100: "#121212",
+  gray200: "#1C1C1E",
+  gray300: "#2C2C2E",
+  gray400: "#3A3A3C",
+  gray500: "#636366",
+  gray600: "#8E8E93",
+  gray700: "#AEAEB2",
+  gray800: "#C7C7CC",
+  gray900: "#E5E5EA",
 
   // Background colors
-  background: "#ffffff",
-  surface: "#ffffff",
+  background: "#000000",
+  surface: "#1A1919",
 
   // Text colors
-  textPrimary: "#121212",
-  textSecondary: "#666666",
-  textDisabled: "#BEBEBE",
+  textPrimary: "#ffffff",
+  textSecondary: "#A1A1AA",
+  textDisabled: "#48484A",
 
   // Border colors
-  border: "#BEBEBE",
-  divider: "#BEBEBE",
+  border: "rgba(255, 255, 255, 0.08)",
+  divider: "rgba(255, 255, 255, 0.08)",
 };
+

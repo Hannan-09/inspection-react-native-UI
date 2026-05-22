@@ -10,6 +10,7 @@ import { inspectionAPI } from "../services/api/inspectionAPI";
 import { populateInspectionStorage } from "../utils/reportMapper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../constants";
+import ThemeBackground from "../components/ThemeBackground";
 
 const LoadingImage = ({ uri, style, ...props }) => {
   const [imageLoading, setImageLoading] = useState(false);
@@ -23,7 +24,7 @@ const LoadingImage = ({ uri, style, ...props }) => {
         {...props}
       />
       {imageLoading && (
-        <View style={[style, { justifyContent: "center", alignItems: "center", backgroundColor: "#F3F4F6" }]}>
+        <View style={[style, { justifyContent: "center", alignItems: "center", backgroundColor: "rgba(255, 255, 255, 0.05)" }]}>
           <ActivityIndicator size="small" color={COLORS.fourth} />
         </View>
       )}
@@ -50,19 +51,19 @@ export default function InspectionDetailsScreen() {
     const s = status?.toUpperCase();
     switch (s) {
       case "ASSIGNED":
-        return { bg: "#FEF3C7", text: "#92400E" };
+        return { bg: "rgba(245, 158, 11, 0.15)", text: "#F59E0B" };
       case "IN_PROGRESS":
       case "ONGOING":
       case "ACCEPTED":
-        return { bg: "#DBEAFE", text: "#1E40AF" };
+        return { bg: "rgba(0, 123, 255, 0.15)", text: COLORS.fourth };
       case "COMPLETED":
-        return { bg: "#DCFCE7", text: "#166534" };
+        return { bg: "rgba(16, 185, 129, 0.15)", text: COLORS.success };
       case "REJECTED":
-        return { bg: "#FEE2E2", text: "#991B1B" };
+        return { bg: "rgba(239, 68, 68, 0.15)", text: COLORS.danger };
       case "REQUEST_CHANGES":
-        return { bg: "#FFEDD5", text: "#C2410C" };
+        return { bg: "rgba(245, 158, 11, 0.15)", text: "#F59E0B" };
       default:
-        return { bg: "#F3F4F6", text: "#6B7280" };
+        return { bg: "rgba(255, 255, 255, 0.08)", text: COLORS.third };
     }
   };
 
@@ -195,7 +196,7 @@ export default function InspectionDetailsScreen() {
           visibilityTime: 2000,
         });
         setDetails(prev => ({ ...prev, assignmentStatus: "IN_PROGRESS" }));
-        loadDetails(); // Reload to update status to IN_PROGRESS from backend
+        loadDetails();
       } catch (error) {
         Alert.alert("Error", "Failed to accept inspection. Please try again.");
       } finally {
@@ -207,7 +208,6 @@ export default function InspectionDetailsScreen() {
         const t = (details.vehicleType || "").toUpperCase();
         const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
 
-        // Only call the START api if the status is ACCEPTED
         if (details.assignmentStatus?.toUpperCase() === "ACCEPTED") {
           if (cat === "2W") {
             await inspectionAPI.startInspection2W(details.id);
@@ -216,7 +216,6 @@ export default function InspectionDetailsScreen() {
           }
         }
 
-        // Pre-populate AsyncStorage if editing an inspection under REQUEST_CHANGES
         if (isRequestChanges) {
           try {
             await populateInspectionStorage(inspectionAPI, details.id, cat, details.fuelType);
@@ -252,20 +251,19 @@ export default function InspectionDetailsScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.gray100 }}>
+      <ThemeBackground style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color={COLORS.fourth} />
-        <Text style={{ marginTop: 12, color: COLORS.textSecondary, fontSize: 14 }}>Loading details...</Text>
-      </View>
+        <Text style={{ marginTop: 12, color: COLORS.third, fontSize: 14 }}>Loading details...</Text>
+      </ThemeBackground>
     );
   }
 
   if (!details) return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Inspection details not found</Text>
-    </View>
+    <ThemeBackground style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text style={{ color: COLORS.secondary }}>Inspection details not found</Text>
+    </ThemeBackground>
   );
 
-  // Group images by category
   const imagesByCategory = {};
   (details.vehicleImages || []).forEach(img => {
     if (!imagesByCategory[img.imageKey]) imagesByCategory[img.imageKey] = [];
@@ -279,8 +277,8 @@ export default function InspectionDetailsScreen() {
   }));
 
   return (
-    <View className="flex-1" style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <ThemeBackground style={{ flex: 1 }}>
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
         {/* Vehicle Info Card */}
         <View style={styles.card}>
           <View className="flex-row items-center">
@@ -331,7 +329,7 @@ export default function InspectionDetailsScreen() {
                 <Text style={styles.specRowLabel}>{item.label}</Text>
                 <Text style={[
                   styles.specRowValue, 
-                  item.isStatus && { color: item.isRed ? "#DC2626" : "#16A34A", fontWeight: "bold" }
+                  item.isStatus && { color: item.isRed ? COLORS.danger : COLORS.success, fontWeight: "bold" }
                 ]}>
                   {item.val}
                 </Text>
@@ -368,7 +366,7 @@ export default function InspectionDetailsScreen() {
           </TouchableOpacity>
 
           <View style={styles.sellerInfoRow}>
-            <Ionicons name="mail" size={18} color="#6B7280" style={styles.sellerIcon} />
+            <Ionicons name="mail" size={18} color={COLORS.third} style={styles.sellerIcon} />
             <Text style={styles.sellerEmailText}>
               {details.ownerEmail || `${details.ownerFirstname?.toLowerCase()}.${details.ownerLastname?.toLowerCase()}@email.com`}
             </Text>
@@ -395,7 +393,7 @@ export default function InspectionDetailsScreen() {
             </View>
 
             <View style={styles.sellerInfoRow}>
-              <Ionicons name="briefcase" size={18} color="#6B7280" style={styles.sellerIcon} />
+              <Ionicons name="briefcase" size={18} color={COLORS.third} style={styles.sellerIcon} />
               <Text style={styles.sellerEmailText}>
                 {details.requestedUserRole?.replace(/_/g, " ")?.replace(/\b\w/g, c => c.toUpperCase()) || "Consultation"}
               </Text>
@@ -461,7 +459,7 @@ export default function InspectionDetailsScreen() {
             </Text>
           </View>
 
-          {/* Instructions Alert Box */}
+          {/* Remarks Alert Box */}
           {(details.remark || details.remarks) ? (
             <View style={styles.instructionBox}>
               <Ionicons name="information-circle" size={20} color={COLORS.fourth} style={styles.instructionIcon} />
@@ -493,7 +491,7 @@ export default function InspectionDetailsScreen() {
           </View>
         )}
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
       {/* Action Buttons */}
@@ -508,7 +506,7 @@ export default function InspectionDetailsScreen() {
               onPress={() => setRejectModalVisible(true)}
               disabled={submitting}
             >
-              <Ionicons name="close-circle" size={22} color={COLORS.primary} />
+              <Ionicons name="close-circle" size={22} color="#FFFFFF" />
               <Text style={styles.rejectButtonText}>Reject</Text>
             </TouchableOpacity>
             <TouchableOpacity 
@@ -517,13 +515,13 @@ export default function InspectionDetailsScreen() {
               disabled={submitting}
             >
               {submitting ? (
-                <ActivityIndicator color={COLORS.primary} />
+                <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <>
                   <Ionicons 
                     name={details.assignmentStatus?.toUpperCase() === 'ASSIGNED' ? "checkmark-circle" : "play-circle"} 
                     size={22} 
-                    color={COLORS.primary} 
+                    color="#FFFFFF" 
                   />
                   <Text style={styles.acceptButtonText}>
                     {details.assignmentStatus?.toUpperCase() === 'ASSIGNED' ? "Accept" : 
@@ -548,7 +546,7 @@ export default function InspectionDetailsScreen() {
               `&regNumber=${encodeURIComponent(details.regNumber || "")}`
             )}
           >
-            <Ionicons name="document-text" size={22} color={COLORS.primary} />
+            <Ionicons name="document-text" size={22} color="#FFFFFF" />
             <Text style={styles.acceptButtonText}>View Inspection Report</Text>
           </TouchableOpacity>
         )}
@@ -560,10 +558,10 @@ export default function InspectionDetailsScreen() {
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator color={COLORS.primary} />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
               <>
-                <Ionicons name="create-outline" size={22} color={COLORS.primary} />
+                <Ionicons name="create-outline" size={22} color="#FFFFFF" />
                 <Text style={styles.acceptButtonText}>Edit & Resubmit</Text>
               </>
             )}
@@ -572,7 +570,7 @@ export default function InspectionDetailsScreen() {
 
         {details.assignmentStatus === "REJECTED" && (
           <TouchableOpacity 
-            style={[styles.rejectButton, { marginRight: 0, backgroundColor: COLORS.gray100 }]} 
+            style={[styles.rejectButton, { marginRight: 0, backgroundColor: "rgba(255, 255, 255, 0.05)", borderWidth: 1, borderColor: COLORS.danger }]} 
             onPress={() => router.back()}
           >
             <Ionicons name="close-circle" size={22} color={COLORS.danger} />
@@ -592,6 +590,7 @@ export default function InspectionDetailsScreen() {
               multiline
               numberOfLines={4}
               placeholder="Enter rejection reason..."
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
               value={rejectReason}
               onChangeText={setRejectReason}
             />
@@ -600,7 +599,7 @@ export default function InspectionDetailsScreen() {
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirm} onPress={handleReject} disabled={submitting}>
-                {submitting ? <ActivityIndicator color={COLORS.primary} /> : <Text style={styles.modalConfirmText}>Confirm Reject</Text>}
+                {submitting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.modalConfirmText}>Confirm Reject</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -630,7 +629,7 @@ export default function InspectionDetailsScreen() {
                   navigateToInspectionForm();
                 }}
               >
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
+                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
                 <Text style={styles.modalDoneButtonText}>Yes, Video Call Complete</Text>
               </TouchableOpacity>
               
@@ -652,69 +651,118 @@ export default function InspectionDetailsScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: COLORS.gray100 },
-  card: { backgroundColor: COLORS.primary, margin: 16, marginBottom: 0, padding: 16, borderRadius: 12, elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
-  carIcon: { width: 50, height: 50, backgroundColor: COLORS.gray100, borderRadius: 25, justifyContent: "center", alignItems: "center", overflow: "hidden" },
+  container: { flex: 1, backgroundColor: "transparent" },
+  card: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    margin: 16,
+    marginBottom: 0,
+    padding: 16,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 0,
+  },
+  carIcon: {
+    width: 50,
+    height: 50,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
   carThumbnail: { width: "100%", height: "100%", borderRadius: 25 },
   carModel: { fontSize: 18, fontWeight: "bold", color: COLORS.secondary },
-  carNumber: { fontSize: 14, color: COLORS.textSecondary, marginTop: 2, fontWeight: "500" },
+  carNumber: { fontSize: 14, color: COLORS.third, marginTop: 2, fontWeight: "500" },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   statusText: { fontSize: 12, fontWeight: "bold", textTransform: "capitalize" },
-  divider: { height: 1, backgroundColor: COLORS.gray100, marginVertical: 12 },
-  specsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
-  specItem: { width: "48%", flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  specLabel: { fontSize: 12, color: COLORS.third },
-  specValue: { fontSize: 14, fontWeight: "600", color: COLORS.secondary },
   sectionTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.fourth, marginBottom: 12 },
-  ownerName: { fontSize: 15, fontWeight: "bold", color: COLORS.secondary },
-  ownerRole: { fontSize: 13, color: COLORS.textSecondary },
-  actionIcon: { width: 40, height: 40, backgroundColor: COLORS.gray100, borderRadius: 20, justifyContent: "center", alignItems: "center" },
-  infoRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  infoText: { fontSize: 14, color: COLORS.textSecondary, marginLeft: 8 },
-  locationLink: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-  locationLinkText: { fontSize: 14, color: COLORS.fourth, marginLeft: 8, fontWeight: "600" },
-  noteBox: { backgroundColor: "#FFFBEB", padding: 12, borderRadius: 8, marginTop: 12, borderLeftWidth: 4, borderLeftColor: "#F59E0B" },
-  noteTitle: { fontSize: 14, fontWeight: "bold", color: "#92400E", marginBottom: 2 },
-  noteText: { fontSize: 13, color: "#B45309" },
   imageTabs: { marginBottom: 12 },
-  imageTab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 8, backgroundColor: COLORS.gray100 },
-  imageTabActive: { backgroundColor: COLORS.fourth },
-  imageTabText: { fontSize: 13, color: COLORS.textSecondary },
-  imageTabTextActive: { color: COLORS.primary, fontWeight: "bold" },
+  imageTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  imageTabActive: { backgroundColor: COLORS.fourth, borderColor: COLORS.fourth },
+  imageTabText: { fontSize: 13, color: COLORS.third },
+  imageTabTextActive: { color: "#FFFFFF", fontWeight: "bold" },
   imageGallery: { width: "100%", height: 200 },
   vehicleImage: { width: "100%", height: "100%", borderRadius: 8 },
-  bottomButtons: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", padding: 16, backgroundColor: COLORS.primary, borderTopWidth: 1, borderTopColor: COLORS.gray200 },
+  bottomButtons: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    padding: 16,
+    backgroundColor: "rgba(26, 25, 25, 0.95)",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+  },
   rejectButton: { flex: 1, flexDirection: "row", height: 50, backgroundColor: COLORS.danger, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  rejectButtonText: { color: COLORS.primary, fontWeight: "bold", fontSize: 16, marginLeft: 8 },
+  rejectButtonText: { color: "#FFFFFF", fontWeight: "bold", fontSize: 16, marginLeft: 8 },
   acceptButton: { flex: 1, flexDirection: "row", height: 50, backgroundColor: COLORS.success, borderRadius: 12, justifyContent: "center", alignItems: "center", marginLeft: 8 },
-  acceptButtonText: { color: COLORS.primary, fontWeight: "bold", fontSize: 16, marginLeft: 8 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalContent: { backgroundColor: COLORS.primary, borderRadius: 16, padding: 20 },
+  acceptButtonText: { color: "#FFFFFF", fontWeight: "bold", fontSize: 16, marginLeft: 8 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", padding: 20 },
+  modalContent: {
+    backgroundColor: "#1A1919",
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
   modalTitle: { fontSize: 20, fontWeight: "bold", color: COLORS.secondary, marginBottom: 16 },
   modalLabel: { fontSize: 14, fontWeight: "600", color: COLORS.secondary, marginBottom: 8 },
-  modalInput: { borderWidth: 1, borderColor: COLORS.gray200, borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    color: COLORS.secondary,
+    height: 100,
+    textAlignVertical: "top",
+  },
   modalCancel: { flex: 1, height: 48, justifyContent: "center", alignItems: "center" },
-  modalCancelText: { fontSize: 16, fontWeight: "bold", color: COLORS.textSecondary },
+  modalCancelText: { fontSize: 16, fontWeight: "bold", color: COLORS.third },
   modalConfirm: { flex: 2, height: 48, backgroundColor: COLORS.danger, borderRadius: 12, justifyContent: "center", alignItems: "center" },
-  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary },
+  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#FFFFFF" },
   
   // Premium Card Redesign Styles
   newCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     marginHorizontal: 16,
     marginTop: 16,
     padding: 20,
     borderRadius: 20,
-    elevation: 3,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 0,
   },
   newCardTitle: {
     fontSize: 18,
@@ -722,13 +770,13 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
   },
   sellerTag: {
-    backgroundColor: "#DEF7EC",
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 100,
   },
   sellerTagText: {
-    color: "#03543F",
+    color: COLORS.success,
     fontSize: 12,
     fontWeight: "bold",
   },
@@ -743,7 +791,7 @@ const styles = StyleSheet.create({
   },
   sellerNameText: {
     fontSize: 15,
-    color: COLORS.textSecondary,
+    color: COLORS.secondary,
     marginLeft: 10,
     fontWeight: "500",
   },
@@ -755,7 +803,7 @@ const styles = StyleSheet.create({
   },
   sellerEmailText: {
     fontSize: 15,
-    color: COLORS.textSecondary,
+    color: COLORS.third,
     marginLeft: 10,
   },
   scheduleItem: {
@@ -767,7 +815,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -799,14 +849,16 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   directionButtonText: {
-    color: COLORS.primary,
+    color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "bold",
     marginLeft: 6,
   },
   addressBox: {
     flexDirection: "row",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "rgba(239, 68, 68, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.2)",
     borderLeftWidth: 4,
     borderLeftColor: COLORS.danger,
     borderRadius: 8,
@@ -827,7 +879,9 @@ const styles = StyleSheet.create({
   },
   instructionBox: {
     flexDirection: "row",
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(0, 123, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 123, 255, 0.2)",
     borderRadius: 8,
     padding: 14,
     marginTop: 14,
@@ -851,11 +905,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray100,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
   },
   specRowLabel: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: COLORS.third,
     fontWeight: "500",
   },
   specRowValue: {
@@ -865,13 +919,13 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   requesterTag: {
-    backgroundColor: "#DBEAFE",
+    backgroundColor: "rgba(0, 123, 255, 0.15)",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 100,
   },
   requesterTagText: {
-    color: "#1E40AF",
+    color: COLORS.fourth,
     fontSize: 12,
     fontWeight: "bold",
   },
@@ -879,14 +933,16 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   modalSubtitle: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: COLORS.third,
     textAlign: "center",
     paddingHorizontal: 20,
     lineHeight: 20,
@@ -903,13 +959,13 @@ const styles = StyleSheet.create({
   modalDoneButtonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: COLORS.primary,
+    color: "#FFFFFF",
   },
   modalRetryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
     borderWidth: 1,
     borderColor: COLORS.success,
     borderRadius: 12,
@@ -929,9 +985,6 @@ const styles = StyleSheet.create({
   modalCancelButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: COLORS.textSecondary,
+    color: COLORS.third,
   },
 });
-
-
-

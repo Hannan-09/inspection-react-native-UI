@@ -22,6 +22,7 @@ import { authAPI } from "../../services/api/authAPI";
 import { apiService } from "../../services/api/api";
 import { API_CONFIG } from "../../config/api.config";
 import { COLORS } from "../../constants";
+import ThemeBackground from "../../components/ThemeBackground";
 
 export default function ProfileTab() {
   const router = useRouter();
@@ -311,15 +312,15 @@ export default function ProfileTab() {
   if (!userData && !loggingOut) {
     // Show skeleton / loading state
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.gray50 }}>
+      <ThemeBackground style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color={COLORS.fourth} />
-        <Text style={{ marginTop: 12, color: COLORS.gray600, fontSize: 14 }}>Loading profile...</Text>
-      </View>
+        <Text style={{ marginTop: 12, color: COLORS.third, fontSize: 14 }}>Loading profile...</Text>
+      </ThemeBackground>
     );
   }
 
   return (
-    <View className="flex-1" style={styles.container}>
+    <ThemeBackground style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Profile Header Card */}
         <View style={styles.headerCard}>
@@ -329,7 +330,7 @@ export default function ProfileTab() {
                 {display.initials ? (
                   <Text style={styles.initialsText}>{display.initials}</Text>
                 ) : (
-                  <Ionicons name="person" size={48} color={COLORS.primary} />
+                  <Ionicons name="person" size={48} color="#FFFFFF" />
                 )}
               </View>
             </View>
@@ -353,9 +354,9 @@ export default function ProfileTab() {
 
               <View style={styles.statItem}>
                 <View
-                  style={[styles.statIconBox, { backgroundColor: "#FEF3C7" }]}
+                  style={[styles.statIconBox, { backgroundColor: "rgba(245, 158, 11, 0.15)" }]}
                 >
-                  <Ionicons name="star" size={24} color="#F59E0B" />
+                  <Ionicons name="star" size={24} color="#FBBF24" />
                 </View>
                 <Text style={styles.statNumber}>{display.rating}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
@@ -363,9 +364,9 @@ export default function ProfileTab() {
 
               <View style={styles.statItem}>
                 <View
-                  style={[styles.statIconBox, { backgroundColor: "#DCFCE7" }]}
+                  style={[styles.statIconBox, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}
                 >
-                  <Ionicons name="time" size={24} color="#16A34A" />
+                  <Ionicons name="time" size={24} color="#34D399" />
                 </View>
                 <Text style={styles.statNumber}>{display.experience}</Text>
                 <Text style={styles.statLabel}>Experience</Text>
@@ -375,9 +376,8 @@ export default function ProfileTab() {
         </View>
 
         {/* Contact Info Card */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-
+        <Text style={styles.sectionHeaderTitle}>Contact Information</Text>
+        <View style={[styles.sectionCard, { marginTop: 0 }]}>
           <View style={styles.infoRow}>
             <View style={styles.infoIconContainer}>
               <Ionicons name="mail-outline" size={20} color={COLORS.fourth} />
@@ -402,9 +402,8 @@ export default function ProfileTab() {
         </View>
 
         {/* Personal & Document Details */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Personal & Documents</Text>
-
+        <Text style={styles.sectionHeaderTitle}>Personal & Documents</Text>
+        <View style={[styles.sectionCard, { marginTop: 0 }]}>
           <View style={styles.infoRow}>
             <View style={styles.infoIconContainer}>
               <Ionicons name="location-outline" size={20} color={COLORS.fourth} />
@@ -490,9 +489,9 @@ export default function ProfileTab() {
           disabled={loggingOut}
         >
           {loggingOut ? (
-            <ActivityIndicator color="#DC2626" size="small" />
+            <ActivityIndicator color="#EF4444" size="small" />
           ) : (
-            <Ionicons name="log-out-outline" size={22} color="#DC2626" />
+            <Ionicons name="log-out-outline" size={22} color="#EF4444" />
           )}
           <Text style={styles.logoutText}>{loggingOut ? "Logging out..." : "Logout"}</Text>
         </TouchableOpacity>
@@ -563,6 +562,7 @@ export default function ProfileTab() {
           </View>
         </View>
       </Modal>
+
       {/* Selector Modal (State/City) */}
       <Modal
         visible={!!selectorType}
@@ -639,6 +639,7 @@ export default function ProfileTab() {
                     value={formData.firstname}
                     onChangeText={(val) => setFormData(prev => ({ ...prev, firstname: val }))}
                     placeholder="Enter first name"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
                   />
                 </View>
 
@@ -649,6 +650,7 @@ export default function ProfileTab() {
                     value={formData.lastname}
                     onChangeText={(val) => setFormData(prev => ({ ...prev, lastname: val }))}
                     placeholder="Enter last name"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
                   />
                 </View>
 
@@ -659,6 +661,7 @@ export default function ProfileTab() {
                     value={formData.email}
                     onChangeText={(val) => setFormData(prev => ({ ...prev, email: val }))}
                     placeholder="Enter email"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
@@ -671,6 +674,7 @@ export default function ProfileTab() {
                     value={formData.contactNumber}
                     onChangeText={(val) => setFormData(prev => ({ ...prev, contactNumber: val }))}
                     placeholder="Enter phone number"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
                     keyboardType="phone-pad"
                   />
                 </View>
@@ -682,6 +686,7 @@ export default function ProfileTab() {
                     value={formData.age}
                     onChangeText={(val) => setFormData(prev => ({ ...prev, age: val }))}
                     placeholder="Enter age"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
                     keyboardType="number-pad"
                   />
                 </View>
@@ -693,6 +698,7 @@ export default function ProfileTab() {
                     value={formData.upiId}
                     onChangeText={(val) => setFormData(prev => ({ ...prev, upiId: val }))}
                     placeholder="Enter UPI ID"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
                   />
                 </View>
 
@@ -703,6 +709,7 @@ export default function ProfileTab() {
                     value={formData.address}
                     onChangeText={(val) => setFormData(prev => ({ ...prev, address: val }))}
                     placeholder="Enter address"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
                     multiline={true}
                   />
                 </View>
@@ -714,7 +721,7 @@ export default function ProfileTab() {
                     style={styles.pickerTrigger}
                     onPress={() => setSelectorType("state")}
                   >
-                    <Text style={[styles.pickerValue, !formData.stateId && { color: "#9CA3AF" }]}>
+                    <Text style={[styles.pickerValue, !formData.stateId && { color: "rgba(255, 255, 255, 0.4)" }]}>
                       {states.find(s => s.id.toString() === formData.stateId)?.name || "Select State"}
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#6B7280" />
@@ -727,7 +734,7 @@ export default function ProfileTab() {
                     style={styles.pickerTrigger}
                     onPress={() => formData.stateId ? setSelectorType("city") : Alert.alert("Select State", "Please select a state first")}
                   >
-                    <Text style={[styles.pickerValue, !formData.cityId && { color: "#9CA3AF" }]}>
+                    <Text style={[styles.pickerValue, !formData.cityId && { color: "rgba(255, 255, 255, 0.4)" }]}>
                       {cities.find(c => c.id.toString() === formData.cityId)?.name || "Select City"}
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#6B7280" />
@@ -741,7 +748,7 @@ export default function ProfileTab() {
                   disabled={updating}
                 >
                   {updating ? (
-                    <ActivityIndicator color={COLORS.primary} size="small" />
+                    <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <Text style={styles.saveButtonText}>Update Profile</Text>
                   )}
@@ -751,35 +758,43 @@ export default function ProfileTab() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.gray50,
+    flex: 1,
   },
   headerCard: {
-    backgroundColor: COLORS.primary,
-    padding: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 24,
+    marginHorizontal: 16,
+    marginTop: 20,
     overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   headerBlueSection: {
-    backgroundColor: COLORS.fourth,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
     paddingTop: 32,
     paddingBottom: 24,
     paddingHorizontal: 20,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
   },
   statsSection: {
-    backgroundColor: COLORS.primary,
     paddingVertical: 24,
     paddingHorizontal: 12,
   },
@@ -791,31 +806,37 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 4,
-    borderColor: COLORS.primary,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+    borderColor: "rgba(0, 123, 255, 0.4)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   initialsText: {
     fontSize: 36,
     fontWeight: "bold",
-    color: COLORS.primary,
+    color: COLORS.secondary,
   },
   userName: {
     fontSize: 24,
     fontWeight: "bold",
-    color: COLORS.primary,
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   userRole: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: COLORS.third,
     fontWeight: "600",
     marginBottom: 0,
   },
@@ -834,15 +855,21 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "rgba(0, 123, 255, 0.15)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
-    shadowColor: COLORS.fourth,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.fourth,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   statNumber: {
     fontSize: 22,
@@ -852,35 +879,57 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: COLORS.gray600,
+    color: COLORS.third,
     fontWeight: "600",
     textAlign: "center",
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: COLORS.gray200,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
   },
   sectionCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 1,
     overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: COLORS.primary,
-    backgroundColor: COLORS.fourth,
+    color: COLORS.secondary,
     paddingVertical: 16,
     paddingHorizontal: 16,
     marginBottom: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.fourth,
+  },
+  sectionHeaderTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.secondary,
+    marginTop: 24,
+    marginBottom: 8,
+    marginHorizontal: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.fourth,
+    paddingLeft: 8,
   },
   infoRow: {
     flexDirection: "row",
@@ -892,14 +941,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
   infoLabel: {
     fontSize: 12,
-    color: COLORS.gray600,
+    color: COLORS.third,
     fontWeight: "600",
     marginBottom: 2,
   },
@@ -910,7 +959,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.gray200,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
     marginHorizontal: 16,
   },
   menuItem: {
@@ -923,7 +972,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -942,23 +991,31 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 16,
     borderRadius: 24,
-    backgroundColor: "#FEE2E2",
-    shadowColor: COLORS.danger,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: "rgba(239, 68, 68, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.25)",
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.danger,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   logoutText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: COLORS.danger,
+    color: "#EF4444",
     marginLeft: 8,
   },
   versionText: {
     textAlign: "center",
     fontSize: 12,
-    color: COLORS.gray400,
+    color: COLORS.third,
     marginTop: 24,
   },
   // Modal Styles
@@ -971,7 +1028,9 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "100%",
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#1A1919",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 24,
     padding: 24,
     alignItems: "center",
@@ -1002,16 +1061,16 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "#121212",
     borderRadius: 16,
     backfaceVisibility: "hidden",
     position: "absolute",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: COLORS.gray200,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   flipCardBack: {
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "#121212",
   },
   docImage: {
     width: "100%",
@@ -1027,7 +1086,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cardLabelText: {
-    color: COLORS.primary,
+    color: "#FFFFFF",
     fontSize: 11,
     fontWeight: "bold",
     letterSpacing: 1,
@@ -1049,7 +1108,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   flipButtonText: {
-    color: COLORS.primary,
+    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "bold",
     marginLeft: 8,
@@ -1057,11 +1116,13 @@ const styles = StyleSheet.create({
   // Edit Profile Styles
   editOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "flex-end",
   },
   editContent: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#1A1919",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: "90%",
@@ -1089,17 +1150,17 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   input: {
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
     fontSize: 15,
     color: COLORS.secondary,
     borderWidth: 1,
-    borderColor: COLORS.gray200,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   pickerTrigger: {
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
@@ -1107,7 +1168,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: COLORS.gray200,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   pickerValue: {
     fontSize: 15,
@@ -1124,21 +1185,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
   },
   saveButtonText: {
-    color: COLORS.primary,
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
   },
   // Selector Styles
   selectorOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "flex-end",
   },
   selectorContent: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#1A1919",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: "60%",
@@ -1161,7 +1224,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray100,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
   },
   selectorItemText: {
     fontSize: 16,

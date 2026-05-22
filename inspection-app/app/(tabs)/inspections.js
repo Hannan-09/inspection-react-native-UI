@@ -11,6 +11,7 @@ import {
   TextInput,
   Alert,
   Linking,
+  Platform,
 } from "react-native";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ import { inspectionAPI } from "../../services/api/inspectionAPI";
 import { populateInspectionStorage } from "../../utils/reportMapper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../../constants";
+import ThemeBackground from "../../components/ThemeBackground";
 
 export default function InspectionsTab() {
   const router = useRouter();
@@ -330,35 +332,35 @@ export default function InspectionsTab() {
     const s = status?.toLowerCase();
     switch (s) {
       case "completed":
-        return { bg: "#DCFCE7", text: "#166534", icon: "checkmark-circle" };
+        return { bg: "rgba(16, 185, 129, 0.15)", text: "#10B981", icon: "checkmark-circle" };
       case "assigned":
       case "pending":
-        return { bg: "#FEF3C7", text: "#92400E", icon: "time-outline" };
+        return { bg: "rgba(245, 158, 11, 0.15)", text: "#F59E0B", icon: "time-outline" };
       case "accepted":
-        return { bg: "#EFF6FF", text: COLORS.fourth, icon: "checkmark-done" };
+        return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA", icon: "checkmark-done" };
       case "in_progress":
       case "ongoing":
-        return { bg: "#DBEAFE", text: "#1E40AF", icon: "car-sport" };
+        return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA", icon: "car-sport" };
       case "submitted":
-        return { bg: "#F0FDF4", text: "#15803D", icon: "send-outline" };
+        return { bg: "rgba(16, 185, 129, 0.15)", text: "#10B981", icon: "send-outline" };
       case "rejected":
-        return { bg: "#FEE2E2", text: "#991B1B", icon: "close-circle" };
+        return { bg: "rgba(239, 68, 68, 0.15)", text: "#EF4444", icon: "close-circle" };
       case "request_changes":
-        return { bg: "#FFEDD5", text: "#C2410C", icon: "alert-circle-outline" };
+        return { bg: "rgba(245, 158, 11, 0.15)", text: "#F59E0B", icon: "alert-circle-outline" };
       default:
-        return { bg: "#F3F4F6", text: "#6B7280", icon: "help-circle" };
+        return { bg: "rgba(255, 255, 255, 0.08)", text: "#9CA3AF", icon: "help-circle" };
     }
   };
 
   const getInspectionTypeColor = (type) => {
     const t = type?.toUpperCase() || "";
     if (t.includes("CONSULTANT") || t.includes("CONSULTATION"))
-      return { bg: "#DBEAFE", text: "#1E40AF" };
+      return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA" };
     if (t.includes("SELLER"))
-      return { bg: "#FCE7F3", text: "#9F1239" };
+      return { bg: "rgba(244, 63, 94, 0.15)", text: "#F43F5E" };
     if (t.includes("BUYER") || t.includes("VIDEO"))
-      return { bg: "#E0E7FF", text: "#3730A3" };
-    return { bg: "#F3F4F6", text: "#6B7280" };
+      return { bg: "rgba(99, 102, 241, 0.15)", text: "#818CF8" };
+    return { bg: "rgba(255, 255, 255, 0.08)", text: "#9CA3AF" };
   };
 
   const renderInspection = ({ item }) => {
@@ -851,20 +853,19 @@ export default function InspectionsTab() {
 
   if (loading) {
     return (
-      <View
-        className="flex-1 items-center justify-center"
-        style={styles.container}
+      <ThemeBackground
+        style={[styles.container, { alignItems: "center", justifyContent: "center" }]}
       >
         <Ionicons name="car-sport-outline" size={48} color={COLORS.third} />
         <Text className="mt-4" style={styles.loadingText}>
           Loading inspections...
         </Text>
-      </View>
+      </ThemeBackground>
     );
   }
 
   return (
-    <View className="flex-1" style={styles.container}>
+    <ThemeBackground style={styles.container}>
       <FlatList
         data={inspections}
         renderItem={renderInspection}
@@ -984,33 +985,33 @@ export default function InspectionsTab() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   // Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalContent: { backgroundColor: COLORS.primary, borderRadius: 16, padding: 20 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", padding: 20 },
+  modalContent: { backgroundColor: COLORS.primary, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", borderRadius: 16, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", color: COLORS.secondary, marginBottom: 16 },
   modalLabel: { fontSize: 14, fontWeight: "600", color: COLORS.secondary, marginBottom: 8 },
-  modalInput: { borderWidth: 1, borderColor: COLORS.third, borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
+  modalInput: { borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)", color: "#FFFFFF", borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
   modalCancel: { flex: 1, height: 48, justifyContent: "center", alignItems: "center" },
   modalCancelText: { fontSize: 16, fontWeight: "bold", color: COLORS.gray600 },
   modalConfirm: { flex: 2, height: 48, backgroundColor: COLORS.danger, borderRadius: 12, justifyContent: "center", alignItems: "center" },
-  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary },
+  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#FFFFFF" },
   videoIconRing: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: COLORS.gray700,
+    color: COLORS.third,
     textAlign: "center",
     paddingHorizontal: 20,
     lineHeight: 20,
@@ -1027,13 +1028,13 @@ const styles = StyleSheet.create({
   modalDoneButtonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: COLORS.primary,
+    color: "#FFFFFF",
   },
   modalRetryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "rgba(22, 163, 74, 0.12)",
     borderWidth: 1,
     borderColor: COLORS.success,
     borderRadius: 12,
@@ -1058,13 +1059,13 @@ const styles = StyleSheet.create({
 
   // Card Actions
   cardActions: { flexDirection: "row", marginTop: 12, gap: 10 },
-  cardRejectButton: { flex: 1, height: 36, backgroundColor: COLORS.gray100, borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardRejectButtonText: { color: COLORS.gray700, fontSize: 13, fontWeight: "600" },
+  cardRejectButton: { flex: 1, height: 36, backgroundColor: "rgba(255, 255, 255, 0.06)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardRejectButtonText: { color: COLORS.gray900, fontSize: 13, fontWeight: "600" },
   cardAcceptButton: { flex: 1, height: 36, backgroundColor: COLORS.fourth, borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardAcceptButtonText: { color: COLORS.primary, fontSize: 13, fontWeight: "600" },
+  cardAcceptButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "600" },
 
   container: {
-    backgroundColor: COLORS.gray50,
+    flex: 1,
   },
   listContent: {
     paddingBottom: 120,
@@ -1078,22 +1079,30 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 4,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   statIconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "rgba(245, 158, 11, 0.15)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -1106,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.gray600,
+    color: COLORS.third,
     marginTop: 2,
   },
   tabsWrapper: {
@@ -1115,13 +1124,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tabsScrollView: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   tabsScrollContainer: {
     padding: 4,
@@ -1133,7 +1150,7 @@ const styles = StyleSheet.create({
   },
   scrollIndicatorTrack: {
     height: 3,
-    backgroundColor: COLORS.gray200,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 2,
     overflow: "hidden",
   },
@@ -1156,13 +1173,13 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    color: COLORS.gray600,
+    color: COLORS.third,
   },
   activeTabText: {
-    color: COLORS.primary,
+    color: "#FFFFFF",
   },
   badge: {
-    backgroundColor: COLORS.gray200,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1171,7 +1188,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   activeBadge: {
-    backgroundColor: "rgba(255,255,255,0.3)",
+    backgroundColor: "rgba(255,255,255,0.25)",
   },
   badgeText: {
     fontSize: 11,
@@ -1179,19 +1196,27 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
   },
   activeBadgeText: {
-    color: COLORS.primary,
+    color: "#FFFFFF",
   },
   card: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   carModel: {
     fontSize: 17,
@@ -1224,14 +1249,14 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: COLORS.gray600,
+    color: COLORS.third,
   },
   cardDetail: {
     fontSize: 13,
-    color: COLORS.gray600,
+    color: COLORS.third,
   },
   rejectionBox: {
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
@@ -1239,10 +1264,10 @@ const styles = StyleSheet.create({
   },
   rejectionText: {
     fontSize: 12,
-    color: "#991B1B",
+    color: "#EF4444",
   },
   remarksBox: {
-    backgroundColor: "#FFFBEB",
+    backgroundColor: "rgba(245, 158, 11, 0.1)",
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
@@ -1250,11 +1275,11 @@ const styles = StyleSheet.create({
   },
   remarksText: {
     fontSize: 12,
-    color: "#B45309",
+    color: "#F59E0B",
   },
   loadingText: {
     fontSize: 16,
-    color: COLORS.gray500,
+    color: COLORS.third,
   },
   emptyContainer: {
     paddingVertical: 60,
@@ -1266,6 +1291,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: COLORS.gray500,
+    color: COLORS.third,
   },
 });

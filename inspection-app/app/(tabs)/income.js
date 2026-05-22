@@ -1,10 +1,11 @@
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
 import { COLORS } from "../../constants";
+import ThemeBackground from "../../components/ThemeBackground";
 
 export default function IncomeTab() {
   const [refreshing, setRefreshing] = useState(false);
@@ -55,13 +56,13 @@ export default function IncomeTab() {
   const getInspectionTypeColor = (type) => {
     switch (type) {
       case "Consultant":
-        return { bg: "#DBEAFE", text: "#1E40AF" };
+        return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA" };
       case "Seller":
-        return { bg: "#FCE7F3", text: "#9F1239" };
+        return { bg: "rgba(244, 63, 94, 0.15)", text: "#FB7185" };
       case "Buyer":
-        return { bg: "#E0E7FF", text: "#3730A3" };
+        return { bg: "rgba(99, 102, 241, 0.15)", text: "#818CF8" };
       default:
-        return { bg: "#F3F4F6", text: "#6B7280" };
+        return { bg: "rgba(156, 163, 175, 0.15)", text: "#9CA3AF" };
     }
   };
 
@@ -80,13 +81,17 @@ export default function IncomeTab() {
           <View
             style={[
               styles.amountBadge,
-              { backgroundColor: isPending ? "#FEF3C7" : "#DCFCE7" },
+              { 
+                backgroundColor: isPending ? "rgba(245, 158, 11, 0.12)" : "rgba(16, 185, 129, 0.12)",
+                borderWidth: 1,
+                borderColor: isPending ? "rgba(245, 158, 11, 0.25)" : "rgba(16, 185, 129, 0.25)"
+              },
             ]}
           >
             <Text
               style={[
                 styles.amountText,
-                { color: isPending ? "#92400E" : "#166534" },
+                { color: isPending ? "#F59E0B" : "#10B981" },
               ]}
             >
               ₹{item.amount.toLocaleString()}
@@ -108,7 +113,7 @@ export default function IncomeTab() {
 
         {/* Details */}
         <View className="flex-row items-center mt-3">
-          <Ionicons name="calendar-outline" size={14} color={COLORS.gray400} />
+          <Ionicons name="calendar-outline" size={14} color={COLORS.third} />
           <Text style={styles.cardDetail}>
             Inspection: {item.inspectionDate}
           </Text>
@@ -116,15 +121,15 @@ export default function IncomeTab() {
 
         {isPending ? (
           <View className="flex-row items-center mt-2">
-            <Ionicons name="time-outline" size={14} color="#F59E0B" />
-            <Text style={[styles.cardDetail, { color: "#F59E0B" }]}>
+            <Ionicons name="time-outline" size={14} color="#FBBF24" />
+            <Text style={[styles.cardDetail, { color: "#FBBF24" }]}>
               Expected: {item.expectedDate}
             </Text>
           </View>
         ) : (
           <View className="flex-row items-center mt-2">
-            <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-            <Text style={[styles.cardDetail, { color: "#16A34A" }]}>
+            <Ionicons name="checkmark-circle" size={14} color="#34D399" />
+            <Text style={[styles.cardDetail, { color: "#34D399" }]}>
               Received: {item.paymentDate}
             </Text>
           </View>
@@ -135,20 +140,20 @@ export default function IncomeTab() {
           style={[
             styles.statusBadge,
             {
-              backgroundColor: isPending ? "#FEF3C7" : "#DCFCE7",
-              borderColor: isPending ? "#F59E0B" : "#16A34A",
+              backgroundColor: isPending ? "rgba(245, 158, 11, 0.12)" : "rgba(16, 185, 129, 0.12)",
+              borderColor: isPending ? "rgba(245, 158, 11, 0.25)" : "rgba(16, 185, 129, 0.25)",
             },
           ]}
         >
           <Ionicons
             name={isPending ? "hourglass-outline" : "checkmark-done"}
             size={12}
-            color={isPending ? "#92400E" : "#166534"}
+            color={isPending ? "#F59E0B" : "#10B981"}
           />
           <Text
             style={[
               styles.statusText,
-              { color: isPending ? "#92400E" : "#166534" },
+              { color: isPending ? "#F59E0B" : "#10B981" },
             ]}
           >
             {isPending ? "Pending" : "Received"}
@@ -159,7 +164,7 @@ export default function IncomeTab() {
   };
 
   return (
-    <View className="flex-1" style={styles.container}>
+    <ThemeBackground style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -174,25 +179,35 @@ export default function IncomeTab() {
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
           {/* Pending Income */}
-          <View style={[styles.statCard, { backgroundColor: "#FEF3C7" }]}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="hourglass-outline" size={28} color="#F59E0B" />
+          <View style={styles.statCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <View style={[styles.statIconContainer, { backgroundColor: "rgba(245, 158, 11, 0.15)" }]}>
+                <Ionicons name="hourglass-outline" size={22} color="#F59E0B" />
+              </View>
+              <View style={[styles.statBadge, { backgroundColor: "rgba(245, 158, 11, 0.15)" }]}>
+                <Text style={[styles.statBadgeText, { color: "#F59E0B" }]}>Pending</Text>
+              </View>
             </View>
+            <Text style={styles.statLabel}>Pending Income</Text>
             <Text style={styles.statNumber}>
               ₹{pendingIncome.toLocaleString()}
             </Text>
-            <Text style={styles.statLabel}>Pending Income</Text>
           </View>
 
           {/* Received Income */}
-          <View style={[styles.statCard, { backgroundColor: "#DCFCE7" }]}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="wallet" size={28} color="#16A34A" />
+          <View style={styles.statCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <View style={[styles.statIconContainer, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}>
+                <Ionicons name="wallet-outline" size={22} color="#10B981" />
+              </View>
+              <View style={[styles.statBadge, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}>
+                <Text style={[styles.statBadgeText, { color: "#10B981" }]}>Received</Text>
+              </View>
             </View>
+            <Text style={styles.statLabel}>Received Income</Text>
             <Text style={styles.statNumber}>
               ₹{receivedIncome.toLocaleString()}
             </Text>
-            <Text style={styles.statLabel}>Received Income</Text>
           </View>
         </View>
 
@@ -219,13 +234,13 @@ export default function IncomeTab() {
         {/* Bottom Spacing */}
         <View style={{ height: 100 }} />
       </ScrollView>
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.gray50,
+    flex: 1,
   },
   statsContainer: {
     flexDirection: "row",
@@ -234,61 +249,52 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 20,
     padding: 20,
     marginHorizontal: 4,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    alignItems: "flex-start",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   statIconContainer: {
-    marginBottom: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  statBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    color: COLORS.secondary,
-    marginBottom: 4,
+    color: "#FFFFFF",
+    marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.gray600,
+    color: COLORS.third,
     fontWeight: "600",
-    textAlign: "center",
-  },
-  totalIncomeCard: {
-    backgroundColor: "#EFF6FF",
-    borderRadius: 20,
-    padding: 24,
-    marginHorizontal: 16,
-    marginTop: 20,
-    shadowColor: COLORS.fourth,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  totalLabel: {
-    fontSize: 14,
-    color: COLORS.gray600,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  totalAmount: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: COLORS.fourth,
-  },
-  totalIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
+    marginTop: 12,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -306,21 +312,29 @@ const styles = StyleSheet.create({
   sectionCount: {
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.gray600,
+    color: COLORS.third,
   },
   incomeList: {
     paddingHorizontal: 16,
   },
   incomeCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   cardCarModel: {
     fontSize: 16,
@@ -358,7 +372,7 @@ const styles = StyleSheet.create({
   },
   cardDetail: {
     fontSize: 12,
-    color: COLORS.gray600,
+    color: COLORS.third,
     marginLeft: 6,
   },
   statusBadge: {

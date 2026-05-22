@@ -10,6 +10,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
@@ -17,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { authAPI } from "../services/api/authAPI";
 import { COLORS } from "../constants";
+import ThemeBackground from "../components/ThemeBackground";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -72,125 +74,126 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
-          {/* Login Card */}
-          <View className="bg-white" style={styles.loginCard}>
-            {/* Logo */}
-            <View className="items-center mb-8">
-              <View
-                className="items-center justify-center"
-                style={styles.logoBorder}
-              >
-                <Ionicons name="clipboard-outline" size={50} color={COLORS.fourth} />
+    <ThemeBackground style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+        style={styles.keyboardContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {/* Login Card */}
+            <View style={styles.loginCard}>
+              {/* Logo */}
+              <View className="items-center mb-8">
+                <View
+                  className="items-center justify-center"
+                  style={styles.logoBorder}
+                >
+                  <Ionicons name="clipboard-outline" size={50} color={COLORS.fourth} />
+                </View>
+                <Text className="font-semibold" style={styles.welcomeText}>
+                  Reecomm Inspector
+                </Text>
               </View>
-              <Text className="font-semibold" style={styles.welcomeText}>
-                Reecomm Inspector
-              </Text>
-            </View>
 
-            {/* Title */}
-            <View className="flex-row mb-9 justify-center items-center">
-              <Text
-                className="font-bold"
-                style={[styles.tabText, styles.tabTextActive, styles.tabButton]}
-              >
-                Login
-              </Text>
-              <View style={styles.tabIndicator} />
-            </View>
+              {/* Title */}
+              <View className="flex-row mb-9 justify-center items-center">
+                <Text
+                  className="font-bold"
+                  style={[styles.tabText, styles.tabTextActive, styles.tabButton]}
+                >
+                  Login
+                </Text>
+                <View style={styles.tabIndicator} />
+              </View>
 
-
-            {/* Username Input */}
-            <View className="mb-4" style={styles.inputContainer}>
-              <TextInput
-                placeholder="Username"
-                placeholderTextColor="#999"
-                value={username}
-                onChangeText={(t) => { setUsername(t); }}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* Password Input */}
-            <View
-              className="flex-row items-center mb-5"
-              style={styles.inputContainer}
-            >
-              <TextInput
-                placeholder="Password"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={(t) => { setPassword(t); }}
-                returnKeyType="done"
-                onSubmitEditing={handleLogin}
-                style={styles.passwordInput}
-                editable={!loading}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} disabled={loading}>
-                <Ionicons
-                  name={showPassword ? "eye-outline" : "eye-off-outline"}
-                  size={22}
-                  color={COLORS.third}
+              {/* Username Input */}
+              <View className="mb-4" style={styles.inputContainer}>
+                <TextInput
+                  placeholder="Username"
+                  placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                  value={username}
+                  onChangeText={(t) => { setUsername(t); }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  style={styles.input}
+                  editable={!loading}
                 />
+              </View>
+
+              {/* Password Input */}
+              <View
+                className="flex-row items-center mb-5"
+                style={styles.inputContainer}
+              >
+                <TextInput
+                  placeholder="Password"
+                  placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={(t) => { setPassword(t); }}
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
+                  style={styles.passwordInput}
+                  editable={!loading}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} disabled={loading}>
+                  <Ionicons
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={22}
+                    color={COLORS.third}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Login Button */}
+              <TouchableOpacity
+                onPress={handleLogin}
+                className="items-center justify-center mb-4"
+                style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text
+                    className="text-white font-bold"
+                    style={styles.loginButtonText}
+                  >
+                    LOGIN
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Forgot Password */}
+              <TouchableOpacity
+                className="mb-6"
+                onPress={() => Alert.alert("Forgot Password", "Please contact your administrator to reset your password.")}
+                disabled={loading}
+              >
+                <Text className="font-medium" style={styles.forgotText}>
+                  Forgot Password?
+                </Text>
               </TouchableOpacity>
             </View>
-
-            {/* Login Button */}
-            <TouchableOpacity
-              onPress={handleLogin}
-              className="items-center justify-center mb-4"
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color={COLORS.primary} size="small" />
-              ) : (
-                <Text
-                  className="text-white font-bold"
-                  style={styles.loginButtonText}
-                >
-                  LOGIN
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Forgot Password */}
-            <TouchableOpacity
-              className="mb-6"
-              onPress={() => Alert.alert("Forgot Password", "Please contact your administrator to reset your password.")}
-              disabled={loading}
-            >
-              <Text className="font-medium" style={styles.forgotText}>
-                Forgot Password?
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.gray100,
+  keyboardContainer: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -203,12 +206,20 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     paddingHorizontal: 28,
     paddingVertical: 40,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 10,
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.2,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   logoBorder: {
     width: 100,
@@ -216,6 +227,8 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 5,
     borderColor: COLORS.fourth,
+    alignItems: "center",
+    justifyContent: "center",
   },
   welcomeText: {
     fontSize: 30,
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: COLORS.third,
   },
   tabTextActive: {
     color: COLORS.fourth,
@@ -241,11 +254,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.fourth,
   },
   inputContainer: {
-    backgroundColor: COLORS.gray50,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
     borderRadius: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: COLORS.gray200,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   input: {
     height: 55,
@@ -268,7 +281,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     fontSize: 16,
-    color: COLORS.primary,
+    color: "#FFFFFF",
     letterSpacing: 1,
   },
   forgotText: {

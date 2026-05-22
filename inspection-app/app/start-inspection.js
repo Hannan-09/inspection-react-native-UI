@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { inspectionAPI } from "../services/api/inspectionAPI";
 import inspectionSchema2W from "../reecomm_inspection_2W.json";
 import inspectionSchema4W from "../reecomm_inspection_4W.json";
+import ThemeBackground from "../components/ThemeBackground";
 
 // ── Normalizers ────────────────────────────────────────────────────────────────
 const normalizeCategory = (vehicleType) => {
@@ -223,11 +224,11 @@ export default function StartInspectionScreen() {
                 <Ionicons
                   name={resolvedCategory === "4W" ? "car-sport" : sub === "Electric Scooter" ? "flash" : "bicycle"}
                   size={28}
-                  color={vehicleSubtype === sub ? COLORS.primary : COLORS.fourth}
+                  color={vehicleSubtype === sub ? "#FFFFFF" : COLORS.fourth}
                 />
                 <Text style={[styles.optionText, vehicleSubtype === sub && styles.optionTextSelected]}>{sub}</Text>
                 {vehicleSubtype === sub && (
-                  <View style={styles.selectedBadge}><Ionicons name="checkmark-circle" size={18} color={COLORS.primary} /></View>
+                  <View style={styles.selectedBadge}><Ionicons name="checkmark-circle" size={18} color="#FFFFFF" /></View>
                 )}
               </TouchableOpacity>
             ))}
@@ -251,11 +252,11 @@ export default function StartInspectionScreen() {
                 <Ionicons
                   name={fuel.includes("Electric") ? "flash" : fuel === "Hybrid" ? "leaf" : "water"}
                   size={28}
-                  color={fuelType === fuel ? COLORS.primary : COLORS.fourth}
+                  color={fuelType === fuel ? "#FFFFFF" : COLORS.fourth}
                 />
                 <Text style={[styles.optionText, fuelType === fuel && styles.optionTextSelected]}>{fuel}</Text>
                 {fuelType === fuel && (
-                  <View style={styles.selectedBadge}><Ionicons name="checkmark-circle" size={18} color={COLORS.primary} /></View>
+                  <View style={styles.selectedBadge}><Ionicons name="checkmark-circle" size={18} color="#FFFFFF" /></View>
                 )}
               </TouchableOpacity>
             ))}
@@ -307,8 +308,8 @@ export default function StartInspectionScreen() {
               <View style={styles.tag}>
                 <Text style={styles.tagText}>{activeSubtype}</Text>
               </View>
-              <View style={[styles.tag, { backgroundColor: "#DBEAFE" }]}>
-                <Text style={[styles.tagText, { color: "#1E40AF" }]}>{activeFuelType}</Text>
+              <View style={[styles.tag, { backgroundColor: "rgba(0, 123, 255, 0.15)", borderColor: "rgba(0, 123, 255, 0.3)", borderWidth: 1 }]}>
+                <Text style={[styles.tagText, { color: COLORS.fourth }]}>{activeFuelType}</Text>
               </View>
             </View>
           </View>
@@ -345,7 +346,7 @@ export default function StartInspectionScreen() {
                   );
                 }}
               >
-                <View style={[styles.sectionIconContainer, isDone && { backgroundColor: "#DCFCE7" }]}>
+                <View style={[styles.sectionIconContainer, isDone && { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "rgba(16, 185, 129, 0.3)" }]}>
                   <Ionicons
                     name={isDone ? "checkmark-circle" : section.icon}
                     size={26}
@@ -389,68 +390,247 @@ export default function StartInspectionScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.gray100 }}>
+    <ThemeBackground style={{ flex: 1 }}>
       {currentStep === "vehicle_selection" ? renderVehicleSelection() : renderInspectionForm()}
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.gray100 },
+  container: { flex: 1, backgroundColor: "transparent" },
 
   // ── Header card (manual selection) ────────────────────────────
-  headerCard: { backgroundColor: COLORS.primary, padding: 24, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
-  vehicleIconContainer: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.gray100, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  headerCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    padding: 24,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  vehicleIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
   vehicleModel: { fontSize: 20, fontWeight: "bold", color: COLORS.secondary, marginBottom: 2, textAlign: "center" },
   vehicleNumber: { fontSize: 15, fontWeight: "600", color: COLORS.fourth, marginBottom: 10 },
-  categoryBadge: { backgroundColor: COLORS.gray100, paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
+  categoryBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
   categoryText: { fontSize: 13, fontWeight: "600", color: COLORS.fourth },
 
   // ── Selection options ──────────────────────────────────────────
-  sectionCardMain: { backgroundColor: COLORS.primary, marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  sectionCardMain: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 0,
+  },
   sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   sectionTitle: { fontSize: 15, fontWeight: "bold", color: COLORS.secondary, marginLeft: 8 },
   optionsGrid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -4 },
-  optionCard: { width: "48%", backgroundColor: COLORS.gray100, borderRadius: 14, padding: 16, margin: "1%", alignItems: "center", borderWidth: 2, borderColor: COLORS.gray200, position: "relative" },
-  optionCardSelected: { backgroundColor: COLORS.fourth, borderColor: COLORS.fourth },
-  optionText: { fontSize: 12, fontWeight: "600", color: COLORS.secondary, marginTop: 10, textAlign: "center" },
-  optionTextSelected: { color: COLORS.primary },
+  optionCard: {
+    width: "48%",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    borderRadius: 14,
+    padding: 16,
+    margin: "1%",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+    position: "relative",
+  },
+  optionCardSelected: {
+    backgroundColor: "rgba(0, 123, 255, 0.15)",
+    borderColor: COLORS.fourth,
+    borderWidth: 1.5,
+  },
+  optionText: { fontSize: 12, fontWeight: "600", color: COLORS.third, marginTop: 10, textAlign: "center" },
+  optionTextSelected: { color: COLORS.secondary },
   selectedBadge: { position: "absolute", top: 6, right: 6 },
-  startButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: COLORS.success, marginHorizontal: 16, marginTop: 24, paddingVertical: 16, borderRadius: 16, shadowColor: COLORS.success, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  startButtonDisabled: { backgroundColor: COLORS.third, shadowOpacity: 0 },
-  startButtonText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary, marginRight: 8 },
+  startButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.success,
+    marginHorizontal: 16,
+    marginTop: 24,
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: COLORS.success,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  startButtonDisabled: { backgroundColor: "rgba(255, 255, 255, 0.08)", borderColor: "rgba(255, 255, 255, 0.05)", borderWidth: 1, shadowOpacity: 0 },
+  startButtonText: { fontSize: 16, fontWeight: "bold", color: "#FFFFFF", marginRight: 8 },
 
   // ── Vehicle banner (inspection form) ──────────────────────────
-  vehicleBanner: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.primary, margin: 16, marginBottom: 0, padding: 16, borderRadius: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
-  vehicleBannerIcon: { width: 52, height: 52, borderRadius: 14, backgroundColor: COLORS.gray100, alignItems: "center", justifyContent: "center", marginRight: 12 },
+  vehicleBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    margin: 16,
+    marginBottom: 0,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 0,
+  },
+  vehicleBannerIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
   vehicleBannerModel: { fontSize: 16, fontWeight: "bold", color: COLORS.secondary },
   vehicleBannerReg: { fontSize: 13, fontWeight: "600", color: COLORS.fourth, marginTop: 1 },
   vehicleBannerTags: { flexDirection: "row", marginTop: 6, gap: 6 },
-  tag: { backgroundColor: "#FEF3C7", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
-  tagText: { fontSize: 11, fontWeight: "600", color: "#92400E" },
+  tag: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  tagText: { fontSize: 11, fontWeight: "600", color: COLORS.secondary },
 
   // ── Progress ───────────────────────────────────────────────────
-  progressHeader: { backgroundColor: COLORS.primary, padding: 20, marginHorizontal: 16, marginTop: 12, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  progressHeader: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 0,
+  },
   progressInfo: { flex: 1 },
   progressTitle: { fontSize: 17, fontWeight: "bold", color: COLORS.secondary, marginBottom: 4 },
-  progressCount: { fontSize: 12, color: COLORS.fourth, fontWeight: "600" },
-  progressCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.gray100, borderWidth: 3, borderColor: COLORS.fourth, alignItems: "center", justifyContent: "center" },
+  progressCount: { fontSize: 12, color: COLORS.third, fontWeight: "600" },
+  progressCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 2,
+    borderColor: COLORS.fourth,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   progressPercent: { fontSize: 13, fontWeight: "bold", color: COLORS.fourth },
-  progressBarContainer: { height: 5, backgroundColor: COLORS.gray200, marginHorizontal: 16, marginTop: 10, borderRadius: 3, overflow: "hidden" },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    marginHorizontal: 16,
+    marginTop: 10,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
   progressBarFill: { height: "100%", backgroundColor: COLORS.success, borderRadius: 3 },
 
   // ── Section list ───────────────────────────────────────────────
   sectionsContainer: { padding: 16 },
-  sectionCard: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.primary, borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
-  sectionCardDone: { borderLeftWidth: 4, borderLeftColor: COLORS.success },
-  sectionIconContainer: { width: 52, height: 52, borderRadius: 14, backgroundColor: COLORS.gray100, alignItems: "center", justifyContent: "center", marginRight: 14 },
+  sectionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 0,
+  },
+  sectionCardDone: {
+    borderColor: "rgba(16, 185, 129, 0.3)",
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.success,
+  },
+  sectionIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
   sectionContent: { flex: 1 },
-  sectionNumber: { fontSize: 10, fontWeight: "700", color: COLORS.fourth, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 },
+  sectionNumber: { fontSize: 10, fontWeight: "700", color: COLORS.third, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 },
   sectionLabel: { fontSize: 14, fontWeight: "700", color: COLORS.secondary, marginBottom: 4 },
   sectionStatus: { flexDirection: "row", alignItems: "center" },
   sectionStatusText: { fontSize: 12, color: COLORS.third, marginLeft: 5 },
 
   // ── Submit ─────────────────────────────────────────────────────
-  submitButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: COLORS.fourth, marginHorizontal: 16, marginTop: 4, paddingVertical: 16, borderRadius: 16, shadowColor: COLORS.fourth, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  submitButtonText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary, marginRight: 8 },
+  submitButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.fourth,
+    marginHorizontal: 16,
+    marginTop: 4,
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: COLORS.fourth,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  submitButtonText: { fontSize: 16, fontWeight: "bold", color: "#FFFFFF", marginRight: 8 },
 });

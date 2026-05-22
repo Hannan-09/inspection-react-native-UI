@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { apiService } from "../services/api/api";
 import { COLORS } from "../constants";
+import ThemeBackground from "../components/ThemeBackground";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ThemeBackground style={styles.container}>
       <Animated.View
         style={{
           opacity: fadeAnim,
@@ -61,21 +62,20 @@ export default function SplashScreen() {
         <Text style={styles.title}>Reecomm</Text>
         <Text style={styles.subtitle}>Inspector</Text>
       </Animated.View>
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.secondary,
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
     fontSize: 42,
     fontWeight: "800",
-    color: COLORS.primary,
+    color: COLORS.secondary,
     letterSpacing: 1.5,
   },
   subtitle: {

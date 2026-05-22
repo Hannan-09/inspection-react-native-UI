@@ -9,6 +9,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,7 @@ import Toast from "react-native-toast-message";
 import { inspectionAPI } from "../../services/api/inspectionAPI";
 import { apiService } from "../../services/api/api";
 import { COLORS } from "../../constants";
+import ThemeBackground from "../../components/ThemeBackground";
 
 export default function HomeTab() {
   const router = useRouter();
@@ -156,12 +158,12 @@ export default function HomeTab() {
   const getInspectionTypeColor = (type) => {
     const t = type?.toUpperCase() || "";
     if (t.includes("CONSULTANT") || t.includes("CONSULTATION"))
-      return { bg: "#DBEAFE", text: "#1E40AF" };
+      return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA" };
     if (t.includes("SELLER"))
-      return { bg: "#FCE7F3", text: "#9F1239" };
+      return { bg: "rgba(244, 63, 94, 0.15)", text: "#F43F5E" };
     if (t.includes("BUYER") || t.includes("VIDEO"))
-      return { bg: "#E0E7FF", text: "#3730A3" };
-    return { bg: "#F3F4F6", text: "#6B7280" };
+      return { bg: "rgba(99, 102, 241, 0.15)", text: "#818CF8" };
+    return { bg: "rgba(255, 255, 255, 0.08)", text: "#9CA3AF" };
   };
 
   const formatDate = (dateString) => {
@@ -178,17 +180,17 @@ export default function HomeTab() {
     const s = status?.toUpperCase();
     switch (s) {
       case "ASSIGNED":
-        return { bg: "#FEF3C7", text: "#92400E", icon: "time-outline" };
+        return { bg: "rgba(245, 158, 11, 0.15)", text: "#F59E0B", icon: "time-outline" };
       case "IN_PROGRESS":
       case "ONGOING":
       case "ACCEPTED":
-        return { bg: "#DBEAFE", text: "#1E40AF", icon: "car-sport" };
+        return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA", icon: "car-sport" };
       case "COMPLETED":
-        return { bg: "#DCFCE7", text: "#166534", icon: "checkmark-circle" };
+        return { bg: "rgba(16, 185, 129, 0.15)", text: "#10B981", icon: "checkmark-circle" };
       case "REJECTED":
-        return { bg: "#FEE2E2", text: "#991B1B", icon: "close-circle" };
+        return { bg: "rgba(239, 68, 68, 0.15)", text: "#EF4444", icon: "close-circle" };
       default:
-        return { bg: "#F3F4F6", text: "#6B7280", icon: "help-circle" };
+        return { bg: "rgba(255, 255, 255, 0.08)", text: "#9CA3AF", icon: "help-circle" };
     }
   };
 
@@ -288,7 +290,7 @@ export default function HomeTab() {
   };
 
   return (
-    <View className="flex-1" style={styles.container}>
+    <ThemeBackground style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -317,41 +319,49 @@ export default function HomeTab() {
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
           {/* Pending */}
-          <View style={[styles.statCard, { backgroundColor: "#FEF3C7" }]}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="time-outline" size={28} color="#F59E0B" />
+          <View style={styles.statCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <View style={[styles.statIconContainer, { backgroundColor: "rgba(245, 158, 11, 0.15)" }]}>
+                <Ionicons name="timer-outline" size={22} color="#F59E0B" />
+              </View>
             </View>
-            <Text style={styles.statNumber}>{pendingCount}</Text>
             <Text style={styles.statLabel}>Pending</Text>
+            <Text style={styles.statNumber}>{pendingCount}</Text>
           </View>
 
           {/* On Going */}
-          <View style={[styles.statCard, { backgroundColor: "#DBEAFE" }]}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="car-sport-outline" size={28} color="#2563EB" />
+          <View style={styles.statCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <View style={[styles.statIconContainer, { backgroundColor: "rgba(59, 130, 246, 0.15)" }]}>
+                <Ionicons name="car-sport-outline" size={22} color="#3B82F6" />
+              </View>
             </View>
-            <Text style={styles.statNumber}>{ongoingCount}</Text>
             <Text style={styles.statLabel}>On Going</Text>
+            <Text style={styles.statNumber}>{ongoingCount}</Text>
           </View>
         </View>
 
         <View style={styles.statsContainer}>
           {/* Completed */}
-          <View style={[styles.statCard, { backgroundColor: "#DCFCE7" }]}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="checkmark-circle" size={28} color="#16A34A" />
+          <View style={styles.statCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <View style={[styles.statIconContainer, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}>
+                <Ionicons name="checkmark-circle-outline" size={22} color="#10B981" />
+              </View>
             </View>
-            <Text style={styles.statNumber}>{completedCount}</Text>
             <Text style={styles.statLabel}>Completed</Text>
+            <Text style={styles.statNumber}>{completedCount}</Text>
           </View>
 
           {/* Total Revenue */}
-          <View style={[styles.statCard, { backgroundColor: "#E0E7FF" }]}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="wallet-outline" size={28} color="#4F46E5" />
+          <View style={styles.statCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <View style={[styles.statIconContainer, { backgroundColor: "rgba(139, 92, 246, 0.15)" }]}>
+                <Ionicons name="wallet-outline" size={22} color="#8B5CF6" />
+              </View>
             </View>
-            <Text style={styles.statNumber}>{revenueAmount}</Text>
             <Text style={styles.statLabel}>Revenue</Text>
+            <Text style={styles.statNumber}>{revenueAmount}</Text>
           </View>
         </View>
 
@@ -404,47 +414,56 @@ export default function HomeTab() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   // Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalContent: { backgroundColor: COLORS.primary, borderRadius: 16, padding: 20 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", padding: 20 },
+  modalContent: { backgroundColor: COLORS.primary, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", borderRadius: 16, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", color: COLORS.secondary, marginBottom: 16 },
   modalLabel: { fontSize: 14, fontWeight: "600", color: COLORS.secondary, marginBottom: 8 },
-  modalInput: { borderWidth: 1, borderColor: COLORS.third, borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
+  modalInput: { borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)", color: "#FFFFFF", borderRadius: 12, padding: 12, fontSize: 15, height: 100, textAlignVertical: "top" },
   modalCancel: { flex: 1, height: 48, justifyContent: "center", alignItems: "center" },
   modalCancelText: { fontSize: 16, fontWeight: "bold", color: COLORS.gray600 },
   modalConfirm: { flex: 2, height: 48, backgroundColor: COLORS.danger, borderRadius: 12, justifyContent: "center", alignItems: "center" },
-  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: COLORS.primary },
+  modalConfirmText: { fontSize: 16, fontWeight: "bold", color: "#FFFFFF" },
   
   // Card Actions
   cardActions: { flexDirection: "row", marginTop: 12, gap: 10 },
-  cardRejectButton: { flex: 1, height: 36, backgroundColor: COLORS.gray100, borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardRejectButtonText: { color: COLORS.gray700, fontSize: 13, fontWeight: "600" },
+  cardRejectButton: { flex: 1, height: 36, backgroundColor: "rgba(255, 255, 255, 0.06)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cardRejectButtonText: { color: COLORS.gray900, fontSize: 13, fontWeight: "600" },
   cardAcceptButton: { flex: 1, height: 36, backgroundColor: COLORS.fourth, borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  cardAcceptButtonText: { color: COLORS.primary, fontSize: 13, fontWeight: "600" },
+  cardAcceptButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "600" },
 
   container: {
-    backgroundColor: COLORS.gray50,
+    flex: 1,
   },
   greetingSection: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
-    backgroundColor: COLORS.gray50,
   },
   greetingCard: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: COLORS.fourth,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
+    // backgroundColor: "rgba(255, 255, 255, 0.03)",
+    // borderWidth: 1,
+    // borderColor: "rgba(255, 255, 255, 0.08)",
+    // borderRadius: 24,
+    paddingLeft: 10,
+    paddingBottom: 10,
+    paddingTop: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   welcomeText: {
     fontSize: 14,
@@ -455,7 +474,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   brandContainer: {
-    flexDirection: "column",
+    flexDirection: "row",
+    columnGap: 10,
   },
   brandTextPrimary: {
     fontSize: 36,
@@ -485,29 +505,52 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 16,
+    padding: 16,
     marginHorizontal: 4,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    alignItems: "flex-start",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   statIconContainer: {
-    marginBottom: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  statBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
-    color: COLORS.secondary,
-    marginBottom: 4,
+    color: "#FFFFFF",
+    marginTop: 8,
   },
   statLabel: {
-    fontSize: 13,
-    color: COLORS.gray600,
+    fontSize: 12,
+    color: COLORS.third,
     fontWeight: "600",
+    marginTop: 12,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -531,15 +574,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   inspectionCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   cardTitle: {
     fontSize: 16,
@@ -555,7 +606,6 @@ const styles = StyleSheet.create({
   pendingBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF3C7",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 16,
@@ -563,7 +613,6 @@ const styles = StyleSheet.create({
   pendingText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#92400E",
     marginLeft: 4,
   },
   typeBadge: {
@@ -582,7 +631,7 @@ const styles = StyleSheet.create({
   },
   cardDetail: {
     fontSize: 12,
-    color: COLORS.gray600,
+    color: COLORS.third,
     marginLeft: 6,
     flex: 1,
   },
