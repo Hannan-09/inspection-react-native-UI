@@ -28,7 +28,7 @@ export default function HomeTab() {
     pending: 0,
     ongoing: 0,
     completed: 0,
-    revenue: "0",
+    revenue: "₹0",
   });
 
   // Action states
@@ -70,25 +70,26 @@ export default function HomeTab() {
 
   const loadData = async () => {
     try {
-      // 1. Fetch recent 3 pending inspections
-      const pendingRes = await inspectionAPI.getAssignedInspections(1, 3, "ASSIGNED");
-      if (pendingRes?.data) {
-        setInspections(pendingRes.data);
-      }
-
-      // 2. Fetch stats counts
-      const [pRes, oRes, cRes] = await Promise.all([
-        inspectionAPI.getAssignedInspections(1, 1, "ASSIGNED"),
-        inspectionAPI.getAssignedInspections(1, 1, "IN_PROGRESS"),
-        inspectionAPI.getAssignedInspections(1, 1, "COMPLETED"),
+      // Fetch both recent pending inspections list and KPIs in parallel
+      const [pendingRes, kpiRes] = await Promise.allSettled([
+        inspectionAPI.getAssignedInspections(1, 3, "ASSIGNED"),
+        inspectionAPI.getHomeKpis(),
       ]);
 
-      setStats({
-        pending: pRes?.pageResponse?.totalElements || 0,
-        ongoing: oRes?.pageResponse?.totalElements || 0,
-        completed: cRes?.pageResponse?.totalElements || 0,
-        revenue: "₹0", // Revenue still mock for now as API doesn't provide it
-      });
+      if (pendingRes.status === "fulfilled" && pendingRes.value?.data) {
+        setInspections(pendingRes.value.data);
+      }
+
+      if (kpiRes.status === "fulfilled" && kpiRes.value) {
+        const kpis = kpiRes.value;
+        const totalIncomeVal = Number(kpis.totalIncome) || 0;
+        setStats({
+          pending: kpis.assignedCount || 0,
+          ongoing: kpis.inProgressCount || 0,
+          completed: kpis.completedCount || 0,
+          revenue: `₹${totalIncomeVal.toLocaleString()}`,
+        });
+      }
     } catch (error) {
       console.error("Error loading home data:", error);
     }

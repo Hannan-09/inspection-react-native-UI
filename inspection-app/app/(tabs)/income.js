@@ -10,29 +10,71 @@ import ThemeBackground from "../../components/ThemeBackground";
 export default function IncomeTab() {
   const [refreshing, setRefreshing] = useState(false);
   const [incomeData, setIncomeData] = useState([]);
+  const [kpis, setKpis] = useState({
+    totalIncome: 0,
+    pendingPaymentCount: 0,
+  });
 
   useEffect(() => {
     loadIncomeData();
   }, []);
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "—";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
   const loadIncomeData = async () => {
     try {
-      const all = await inspectionAPI.getAll();
-      // Derive income records from completed/rejected inspections
-      const mapped = all
-        .filter((i) => i.status === "completed" || i.status === "ongoing")
-        .map((i) => ({
-          id: i.id,
-          carModel: i.carModel,
-          carNumber: i.carNumber,
-          inspectionDate: i.date,
-          amount: i.amount || 2000, // use amount from API or default
-          status: i.status === "completed" ? "received" : "pending",
-          inspectionType: i.inspectionType,
-          paymentDate: i.status === "completed" ? i.completedDate || i.date : undefined,
-          expectedDate: i.status === "ongoing" ? i.date : undefined,
-        }));
-      setIncomeData(mapped);
+      const [responseData, kpiData] = await Promise.allSettled([
+        inspectionAPI.getIncomeHistory(),
+        inspectionAPI.getIncomeKpis(),
+      ]);
+
+      if (responseData.status === "fulfilled") {
+        const list = Array.isArray(responseData.value)
+          ? responseData.value
+          : (responseData.value?.data || []);
+
+        const mapped = list.map((i) => {
+          const carModel = [i.makerName, i.modelName, i.variantName].filter(Boolean).join(" ") || "Vehicle";
+          const carNumber = i.regNumber || "—";
+          const status = i.paidByAdmin ? "received" : "pending";
+          const amount = Number(i.paidAmountByAdmin) || 2000;
+          const rawType = i.requesterType || i.inspectionType || "Inspection";
+          const inspectionType = rawType.charAt(0).toUpperCase() + rawType.slice(1).toLowerCase().replace(/_/g, " ");
+
+          return {
+            id: i.id,
+            carModel,
+            carNumber,
+            inspectionDate: formatDate(i.acceptedAt || i.scheduledAt),
+            amount,
+            status,
+            inspectionType,
+            paymentDate: i.paidByAdminDate ? formatDate(i.paidByAdminDate) : undefined,
+            expectedDate: i.scheduledAt ? formatDate(i.scheduledAt) : undefined,
+          };
+        });
+        setIncomeData(mapped);
+      }
+
+      if (kpiData.status === "fulfilled" && kpiData.value) {
+        const data = kpiData.value;
+        setKpis({
+          totalIncome: Number(data.totalIncome) || 0,
+          pendingPaymentCount: Number(data.pendingPaymentCount) || 0,
+        });
+      }
     } catch (error) {
       console.error("Error loading income:", error);
     }
@@ -44,25 +86,20 @@ export default function IncomeTab() {
     setRefreshing(false);
   };
 
-  // Calculate totals
-  const pendingIncome = incomeData
-    .filter((item) => item.status === "pending")
-    .reduce((sum, item) => sum + item.amount, 0);
-
-  const receivedIncome = incomeData
-    .filter((item) => item.status === "received")
-    .reduce((sum, item) => sum + item.amount, 0);
+  // Totals are fetched directly from the KPIs API
 
   const getInspectionTypeColor = (type) => {
-    switch (type) {
-      case "Consultant":
-        return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA" };
-      case "Seller":
-        return { bg: "rgba(244, 63, 94, 0.15)", text: "#FB7185" };
-      case "Buyer":
-        return { bg: "rgba(99, 102, 241, 0.15)", text: "#818CF8" };
-      default:
-        return { bg: "rgba(156, 163, 175, 0.15)", text: "#9CA3AF" };
+    const t = (type || "").toUpperCase();
+    if (t.includes("CONSULT")) {
+      return { bg: "rgba(59, 130, 246, 0.15)", text: "#60A5FA" };
+    } else if (t.includes("SELLER")) {
+      return { bg: "rgba(244, 63, 94, 0.15)", text: "#FB7185" };
+    } else if (t.includes("BUYER")) {
+      return { bg: "rgba(99, 102, 241, 0.15)", text: "#818CF8" };
+    } else if (t.includes("VIDEO")) {
+      return { bg: "rgba(16, 185, 129, 0.15)", text: "#34D399" };
+    } else {
+      return { bg: "rgba(156, 163, 175, 0.15)", text: "#9CA3AF" };
     }
   };
 
@@ -178,7 +215,7 @@ export default function IncomeTab() {
       >
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
-          {/* Pending Income */}
+          {/* Pending Payments */}
           <View style={styles.statCard}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
               <View style={[styles.statIconContainer, { backgroundColor: "rgba(245, 158, 11, 0.15)" }]}>
@@ -188,9 +225,9 @@ export default function IncomeTab() {
                 <Text style={[styles.statBadgeText, { color: "#F59E0B" }]}>Pending</Text>
               </View>
             </View>
-            <Text style={styles.statLabel}>Pending Income</Text>
+            <Text style={styles.statLabel}>Pending Payments</Text>
             <Text style={styles.statNumber}>
-              ₹{pendingIncome.toLocaleString()}
+              {kpis.pendingPaymentCount}
             </Text>
           </View>
 
@@ -206,7 +243,7 @@ export default function IncomeTab() {
             </View>
             <Text style={styles.statLabel}>Received Income</Text>
             <Text style={styles.statNumber}>
-              ₹{receivedIncome.toLocaleString()}
+              ₹{kpis.totalIncome.toLocaleString()}
             </Text>
           </View>
         </View>

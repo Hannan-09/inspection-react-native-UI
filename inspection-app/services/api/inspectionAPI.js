@@ -793,6 +793,41 @@ class InspectionAPI {
     }
   }
 
+  async getIncomeHistory() {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.INCOME_HISTORY;
+      const response = await apiService.get(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error fetching income history:", error);
+      throw error;
+    }
+  }
+
+  // Get Income KPIs
+  async getIncomeKpis() {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.INCOME_KPIS;
+      const response = await apiService.get(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error fetching income KPIs:", error);
+      throw error;
+    }
+  }
+
+  // Get Home KPIs
+  async getHomeKpis() {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.HOME_KPIS;
+      const response = await apiService.get(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error fetching home KPIs:", error);
+      throw error;
+    }
+  }
+
   // Get all inspections
   async getAll(params = {}) {
     // TODO: Uncomment when API is ready

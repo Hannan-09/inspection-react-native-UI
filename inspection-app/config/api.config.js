@@ -52,6 +52,9 @@ export const API_CONFIG = {
       SECTION_MEDIA: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/section/media",
       SUBMIT: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/submit",
       GET_REPORT: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/report",
+      INCOME_HISTORY: "/api/v1/website/vehicle/inspector/income-history",
+      INCOME_KPIS: "/api/v1/website/vehicle/inspector/income-history/kpis",
+      HOME_KPIS: "/api/v1/website/vehicle/inspector/kpis",
     },
     INSPECTIONS_2W: {
       START: "/api/v1/website/vehicle/inspector/inspection/two-wheeler/:id/start",

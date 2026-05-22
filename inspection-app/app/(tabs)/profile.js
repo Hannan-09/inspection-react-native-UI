@@ -272,13 +272,13 @@ export default function ProfileTab() {
       color: COLORS.fourth,
       onPress: openEditModal,
     },
-    {
-      id: 2,
-      icon: "document-text-outline",
-      label: "My Reports",
-      color: COLORS.fourth,
-      onPress: () => console.log("My Reports"),
-    },
+    // {
+    //   id: 2,
+    //   icon: "document-text-outline",
+    //   label: "My Reports",
+    //   color: COLORS.fourth,
+    //   onPress: () => console.log("My Reports"),
+    // },
     {
       id: 3,
       icon: "wallet-outline",
