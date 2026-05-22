@@ -354,16 +354,6 @@ export default function ProfileTab() {
 
               <View style={styles.statItem}>
                 <View
-                  style={[styles.statIconBox, { backgroundColor: "rgba(245, 158, 11, 0.15)" }]}
-                >
-                  <Ionicons name="star" size={24} color="#FBBF24" />
-                </View>
-                <Text style={styles.statNumber}>{display.rating}</Text>
-                <Text style={styles.statLabel}>Rating</Text>
-              </View>
-
-              <View style={styles.statItem}>
-                <View
                   style={[styles.statIconBox, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}
                 >
                   <Ionicons name="time" size={24} color="#34D399" />

@@ -203,10 +203,10 @@ export default function InspectionsTab() {
   const handleStartInspection = async (item) => {
     const isAccepted = item.assignmentStatus?.toUpperCase() === "ACCEPTED";
     const isRequestChanges = item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES";
-    
+
     try {
       setSubmittingId(item.id);
-      
+
       const t = (item.vehicleType || "").toUpperCase();
       const cat = (t.includes("TWO") || t === "2W" || t.includes("2")) ? "2W" : "4W";
 
@@ -228,7 +228,7 @@ export default function InspectionsTab() {
           Alert.alert("Error", "Failed to load prefilled inspection report details. Starting with a blank form.");
         }
       }
-      
+
       const isVideoCall = item.inspectionType?.toUpperCase().includes("VIDEO");
 
       if (isVideoCall) {
@@ -245,7 +245,7 @@ export default function InspectionsTab() {
               console.error("Error fetching inspection details for whatsapp:", fetchErr);
             }
           }
-          
+
           const phone = fullDetails?.whatsappNumber || fullDetails?.ownerPhone || fullDetails?.phone || rawPhone;
           openWhatsApp(phone);
           setActiveItemForVideo(fullDetails);
@@ -318,12 +318,12 @@ export default function InspectionsTab() {
     }
   };
 
-  const { 
-    pending: pendingCount, 
-    accepted: acceptedCount, 
-    ongoing: ongoingCount, 
-    submitted: submittedCount, 
-    completed: completedCount, 
+  const {
+    pending: pendingCount,
+    accepted: acceptedCount,
+    ongoing: ongoingCount,
+    submitted: submittedCount,
+    completed: completedCount,
     rejected: rejectedCount,
     request_changes: requestChangesCount
   } = tabCounts;
@@ -442,14 +442,14 @@ export default function InspectionsTab() {
         <View style={styles.cardActions}>
           {item.assignmentStatus === "ASSIGNED" && (
             <>
-              <TouchableOpacity 
-                style={styles.cardRejectButton} 
+              <TouchableOpacity
+                style={styles.cardRejectButton}
                 onPress={() => handleRejectPress(item.id)}
               >
                 <Text style={styles.cardRejectButtonText}>Reject</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]} 
+              <TouchableOpacity
+                style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]}
                 onPress={() => handleAccept(item.id)}
                 disabled={submittingId !== null}
               >
@@ -461,7 +461,7 @@ export default function InspectionsTab() {
               </TouchableOpacity>
             </>
           )}
-          
+
           {((item.assignmentStatus?.toUpperCase() === "IN_PROGRESS") || (item.assignmentStatus?.toUpperCase() === "ACCEPTED") || (item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES")) && (
             <>
               {/* <TouchableOpacity 
@@ -470,8 +470,8 @@ export default function InspectionsTab() {
               >
                 <Text style={styles.cardRejectButtonText}>Reject</Text>
               </TouchableOpacity> */}
-              <TouchableOpacity 
-                style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]} 
+              <TouchableOpacity
+                style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]}
                 onPress={() => handleStartInspection(item)}
                 disabled={submittingId !== null}
               >
@@ -479,10 +479,10 @@ export default function InspectionsTab() {
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <Text style={styles.cardAcceptButtonText}>
-                    {item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES" 
-                      ? "Edit & Resubmit" 
-                      : item.assignmentStatus?.toUpperCase() === "IN_PROGRESS" 
-                        ? "Continue to Inspection" 
+                    {item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES"
+                      ? "Edit & Resubmit"
+                      : item.assignmentStatus?.toUpperCase() === "IN_PROGRESS"
+                        ? "Continue to Inspection"
                         : "Start Inspection"}
                   </Text>
                 )}
@@ -491,8 +491,8 @@ export default function InspectionsTab() {
           )}
 
           {(item.assignmentStatus === "COMPLETED" || item.assignmentStatus === "SUBMITTED") && (
-            <TouchableOpacity 
-              style={[styles.cardAcceptButton, { backgroundColor: COLORS.fourth }]} 
+            <TouchableOpacity
+              style={[styles.cardAcceptButton, { backgroundColor: COLORS.fourth }]}
               onPress={() => router.push(
                 `/inspection-report?id=${item.id}` +
                 `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
@@ -508,8 +508,8 @@ export default function InspectionsTab() {
           )}
 
           {(item.assignmentStatus === "REJECTED") && (
-            <TouchableOpacity 
-              style={[styles.cardAcceptButton, { backgroundColor: "#F3F4F6" }]} 
+            <TouchableOpacity
+              style={[styles.cardAcceptButton, { backgroundColor: "#F3F4F6" }]}
               onPress={() => router.push(`/inspection-details?id=${item.id}`)}
             >
               <Text style={[styles.cardAcceptButtonText, { color: "#4B5563" }]}>View Details</Text>
@@ -943,10 +943,10 @@ export default function InspectionsTab() {
             </View>
             <Text style={styles.modalTitle}>Video Call Status</Text>
             <Text style={styles.modalSubtitle}>Is the video call with the vehicle owner complete?</Text>
-            
+
             <View style={{ width: "100%", marginTop: 24, gap: 12 }}>
-              <TouchableOpacity 
-                style={styles.modalDoneButton} 
+              <TouchableOpacity
+                style={styles.modalDoneButton}
                 onPress={async () => {
                   setVideoModalVisible(false);
                   if (activeItemForVideo) {
@@ -962,9 +962,9 @@ export default function InspectionsTab() {
                 <Ionicons name="checkmark-circle" size={20} color="#fff" />
                 <Text style={styles.modalDoneButtonText}>Yes, Video Call Complete</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.modalRetryButton} 
+
+              <TouchableOpacity
+                style={styles.modalRetryButton}
                 onPress={() => {
                   if (activeItemForVideo) {
                     openWhatsApp(activeItemForVideo.whatsappNumber || activeItemForVideo.ownerPhone || activeItemForVideo.phone);
@@ -975,8 +975,8 @@ export default function InspectionsTab() {
                 <Text style={styles.modalRetryButtonText}>Re-open WhatsApp</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.modalCancelButton} 
+              <TouchableOpacity
+                style={styles.modalCancelButton}
                 onPress={() => setVideoModalVisible(false)}
               >
                 <Text style={styles.modalCancelButtonText}>Cancel</Text>
@@ -1124,16 +1124,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tabsScrollView: {
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    borderRadius: 12,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderColor: "transparent",
+    borderRadius: 0,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowColor: "transparent",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0,
+        shadowRadius: 0,
       },
       android: {
         elevation: 0,
@@ -1141,7 +1141,7 @@ const styles = StyleSheet.create({
     }),
   },
   tabsScrollContainer: {
-    padding: 4,
+    paddingVertical: 4,
   },
   scrollIndicatorContainer: {
     marginHorizontal: 16,
@@ -1165,8 +1165,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    marginRight: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
   },
   activeTab: {
     backgroundColor: COLORS.fourth,
