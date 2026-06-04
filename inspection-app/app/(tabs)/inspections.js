@@ -71,6 +71,7 @@ export default function InspectionsTab() {
     try {
       if (isInitial) {
         setLoading(true);
+        setInspections([]);
         setPageNo(1);
       } else {
         setLoadingMore(true);
@@ -186,6 +187,23 @@ export default function InspectionsTab() {
         console.error("Failed to open WhatsApp:", err);
         Alert.alert("Error", "Could not launch WhatsApp. Please make sure WhatsApp is installed.");
       });
+  };
+
+  const handlePhoneCall = (item) => {
+    const phone = item.whatsappNumber;
+    if (!phone) {
+      Alert.alert("No Number", "No phone number is available for this inspection.");
+      return;
+    }
+    let cleaned = phone.replace(/[^0-9+]/g, "");
+    if (cleaned.length === 10) cleaned = "+91" + cleaned;
+    const url = `tel:${cleaned}`;
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) return Linking.openURL(url);
+        Alert.alert("Error", "Phone calls are not supported on this device.");
+      })
+      .catch(() => Alert.alert("Error", "Could not initiate the call."));
   };
 
   const navigateToInspectionForm = (item) => {
@@ -464,12 +482,15 @@ export default function InspectionsTab() {
 
           {((item.assignmentStatus?.toUpperCase() === "IN_PROGRESS") || (item.assignmentStatus?.toUpperCase() === "ACCEPTED") || (item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES")) && (
             <>
-              {/* <TouchableOpacity 
-                style={styles.cardRejectButton} 
-                onPress={() => handleRejectPress(item.id)}
-              >
-                <Text style={styles.cardRejectButtonText}>Reject</Text>
-              </TouchableOpacity> */}
+              {(item.assignmentStatus?.toUpperCase() === "ACCEPTED" || item.assignmentStatus?.toUpperCase() === "IN_PROGRESS") && (
+                <TouchableOpacity
+                  style={styles.callButton}
+                  onPress={() => handlePhoneCall(item)}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="call" size={18} color="#fff" />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.cardAcceptButton, submittingId === item.id && { opacity: 0.7 }]}
                 onPress={() => handleStartInspection(item)}
@@ -851,26 +872,13 @@ export default function InspectionsTab() {
     ],
   );
 
-  if (loading) {
-    return (
-      <ThemeBackground
-        style={[styles.container, { alignItems: "center", justifyContent: "center" }]}
-      >
-        <Ionicons name="car-sport-outline" size={48} color={COLORS.third} />
-        <Text className="mt-4" style={styles.loadingText}>
-          Loading inspections...
-        </Text>
-      </ThemeBackground>
-    );
-  }
-
   return (
     <ThemeBackground style={styles.container}>
+      {headerComponent}
       <FlatList
         data={inspections}
         renderItem={renderInspection}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={headerComponent}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}
@@ -891,7 +899,14 @@ export default function InspectionsTab() {
           />
         }
         ListEmptyComponent={
-          !loading ? (
+          loading ? (
+            <View style={styles.listLoaderContainer}>
+              <ActivityIndicator size="large" color={COLORS.fourth} />
+              <Text className="mt-4" style={styles.loadingText}>
+                Loading inspections...
+              </Text>
+            </View>
+          ) : (
             <View
               className="items-center justify-center"
               style={styles.emptyContainer}
@@ -904,7 +919,7 @@ export default function InspectionsTab() {
                 There are no {activeTab} car inspections at the moment
               </Text>
             </View>
-          ) : null
+          )
         }
       />
 
@@ -1063,6 +1078,7 @@ const styles = StyleSheet.create({
   cardRejectButtonText: { color: COLORS.gray900, fontSize: 13, fontWeight: "600" },
   cardAcceptButton: { flex: 1, height: 36, backgroundColor: COLORS.fourth, borderRadius: 8, justifyContent: "center", alignItems: "center" },
   cardAcceptButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "600" },
+  callButton: { width: 36, height: 36, backgroundColor: "#16A34A", borderRadius: 8, justifyContent: "center", alignItems: "center" },
 
   container: {
     flex: 1,
@@ -1280,6 +1296,11 @@ const styles = StyleSheet.create({
   remarksText: {
     fontSize: 12,
     color: "#F59E0B",
+  },
+  listLoaderContainer: {
+    paddingVertical: 100,
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingText: {
     fontSize: 16,

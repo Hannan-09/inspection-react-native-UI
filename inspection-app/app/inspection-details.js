@@ -911,12 +911,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.third,
     fontWeight: "500",
+    flexShrink: 0,
   },
   specRowValue: {
+    flex: 1,
+    flexShrink: 1,
     fontSize: 14,
     fontWeight: "700",
     color: COLORS.secondary,
     textAlign: "right",
+    marginLeft: 8,
   },
   requesterTag: {
     backgroundColor: "rgba(0, 123, 255, 0.15)",

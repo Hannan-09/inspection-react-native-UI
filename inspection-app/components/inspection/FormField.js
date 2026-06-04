@@ -28,8 +28,6 @@ export const TapButtons = ({ value, onChange, label, required, options = ["Pass"
       <View style={styles.buttonRow}>
         {options.map((option) => {
           const isSelected = value === option;
-          const isPassType = option === "Pass" || option === "True";
-          const isFailType = option === "Fail" || option === "False";
 
           return (
             <TouchableOpacity
@@ -37,8 +35,6 @@ export const TapButtons = ({ value, onChange, label, required, options = ["Pass"
               style={[
                 styles.tapButton,
                 isSelected && styles.tapButtonSelected,
-                isPassType && isSelected && styles.passSelected,
-                isFailType && isSelected && styles.failSelected,
               ]}
               onPress={() => {
                 if (value === option) {
@@ -83,9 +79,6 @@ export const ConditionButtons = ({ value, onChange, label, required }) => {
             style={[
               styles.conditionButton,
               value === option && styles.conditionButtonSelected,
-              option === "None" && value === option && styles.noneSelected,
-              option === "Minor" && value === option && styles.minorSelected,
-              option === "Major" && value === option && styles.majorSelected,
             ]}
             onPress={() => {
               if (value === option) {
@@ -429,20 +422,20 @@ export const MediaUpload = ({
               <Text style={styles.pickerTitle}>{isVideo ? "Upload Video" : "Upload Photo"}</Text>
               <Text style={styles.pickerSubtitle}>Choose a source</Text>
             </View>
-
+ 
             {/* Divider */}
             <View style={styles.pickerDivider} />
-
+ 
             {/* Options */}
             <TouchableOpacity style={styles.pickerOption} onPress={takeFromCamera} activeOpacity={0.7}>
-              <View style={[styles.pickerOptionIcon, { backgroundColor: "#EFF6FF" }]}>
+              <View style={[styles.pickerOptionIcon, { backgroundColor: "rgba(0, 123, 255, 0.12)" }]}>
                 <Ionicons name="camera" size={22} color={COLORS.fourth} />
               </View>
               <View style={styles.pickerOptionText}>
                 <Text style={styles.pickerOptionTitle}>Camera</Text>
                 <Text style={styles.pickerOptionSub}>{isVideo ? "Record a new video" : "Take a new photo"}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={18} color="#AEAEB2" />
             </TouchableOpacity>
 
             {/* Cancel */}
@@ -488,14 +481,6 @@ const styles = StyleSheet.create({
   tapButtonSelected: {
     borderColor: COLORS.fourth,
   },
-  passSelected: {
-    backgroundColor: "#DCFCE7",
-    borderColor: COLORS.success,
-  },
-  failSelected: {
-    backgroundColor: "#FEE2E2",
-    borderColor: COLORS.danger,
-  },
   tapButtonText: {
     fontSize: 14,
     fontWeight: "600",
@@ -516,18 +501,6 @@ const styles = StyleSheet.create({
   },
   conditionButtonSelected: {
     borderColor: COLORS.fourth,
-  },
-  noneSelected: {
-    backgroundColor: "#DCFCE7",
-    borderColor: COLORS.success,
-  },
-  minorSelected: {
-    backgroundColor: "#FEF3C7",
-    borderColor: COLORS.warning,
-  },
-  majorSelected: {
-    backgroundColor: "#FEE2E2",
-    borderColor: COLORS.danger,
   },
   conditionButtonText: {
     fontSize: 14,
@@ -665,7 +638,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "rgba(0, 123, 255, 0.05)",
     borderWidth: 2,
     borderColor: COLORS.fourth,
     borderStyle: "dashed",
@@ -698,7 +671,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   pickerModal: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.primary,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingBottom: 56,
@@ -707,6 +680,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 20,
     elevation: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderBottomWidth: 0,
   },
   pickerHeader: {
     alignItems: "center",
@@ -718,7 +694,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 20,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "rgba(0, 123, 255, 0.15)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
@@ -737,12 +713,12 @@ const styles = StyleSheet.create({
   },
   pickerSubtitle: {
     fontSize: 14,
-    color: COLORS.gray500,
+    color: COLORS.third,
     fontWeight: "500",
   },
   pickerDivider: {
     height: 1,
-    backgroundColor: COLORS.gray100,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     marginHorizontal: 20,
     marginBottom: 8,
   },
@@ -771,13 +747,13 @@ const styles = StyleSheet.create({
   },
   pickerOptionSub: {
     fontSize: 12,
-    color: COLORS.gray500,
+    color: COLORS.third,
     fontWeight: "500",
   },
   pickerCancel: {
     marginHorizontal: 20,
     marginTop: 12,
-    backgroundColor: COLORS.gray100,
+    backgroundColor: COLORS.gray200,
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
@@ -785,7 +761,7 @@ const styles = StyleSheet.create({
   pickerCancelText: {
     fontSize: 15,
     fontWeight: "700",
-    color: COLORS.gray600,
+    color: "#ffffff",
   },
   videoPlayerContainer: {
     width: "100%",

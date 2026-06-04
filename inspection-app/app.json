@@ -26,10 +26,7 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
-      ],
-      "compileSdkVersion": 34,
-      "targetSdkVersion": 34,
-      "buildToolsVersion": "34.0.0"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -44,7 +41,8 @@
           "cameraPermission": "Allow Reecomm Inspector to use the camera to capture vehicle photos."
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-font"
     ],
     "extra": {
       "router": {},

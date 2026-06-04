@@ -23,6 +23,7 @@ class InspectionAPI {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.ASSIGNED_DETAILS.replace(":id", id);
       const response = await apiService.get(endpoint);
+      console.log('assigned&&&',response);
       return response.data || response;
     } catch (error) {
       console.error("Error fetching assigned inspection details:", error);
