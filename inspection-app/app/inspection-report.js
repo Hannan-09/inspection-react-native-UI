@@ -63,6 +63,7 @@ export default function InspectionReportScreen() {
         ...(!isEV ? [{ id: "section_8", key: "section_8_obd_diagnostics", label: "OBD / Diagnostics", icon: "hardware-chip" }] : []),
         { id: "section_9", key: "section_9_modifications", label: "Modification Check", icon: "build" },
         { id: "section_10", key: "section_10_media", label: "Media & Documentation", icon: "images" },
+        { id: "section_11", key: "section_11_vehicle_specs", label: "Vehicle Document", icon: "document-text" },
       ];
 
       setSections(sectionList);
@@ -956,6 +957,51 @@ const generatePDFReport = (report) => {
       ${obdHTML}
       ${modificationsHTML}
       ${mediaHTML}
+      ${(() => {
+        const spec = report.vehicleSpecs || {};
+        return `
+          <div class="section-card">
+            <h3>Section 11: Vehicle Document</h3>
+            <table class="data-table">
+              <tr><td>Chassis No</td><td>${formatVal(spec.chassisNo)}</td></tr>
+              <tr><td>Engine No</td><td>${formatVal(spec.engineNo)}</td></tr>
+              <tr><td>Owner Count</td><td>${formatVal(spec.ownerCount)}</td></tr>
+              <tr><td>Reg. Date</td><td>${formatVal(spec.regDate)}</td></tr>
+              <tr><td>RC Upto Date</td><td>${formatVal(spec.rcUptoDate)}</td></tr>
+              <tr><td>Vehicle Tax Upto Date</td><td>${formatVal(spec.vehicleTaxUptoDate)}</td></tr>
+              <tr><td>Insurance Upto Date</td><td>${formatVal(spec.insuranceUptoDate)}</td></tr>
+              <tr><td>Vehicle CC</td><td>${spec.vehicleCc ? spec.vehicleCc + " cc" : "N/A"}</td></tr>
+              <tr><td>Vehicle Gross Weight</td><td>${spec.vehicleGrossWeight ? spec.vehicleGrossWeight + " kg" : "N/A"}</td></tr>
+              <tr><td>Vehicle Cylinder</td><td>${formatVal(spec.vehicleCylinder)}</td></tr>
+              <tr><td>PUC No</td><td>${formatVal(spec.pucNo)}</td></tr>
+              <tr><td>PUC Upto Date</td><td>${formatVal(spec.pucUptoDate)}</td></tr>
+              <tr>
+                <td>Blacklist Details</td>
+                <td>
+                  ${spec.blacklistDetails && spec.blacklistDetails.length > 0
+                    ? spec.blacklistDetails.map(d => `<div style="margin-bottom: 4px;">• ${escapeHtml(d)}</div>`).join("")
+                    : "No Blacklist Details"}
+                </td>
+              </tr>
+              <tr>
+                <td>Challan Details</td>
+                <td>
+                  ${spec.challanDetails && spec.challanDetails.length > 0
+                    ? spec.challanDetails.map(d => `<div style="margin-bottom: 4px;">• ${escapeHtml(d)}</div>`).join("")
+                    : "No Challan Details"}
+                </td>
+              </tr>
+              <tr><td>Permit No</td><td>${formatVal(spec.permitNo)}</td></tr>
+              <tr><td>Permit Type</td><td>${formatVal(spec.permitType)}</td></tr>
+              <tr><td>Permit From Date</td><td>${formatVal(spec.permitFromDate)}</td></tr>
+              <tr><td>Permit To Date</td><td>${formatVal(spec.permitToDate)}</td></tr>
+              <tr><td>National Permit No</td><td>${formatVal(spec.nationalPermitNo)}</td></tr>
+              <tr><td>National Permit Upto Date</td><td>${formatVal(spec.nationalPermitUptoDate)}</td></tr>
+              <tr><td>RTO Code</td><td>${formatVal(spec.rtoCode)}</td></tr>
+            </table>
+          </div>
+        `;
+      })()}
 
       <div class="footer">
         <p>© ${new Date().getFullYear()} Reecomm Infotech. All rights reserved. This document is confidential.</p>

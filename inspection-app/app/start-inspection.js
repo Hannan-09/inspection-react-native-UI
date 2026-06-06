@@ -131,6 +131,7 @@ export default function StartInspectionScreen() {
       ...(!isEV ? [{ id: "section_8", key: "section_8_obd_diagnostics", label: "OBD / Diagnostics", icon: "hardware-chip" }] : []),
       { id: "section_9", key: "section_9_modifications", label: "Modification Check", icon: "build" },
       { id: "section_10", key: "section_10_media", label: "Media & Documentation", icon: "images" },
+      { id: "section_11", key: "section_11_vehicle_specs", label: "Vehicle Document", icon: "document-text" },
     ];
     return list;
   };

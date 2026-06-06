@@ -32,6 +32,29 @@ const normalizeFuelType = (fuelType) => {
 };
 
 // ── Optimized Section Components ─────────────────────────────────────────────
+const TextInputField = ({ value, onChange, label, required, placeholder = "", isReadOnly }) => {
+  return (
+    <View style={styles.fieldWrap}>
+      <Text style={styles.fieldLabel}>
+        {label}
+        {required && <Text style={{ color: "#EF4444" }}> *</Text>}
+      </Text>
+      <TextInput
+        style={[
+          styles.textArea,
+          { minHeight: 48, height: 48, paddingVertical: 12 },
+          isReadOnly && { backgroundColor: "rgba(255,255,255,0.05)", color: "#9CA3AF" }
+        ]}
+        value={value || ""}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor="rgba(255, 255, 255, 0.4)"
+        editable={!isReadOnly}
+      />
+    </View>
+  );
+};
+
 const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, renderField }) => {
   return (
     <View style={styles.panelCard}>
@@ -386,6 +409,32 @@ export default function InspectionSectionScreen() {
         chassis_number_photo: s.chassisNumberPhoto,
         engine_number_photo: s.engineNumberPhoto,
         full_vehicle_walkaround_photos: s.fullVehicleWalkaroundPhotos || []
+      };
+    }
+    if (key === "section_11_vehicle_specs") {
+      const s = report.vehicleSpecs || {};
+      return {
+        chassis_no: s.chassisNo || "",
+        engine_no: s.engineNo || "",
+        owner_count: s.ownerCount !== undefined && s.ownerCount !== null ? s.ownerCount : "",
+        reg_date: s.regDate || "",
+        rc_upto_date: s.rcUptoDate || "",
+        vehicle_tax_upto_date: s.vehicleTaxUptoDate || "",
+        insurance_upto_date: s.insuranceUptoDate || "",
+        vehicle_cc: s.vehicleCc !== undefined && s.vehicleCc !== null ? s.vehicleCc : "",
+        vehicle_gross_weight: s.vehicleGrossWeight !== undefined && s.vehicleGrossWeight !== null ? s.vehicleGrossWeight : "",
+        vehicle_cylinder: s.vehicleCylinder !== undefined && s.vehicleCylinder !== null ? s.vehicleCylinder : "",
+        puc_no: s.pucNo || "",
+        puc_upto_date: s.pucUptoDate || "",
+        blacklist_details: s.blacklistDetails || [],
+        challan_details: s.challanDetails || [],
+        permit_no: s.permitNo || "",
+        permit_type: s.permitType || "",
+        permit_from_date: s.permitFromDate || "",
+        permit_to_date: s.permitToDate || "",
+        national_permit_no: s.nationalPermitNo || "",
+        national_permit_upto_date: s.nationalPermitUptoDate || "",
+        rto_code: s.rtoCode || ""
       };
     }
     return {};
@@ -756,6 +805,32 @@ export default function InspectionSectionScreen() {
         const payload = mapMediaData(formData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionMedia2W(inspectionId, payload);
         else await inspectionAPI.saveSectionMedia(inspectionId, payload);
+      } else if (sectionKey === "section_11_vehicle_specs") {
+        const payload = {
+          chassisNo: formData.chassis_no || null,
+          engineNo: formData.engine_no || null,
+          ownerCount: formData.owner_count ? parseInt(formData.owner_count) : null,
+          regDate: formData.reg_date || null,
+          rcUptoDate: formData.rc_upto_date || null,
+          vehicleTaxUptoDate: formData.vehicle_tax_upto_date || null,
+          insuranceUptoDate: formData.insurance_upto_date || null,
+          vehicleCc: formData.vehicle_cc ? parseInt(formData.vehicle_cc) : null,
+          vehicleGrossWeight: formData.vehicle_gross_weight ? parseInt(formData.vehicle_gross_weight) : null,
+          vehicleCylinder: formData.vehicle_cylinder ? parseInt(formData.vehicle_cylinder) : null,
+          pucNo: formData.puc_no || null,
+          pucUptoDate: formData.puc_upto_date || null,
+          blacklistDetails: Array.isArray(formData.blacklist_details) ? formData.blacklist_details.filter(Boolean) : [],
+          challanDetails: Array.isArray(formData.challan_details) ? formData.challan_details.filter(Boolean) : [],
+          permitNo: formData.permit_no || null,
+          permitType: formData.permit_type || null,
+          permitFromDate: formData.permit_from_date || null,
+          permitToDate: formData.permit_to_date || null,
+          nationalPermitNo: formData.national_permit_no || null,
+          nationalPermitUptoDate: formData.national_permit_upto_date || null,
+          rtoCode: formData.rto_code || null
+        };
+        if (vehicleCategory === "2W") await inspectionAPI.saveSectionVehicleSpecs2W(inspectionId, payload);
+        else await inspectionAPI.saveSectionVehicleSpecs(inspectionId, payload);
       }
 
       // 3. Update progress locally
@@ -878,6 +953,77 @@ export default function InspectionSectionScreen() {
         <MediaUpload key={fieldName} label={label} value={value} onChange={onChange}
           required={fieldConfig.required} type="photo"
           isReadOnly={isReadOnly} />
+      );
+    } else if (fieldConfig.input_ui === "text") {
+      inputComponent = (
+        <TextInputField
+          key={fieldName}
+          label={label}
+          value={value}
+          onChange={onChange}
+          required={fieldConfig.required}
+          placeholder={fieldConfig.description || ""}
+          isReadOnly={isReadOnly}
+        />
+      );
+    } else if (fieldConfig.input_ui === "string_array") {
+      const items = Array.isArray(value) ? value : [];
+      inputComponent = (
+        <View key={fieldName} style={styles.fieldWrap}>
+          <Text style={styles.fieldLabel}>
+            {label}
+            {fieldConfig.required && <Text style={{ color: "#EF4444" }}> *</Text>}
+          </Text>
+          {items.map((item, idx) => (
+            <View key={idx} style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <TextInput
+                style={[
+                  styles.textArea,
+                  { flex: 1, minHeight: 48, height: 48, paddingVertical: 12 },
+                  isReadOnly && { backgroundColor: "rgba(255,255,255,0.05)", color: "#9CA3AF" }
+                ]}
+                value={item}
+                onChangeText={(text) => {
+                  const updated = [...items];
+                  updated[idx] = text;
+                  onChange(updated);
+                }}
+                placeholder={`Detail ${idx + 1}`}
+                placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                editable={!isReadOnly}
+              />
+              {!isReadOnly && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const updated = items.filter((_, i) => i !== idx);
+                    onChange(updated);
+                  }}
+                  style={{ marginLeft: 8, padding: 8 }}
+                >
+                  <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          {!isReadOnly && (
+            <TouchableOpacity
+              onPress={() => {
+                onChange([...items, ""]);
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 4,
+                paddingVertical: 8,
+              }}
+            >
+              <Ionicons name="add-circle-outline" size={20} color={COLORS.fourth} />
+              <Text style={{ marginLeft: 6, color: COLORS.fourth, fontWeight: "600", fontSize: 14 }}>
+                Add Detail
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       );
     } else if (fieldConfig.input_ui === "tap_buttons") {
       const isBool = fieldConfig.type === "boolean";
@@ -1279,6 +1425,15 @@ const styles = StyleSheet.create({
   fieldNote: { fontSize: 12, color: COLORS.third, fontStyle: "italic", marginTop: -10, marginBottom: 14 },
   fieldWrap: { marginBottom: 20 },
   fieldLabel: { fontSize: 14, fontWeight: "600", color: COLORS.secondary, marginBottom: 10 },
+  textArea: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    color: "#ffffff",
+    fontSize: 14,
+  },
 
   // Enum buttons
   enumRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

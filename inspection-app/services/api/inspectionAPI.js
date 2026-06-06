@@ -449,6 +449,18 @@ class InspectionAPI {
     }
   }
 
+  // Save Section 11: Vehicle Specs
+  async saveSectionVehicleSpecs(id, data) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_VEHICLE_SPECS.replace(":id", id);
+      const response = await apiService.put(endpoint, data);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error saving vehicle specs section:", error);
+      throw error;
+    }
+  }
+
   // Final Submit Inspection
   async submitInspection(id) {
     try {
@@ -762,6 +774,18 @@ class InspectionAPI {
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W media section:", error);
+      throw error;
+    }
+  }
+
+  // Save Section 11: 2W Vehicle Specs
+  async saveSectionVehicleSpecs2W(id, data) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_VEHICLE_SPECS.replace(":id", id);
+      const response = await apiService.put(endpoint, data);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error saving 2W vehicle specs section:", error);
       throw error;
     }
   }

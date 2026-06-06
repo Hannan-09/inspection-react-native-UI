@@ -292,6 +292,32 @@ export const mapReportToSectionState = (report, key, category) => {
       full_vehicle_walkaround_photos: s.fullVehicleWalkaroundPhotos || []
     };
   }
+  if (key === "section_11_vehicle_specs") {
+    const s = report.vehicleSpecs || {};
+    return {
+      chassis_no: s.chassisNo || "",
+      engine_no: s.engineNo || "",
+      owner_count: s.ownerCount !== undefined && s.ownerCount !== null ? s.ownerCount : "",
+      reg_date: s.regDate || "",
+      rc_upto_date: s.rcUptoDate || "",
+      vehicle_tax_upto_date: s.vehicleTaxUptoDate || "",
+      insurance_upto_date: s.insuranceUptoDate || "",
+      vehicle_cc: s.vehicleCc !== undefined && s.vehicleCc !== null ? s.vehicleCc : "",
+      vehicle_gross_weight: s.vehicleGrossWeight !== undefined && s.vehicleGrossWeight !== null ? s.vehicleGrossWeight : "",
+      vehicle_cylinder: s.vehicleCylinder !== undefined && s.vehicleCylinder !== null ? s.vehicleCylinder : "",
+      puc_no: s.pucNo || "",
+      puc_upto_date: s.pucUptoDate || "",
+      blacklist_details: s.blacklistDetails || [],
+      challan_details: s.challanDetails || [],
+      permit_no: s.permitNo || "",
+      permit_type: s.permitType || "",
+      permit_from_date: s.permitFromDate || "",
+      permit_to_date: s.permitToDate || "",
+      national_permit_no: s.nationalPermitNo || "",
+      national_permit_upto_date: s.nationalPermitUptoDate || "",
+      rto_code: s.rtoCode || ""
+    };
+  }
   return {};
 };
 
@@ -321,7 +347,8 @@ export const populateInspectionStorage = async (inspectionAPI, inspectionId, cat
       { key: "section_7_tyres" },
       ...(!isEV ? [{ key: "section_8_obd_diagnostics" }] : []),
       { key: "section_9_modifications" },
-      { key: "section_10_media" }
+      { key: "section_10_media" },
+      { key: "section_11_vehicle_specs" }
     ];
 
     const progress = {};

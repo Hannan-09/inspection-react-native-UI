@@ -134,6 +134,7 @@ export const SliderInput = ({
           onChangeText={handleChange}
           keyboardType="numeric"
           placeholder="0"
+          placeholderTextColor="rgba(255, 255, 255, 0.4)"
           maxLength={3}
         />
         <Text style={styles.sliderUnit}>{unit}</Text>
@@ -185,13 +186,14 @@ export const NumberInput = ({
         {label}
         {required && <Text style={styles.required}> *</Text>}
       </Text>
-      <View style={[styles.numberInputContainer, isReadOnly && { backgroundColor: COLORS.gray100, borderColor: COLORS.gray200 }]}>
+      <View style={[styles.numberInputContainer, isReadOnly && { backgroundColor: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)" }]}>
         <TextInput
-          style={[styles.numberInput, isReadOnly && { color: COLORS.gray700 }]}
+          style={[styles.numberInput, isReadOnly && { color: "#9CA3AF" }]}
           value={localText}
           onChangeText={handleChangeText}
           keyboardType="decimal-pad"
           placeholder="Enter value"
+          placeholderTextColor="rgba(255, 255, 255, 0.4)"
           editable={!isReadOnly}
         />
         {unit ? <Text style={styles.inputUnit}>{unit}</Text> : null}
@@ -217,10 +219,11 @@ export const TextArea = ({
         {required && <Text style={styles.required}> *</Text>}
       </Text>
       <TextInput
-        style={[styles.textArea, isReadOnly && { backgroundColor: COLORS.gray100, borderColor: COLORS.gray200, color: COLORS.gray700 }]}
+        style={[styles.textArea, isReadOnly && { backgroundColor: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)", color: "#9CA3AF" }]}
         value={value || ""}
         onChangeText={onChange}
         placeholder={placeholder}
+        placeholderTextColor="rgba(255, 255, 255, 0.4)"
         multiline
         numberOfLines={4}
         textAlignVertical="top"
@@ -517,9 +520,9 @@ const styles = StyleSheet.create({
   },
   sliderInput: {
     flex: 1,
-    backgroundColor: COLORS.gray50,
-    borderWidth: 2,
-    borderColor: COLORS.gray200,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -547,15 +550,15 @@ const styles = StyleSheet.create({
   numberInputContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: 12,
+    paddingHorizontal: 16,
   },
   numberInput: {
     flex: 1,
-    backgroundColor: COLORS.gray50,
-    borderWidth: 2,
-    borderColor: COLORS.gray200,
-    borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: 16,
     fontSize: 16,
     color: COLORS.secondary,
   },
@@ -566,9 +569,9 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   textArea: {
-    backgroundColor: COLORS.gray50,
-    borderWidth: 2,
-    borderColor: COLORS.gray200,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,

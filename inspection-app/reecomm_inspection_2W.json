@@ -229,6 +229,34 @@
         "engine_number_photo": { "type": "media_url", "required": true },
         "inspection_pdf_url": { "type": "media_url", "description": "Auto-generated after submission" }
       }
+    },
+
+    "section_11_vehicle_specs": {
+      "label": "Vehicle Document",
+      "applicable_fuel_types": ["Petrol", "CNG", "Hybrid", "EV (Electric)"],
+      "fields": {
+        "chassis_no": { "type": "string", "input_ui": "text", "required": true },
+        "engine_no": { "type": "string", "input_ui": "text", "required": true },
+        "owner_count": { "type": "integer", "required": true },
+        "reg_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "rc_upto_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "vehicle_tax_upto_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "insurance_upto_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "vehicle_cc": { "type": "integer", "unit": "cc", "required": true },
+        "vehicle_gross_weight": { "type": "integer", "unit": "kg", "required": true },
+        "vehicle_cylinder": { "type": "integer", "required": true },
+        "puc_no": { "type": "string", "input_ui": "text", "required": true },
+        "puc_upto_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "blacklist_details": { "type": "array", "items": { "type": "string" }, "input_ui": "string_array", "required": false },
+        "challan_details": { "type": "array", "items": { "type": "string" }, "input_ui": "string_array", "required": false },
+        "permit_no": { "type": "string", "input_ui": "text", "required": true },
+        "permit_type": { "type": "string", "input_ui": "text", "required": true },
+        "permit_from_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "permit_to_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "national_permit_no": { "type": "string", "input_ui": "text", "required": true },
+        "national_permit_upto_date": { "type": "string", "input_ui": "text", "required": true, "description": "DD-MM-YYYY" },
+        "rto_code": { "type": "string", "input_ui": "text", "required": true }
+      }
     }
   },
 
