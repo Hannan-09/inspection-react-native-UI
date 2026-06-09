@@ -100,7 +100,8 @@
       "panels": [
         "Bonnet", "Roof", "Front Bumper", "Rear Bumper",
         "FL Door", "FR Door", "RL Door", "RR Door",
-        "FL Fender", "FR Fender", "RL Quarter", "RR Quarter"
+        "FL Fender", "FR Fender", "RL Quarter", "RR Quarter",
+        "Sunroof", "Dicky", "Airbag", "Running Board Left", "Running Board Right"
       ],
       "per_panel_fields": {
         "original_paint": { "type": "boolean", "input_ui": "mini_toggle" },
@@ -130,7 +131,13 @@
         "side_mirrors": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
         "parking_sensors": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
         "exterior_lights_all": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
-        "wipers_washers": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" }
+        "wipers_washers": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "headlight": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "fog_lamp": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "tail_light": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "front_wiper": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "rear_wiper": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "rear_windshield": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "photo_required_on_fail": true }
       }
     },
 
@@ -138,15 +145,21 @@
       "label": "Interior & Cabin",
       "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid", "EV (Electric)"],
       "fields": {
-        "ac_cooling_heating": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
+        "ac_cooling": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
+        "ac_heating": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
         "ac_compressor": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
         "ac_gas_leakage": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["Petrol", "Diesel", "CNG", "LPG", "Hybrid"] },
         "hvac_climate_control": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons", "applicable_fuel_types": ["EV (Electric)"] },
         "speakers": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
         "infotainment_system": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "ventilated_seat": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "back_camera": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "camera_360": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "cruise_control": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
         "interior_lights": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
         "central_locking": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
         "power_windows_all": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
+        "manual_power_windows_count": { "type": "integer", "input_ui": "number_input", "description": "How many manual power windows are there?", "conditional_show": "power_windows_all === Fail" },
         "reverse_camera_sensors": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
         "seat_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
         "dashboard_condition": { "type": "string", "enum": ["None", "Minor", "Major"], "input_ui": "condition_buttons" },
@@ -191,7 +204,7 @@
       "note": "Mandatory for 4W ICE. For EV use BMS check in battery section.",
       "fields": {
         "obd_scan_done": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
-        "error_codes_present": { "type": "boolean", "input_ui": "tap_buttons" },
+        "error_codes_present": { "type": "boolean", "input_ui": "tap_buttons", "photo_required_if_true": true },
         "error_code_details": { "type": "string", "input_ui": "textarea", "description": "Enter codes e.g. P0300, P0171", "conditional_show": "error_codes_present === true" },
         "emission_status": { "type": "string", "enum": ["Pass", "Fail", "Advisory"], "input_ui": "tap_buttons" }
       }

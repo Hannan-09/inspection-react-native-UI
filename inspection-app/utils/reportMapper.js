@@ -149,7 +149,14 @@ export const mapReportToSectionState = (report, key, category) => {
       side_mirrors: normalizeEnum(s.sideMirrors),
       parking_sensors: normalizeEnum(s.parkingSensors),
       exterior_lights_all: normalizeEnum(s.exteriorLightsAll),
-      wipers_washers: normalizeEnum(s.wipersWashers)
+      wipers_washers: normalizeEnum(s.wipersWashers),
+      headlight: normalizeEnum(s.headlight),
+      fog_lamp: normalizeEnum(s.fogLamp),
+      tail_light: normalizeEnum(s.tailLight),
+      front_wiper: normalizeEnum(s.frontWiper),
+      rear_wiper: normalizeEnum(s.rearWiper),
+      rear_windshield: normalizeEnum(s.rearWindshield),
+      rear_windshield_photo: s.rearWindshieldPhoto || null
     };
   }
   if (key === "section_5_interior_cabin" || key === "section_5_comfort_electronics") {
@@ -166,15 +173,21 @@ export const mapReportToSectionState = (report, key, category) => {
       };
     }
     return {
-      ac_cooling_heating: normalizeEnum(s.acCoolingHeating),
+      ac_cooling: normalizeEnum(s.acCooling),
+      ac_heating: normalizeEnum(s.acHeating),
       ac_compressor: normalizeEnum(s.acCompressor),
       ac_gas_leakage: normalizeEnum(s.acGasLeakage),
       hvac_climate_control: normalizeEnum(s.hvacClimateControl),
       speakers: normalizeEnum(s.speakers),
       infotainment_system: normalizeEnum(s.infotainmentSystem),
+      ventilated_seat: normalizeEnum(s.ventilatedSeat),
+      back_camera: normalizeEnum(s.backCamera),
+      camera_360: normalizeEnum(s.camera360),
+      cruise_control: normalizeEnum(s.cruiseControl),
       interior_lights: normalizeEnum(s.interiorLights),
       central_locking: normalizeEnum(s.centralLocking),
       power_windows_all: normalizeEnum(s.powerWindowsAll),
+      manual_power_windows_count: s.manualPowerWindowCount !== undefined && s.manualPowerWindowCount !== null ? s.manualPowerWindowCount : "",
       reverse_camera_sensors: normalizeEnum(s.reverseCameraSensors),
       seat_condition: normalizeEnum(s.seatCondition),
       dashboard_condition: normalizeEnum(s.dashboardCondition),
@@ -257,6 +270,7 @@ export const mapReportToSectionState = (report, key, category) => {
       obd_scan_done: normalizeEnum(s.obdScanDone),
       error_codes_present: s.errorCodesPresent === true,
       error_code_details: s.errorCodeDetails || "",
+      error_codes_present_photo: s.errorCodesPhoto || null,
       emission_status: normalizeEnum(s.emissionStatus)
     };
   }

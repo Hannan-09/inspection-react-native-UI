@@ -9,6 +9,8 @@ class AuthAPI {
         username,
         password,
       });
+      console.log("login endpoint",API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.AUTH.LOGIN);
+      console.log("login",response);
 
       // Actual response shape:
       // { status, statusCode, message, data: { accessToken, refreshToken, inspectorId, username } }

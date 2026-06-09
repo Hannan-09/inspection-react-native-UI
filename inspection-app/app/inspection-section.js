@@ -284,7 +284,14 @@ export default function InspectionSectionScreen() {
         side_mirrors: normalizeEnum(s.sideMirrors),
         parking_sensors: normalizeEnum(s.parkingSensors),
         exterior_lights_all: normalizeEnum(s.exteriorLightsAll),
-        wipers_washers: normalizeEnum(s.wipersWashers)
+        wipers_washers: normalizeEnum(s.wipersWashers),
+        headlight: normalizeEnum(s.headlight),
+        fog_lamp: normalizeEnum(s.fogLamp),
+        tail_light: normalizeEnum(s.tailLight),
+        front_wiper: normalizeEnum(s.frontWiper),
+        rear_wiper: normalizeEnum(s.rearWiper),
+        rear_windshield: normalizeEnum(s.rearWindshield),
+        rear_windshield_photo: s.rearWindshieldPhoto || null
       };
     }
     if (key === "section_5_interior_cabin" || key === "section_5_comfort_electronics") {
@@ -301,15 +308,21 @@ export default function InspectionSectionScreen() {
         };
       }
       return {
-        ac_cooling_heating: normalizeEnum(s.acCoolingHeating),
+        ac_cooling: normalizeEnum(s.acCooling),
+        ac_heating: normalizeEnum(s.acHeating),
         ac_compressor: normalizeEnum(s.acCompressor),
         ac_gas_leakage: normalizeEnum(s.acGasLeakage),
         hvac_climate_control: normalizeEnum(s.hvacClimateControl),
         speakers: normalizeEnum(s.speakers),
         infotainment_system: normalizeEnum(s.infotainmentSystem),
+        ventilated_seat: normalizeEnum(s.ventilatedSeat),
+        back_camera: normalizeEnum(s.backCamera),
+        camera_360: normalizeEnum(s.camera360),
+        cruise_control: normalizeEnum(s.cruiseControl),
         interior_lights: normalizeEnum(s.interiorLights),
         central_locking: normalizeEnum(s.centralLocking),
         power_windows_all: normalizeEnum(s.powerWindowsAll),
+        manual_power_windows_count: s.manualPowerWindowCount !== undefined && s.manualPowerWindowCount !== null ? s.manualPowerWindowCount : "",
         reverse_camera_sensors: normalizeEnum(s.reverseCameraSensors),
         seat_condition: normalizeEnum(s.seatCondition),
         dashboard_condition: normalizeEnum(s.dashboardCondition),
@@ -376,6 +389,7 @@ export default function InspectionSectionScreen() {
         obd_scan_done: normalizeEnum(s.obdScanDone),
         error_codes_present: s.errorCodesPresent,
         error_code_details: s.errorCodeDetails,
+        error_codes_present_photo: s.errorCodesPhoto || null,
         emission_status: normalizeEnum(s.emissionStatus)
       };
     }
@@ -606,7 +620,14 @@ export default function InspectionSectionScreen() {
       sideMirrors: mapEnum(data.side_mirrors),
       parkingSensors: mapEnum(data.parking_sensors),
       exteriorLightsAll: mapEnum(data.exterior_lights_all),
-      wipersWashers: mapEnum(data.wipers_washers)
+      wipersWashers: mapEnum(data.wipers_washers),
+      headlight: mapEnum(data.headlight),
+      fogLamp: mapEnum(data.fog_lamp),
+      tailLight: mapEnum(data.tail_light),
+      frontWiper: mapEnum(data.front_wiper),
+      rearWiper: mapEnum(data.rear_wiper),
+      rearWindshield: mapEnum(data.rear_windshield),
+      rearWindshieldPhoto: data.rear_windshield_photo || null
     };
   };
 
@@ -623,15 +644,21 @@ export default function InspectionSectionScreen() {
       };
     }
     return {
-      acCoolingHeating: mapEnum(data.ac_cooling_heating),
+      acCooling: mapEnum(data.ac_cooling),
+      acHeating: mapEnum(data.ac_heating),
       acCompressor: mapEnum(data.ac_compressor),
       acGasLeakage: mapEnum(data.ac_gas_leakage),
       hvacClimateControl: mapEnum(data.hvac_climate_control),
       speakers: mapEnum(data.speakers),
       infotainmentSystem: mapEnum(data.infotainment_system),
+      ventilatedSeat: mapEnum(data.ventilated_seat),
+      backCamera: mapEnum(data.back_camera),
+      camera360: mapEnum(data.camera_360),
+      cruiseControl: mapEnum(data.cruise_control),
       interiorLights: mapEnum(data.interior_lights),
       centralLocking: mapEnum(data.central_locking),
       powerWindowsAll: mapEnum(data.power_windows_all),
+      manualPowerWindowCount: data.manual_power_windows_count !== undefined && data.manual_power_windows_count !== null && data.manual_power_windows_count !== "" ? parseInt(data.manual_power_windows_count) : null,
       reverseCameraSensors: mapEnum(data.reverse_camera_sensors),
       seatCondition: mapEnum(data.seat_condition),
       dashboardCondition: mapEnum(data.dashboard_condition),
@@ -694,6 +721,7 @@ export default function InspectionSectionScreen() {
       obdScanDone: mapEnum(data.obd_scan_done),
       errorCodesPresent: data.error_codes_present === true,
       errorCodeDetails: data.error_code_details || null,
+      errorCodesPhoto: data.error_codes_present_photo || null,
       emissionStatus: mapEnum(data.emission_status)
     };
   };

@@ -235,7 +235,7 @@ class InspectionAPI {
   }
 
   // Save Section 5: Interior & Cabin
-  async saveSectionInteriorCabin(id, data) {
+  async saveSectionInteriorCabin(id, data) { 
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_INTERIOR_CABIN.replace(":id", id);
 
@@ -676,8 +676,33 @@ class InspectionAPI {
   async saveSectionObd2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_OBD.replace(":id", id);
-      const response = await apiService.put(endpoint, data);
-      return response.data || response;
+      const hasPhoto = data.errorCodesPhoto && 
+                       (data.errorCodesPhoto.startsWith("file://") || data.errorCodesPhoto.startsWith("content://"));
+      if (hasPhoto) {
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+          const value = data[key];
+          if (value !== null && value !== undefined) {
+            if (key === "errorCodesPhoto" && typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
+              const filename = value.split("/").pop();
+              const match = /\.(\w+)$/.exec(filename);
+              const type = match ? `image/${match[1]}` : "image/jpeg";
+              formData.append(key, {
+                uri: value,
+                name: filename,
+                type: type
+              });
+            } else {
+              formData.append(key, value);
+            }
+          }
+        });
+        const response = await apiService.putMultipart(endpoint, formData);
+        return response.data || response;
+      } else {
+        const response = await apiService.put(endpoint, data);
+        return response.data || response;
+      }
     } catch (error) {
       console.error("Error saving 2W OBD section:", error);
       throw error;

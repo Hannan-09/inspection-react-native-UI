@@ -577,6 +577,15 @@ const generatePDFReport = (report) => {
         <tr><td>Parking Sensors</td><td>${toLabel(glass.parkingSensors)}</td></tr>
         <tr><td>Exterior Lights All</td><td>${toLabel(glass.exteriorLightsAll)}</td></tr>
         <tr><td>Wipers & Washers</td><td>${toLabel(glass.wipersWashers)}</td></tr>
+        ${is4W ? `
+          <tr><td>Headlight</td><td>${toLabel(glass.headlight)}</td></tr>
+          <tr><td>Fog Lamp</td><td>${toLabel(glass.fogLamp)}</td></tr>
+          <tr><td>Tail Light</td><td>${toLabel(glass.tailLight)}</td></tr>
+          <tr><td>Front Wiper</td><td>${toLabel(glass.frontWiper)}</td></tr>
+          <tr><td>Rear Wiper</td><td>${toLabel(glass.rearWiper)}</td></tr>
+          <tr><td>Rear Windshield</td><td>${toLabel(glass.rearWindshield)}</td></tr>
+          ${glass.rearWindshieldPhoto ? `<tr><td>Rear Windshield Photo</td><td>${formatVal(glass.rearWindshieldPhoto)}</td></tr>` : ""}
+        ` : ""}
       </table>
     </div>
   `;
@@ -588,7 +597,8 @@ const generatePDFReport = (report) => {
       <h3>Section 5: Interior & Cabin</h3>
       <table class="data-table">
         ${!isEV ? `
-          <tr><td>AC Cooling / Heating</td><td>${toLabel(cabin.acCoolingHeating)}</td></tr>
+          <tr><td>AC Cooling</td><td>${toLabel(cabin.acCooling)}</td></tr>
+          <tr><td>AC Heating</td><td>${toLabel(cabin.acHeating)}</td></tr>
           <tr><td>AC Compressor</td><td>${toLabel(cabin.acCompressor)}</td></tr>
           <tr><td>AC Gas Leakage</td><td>${toLabel(cabin.acGasLeakage)}</td></tr>
         ` : `
@@ -599,7 +609,16 @@ const generatePDFReport = (report) => {
         <tr><td>Interior Lights</td><td>${toLabel(cabin.interiorLights)}</td></tr>
         <tr><td>Central Locking</td><td>${toLabel(cabin.centralLocking)}</td></tr>
         <tr><td>Power Windows All</td><td>${toLabel(cabin.powerWindowsAll)}</td></tr>
+        ${cabin.powerWindowsAll?.toUpperCase() === 'FAIL' ? `
+          <tr><td>Manual Power Windows Count</td><td>${formatVal(cabin.manualPowerWindowCount)}</td></tr>
+        ` : ""}
         <tr><td>Reverse Camera & Sensors</td><td>${toLabel(cabin.reverseCameraSensors)}</td></tr>
+        ${is4W ? `
+          <tr><td>Ventilated Seat</td><td>${toLabel(cabin.ventilatedSeat)}</td></tr>
+          <tr><td>Back Camera</td><td>${toLabel(cabin.backCamera)}</td></tr>
+          <tr><td>360 Camera</td><td>${toLabel(cabin.camera360)}</td></tr>
+          <tr><td>Cruise Control</td><td>${toLabel(cabin.cruiseControl)}</td></tr>
+        ` : ""}
         <tr><td>Seat Condition</td><td>${toLabel(cabin.seatCondition)}</td></tr>
         <tr><td>Dashboard Condition</td><td>${toLabel(cabin.dashboardCondition)}</td></tr>
         <tr><td>Water / Flood Damage Signs</td><td>${toLabel(cabin.waterFloodDamageSigns)}</td></tr>
@@ -684,7 +703,10 @@ const generatePDFReport = (report) => {
         <table class="data-table">
           <tr><td>OBD Scan Done</td><td>${toLabel(obd.obdScanDone)}</td></tr>
           <tr><td>Error Codes Present</td><td>${formatVal(obd.errorCodesPresent)}</td></tr>
-          ${obd.errorCodesPresent ? `<tr><td>Error Code Details</td><td><strong>${obd.errorCodeDetails || "N/A"}</strong></td></tr>` : ""}
+          ${obd.errorCodesPresent ? `
+            <tr><td>Error Code Details</td><td><strong>${obd.errorCodeDetails || "N/A"}</strong></td></tr>
+            ${obd.errorCodesPhoto ? `<tr><td>OBD Scan Photo</td><td>${formatVal(obd.errorCodesPhoto)}</td></tr>` : ""}
+          ` : ""}
           <tr><td>Emission Status</td><td>${toLabel(obd.emissionStatus)}</td></tr>
         </table>
       </div>
