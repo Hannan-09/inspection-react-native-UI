@@ -16,25 +16,50 @@ import * as ImagePicker from "expo-image-picker";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { COLORS } from "../../constants";
 
+// Helper to return condition colors dynamically based on enum value
+export const getConditionColor = (option) => {
+  if (!option) return COLORS.fourth;
+  const opt = option.trim().toUpperCase().replace(/\s+/g, "_");
+  
+  if (["GOOD", "WORKING", "NONE", "LOW", "PASS"].includes(opt)) {
+    return COLORS.conditionGood;
+  }
+  if (["FAIR", "PARTIALLY_WORKING", "MINOR", "MODERATE", "MEDIUM", "WORN", "ADVISORY"].includes(opt)) {
+    return COLORS.conditionFair;
+  }
+  if (["POOR", "NOT_WORKING", "MAJOR", "HIGH", "FAIL", "REPLACE", "MISSING"].includes(opt)) {
+    return COLORS.conditionPoor;
+  }
+  if (["NA", "N/A"].includes(opt)) {
+    return COLORS.conditionNeutral;
+  }
+  return COLORS.fourth; // Default to theme blue
+};
+
 // ── Tap Buttons (Pass / Fail / N/A) ─────────────────────────────────────────
 
 export const TapButtons = ({ value, onChange, label, required, options = ["Pass", "Fail", "N/A"] }) => {
+  const isLarge = options.length > 3;
+
   return (
     <View style={styles.fieldContainer}>
       <Text style={styles.fieldLabel}>
         {label}
         {required && <Text style={styles.required}> *</Text>}
       </Text>
-      <View style={styles.buttonRow}>
+      <View style={[styles.buttonRow, { flexWrap: "wrap" }]}>
         {options.map((option) => {
           const isSelected = value === option;
+          const activeColor = getConditionColor(option);
+          const activeBg = activeColor + "12"; // ~7% opacity tint for background
 
           return (
             <TouchableOpacity
               key={option}
               style={[
                 styles.tapButton,
-                isSelected && styles.tapButtonSelected,
+                isLarge ? { minWidth: "45%", flexGrow: 1 } : { flex: 1 },
+                isSelected && { borderColor: activeColor, backgroundColor: activeBg },
               ]}
               onPress={() => {
                 if (value === option) {
@@ -48,7 +73,7 @@ export const TapButtons = ({ value, onChange, label, required, options = ["Pass"
               <Text
                 style={[
                   styles.tapButtonText,
-                  isSelected && styles.tapButtonTextSelected,
+                  isSelected && { color: activeColor },
                 ]}
               >
                 {option}
@@ -63,8 +88,8 @@ export const TapButtons = ({ value, onChange, label, required, options = ["Pass"
 
 // ── Condition Buttons (None / Minor / Major) ─────────────────────────────────
 
-export const ConditionButtons = ({ value, onChange, label, required }) => {
-  const options = ["None", "Minor", "Major"];
+export const ConditionButtons = ({ value, onChange, label, required, options }) => {
+  const opts = options || ["None", "Minor", "Major"];
 
   return (
     <View style={styles.fieldContainer}>
@@ -73,32 +98,38 @@ export const ConditionButtons = ({ value, onChange, label, required }) => {
         {required && <Text style={styles.required}> *</Text>}
       </Text>
       <View style={styles.buttonRow}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option}
-            style={[
-              styles.conditionButton,
-              value === option && styles.conditionButtonSelected,
-            ]}
-            onPress={() => {
-              if (value === option) {
-                onChange(null);
-              } else {
-                onChange(option);
-              }
-            }}
-            activeOpacity={0.7}
-          >
-            <Text
+        {opts.map((option) => {
+          const isSelected = value === option;
+          const activeColor = getConditionColor(option);
+          const activeBg = activeColor + "12";
+
+          return (
+            <TouchableOpacity
+              key={option}
               style={[
-                styles.conditionButtonText,
-                value === option && styles.conditionButtonTextSelected,
+                styles.conditionButton,
+                isSelected && { borderColor: activeColor, backgroundColor: activeBg },
               ]}
+              onPress={() => {
+                if (value === option) {
+                  onChange(null);
+                } else {
+                  onChange(option);
+                }
+              }}
+              activeOpacity={0.7}
             >
-              {option}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.conditionButtonText,
+                  isSelected && { color: activeColor },
+                ]}
+              >
+                {option}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -286,48 +317,14 @@ export const MediaUpload = ({
   maxCount,
   isReadOnly,
 }) => {
-  const [pickerVisible, setPickerVisible] = useState(false);
-
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const uris = value
     ? Array.isArray(value) ? value : [value]
     : [];
 
   const limit = maxCount || (type === "video" ? 1 : 99);
 
-  const requestLibraryPermission = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission Required", "Please allow photo library access in Settings.");
-      return false;
-    }
-    return true;
-  };
-
-  const pickFromLibrary = async () => {
-    setPickerVisible(false);
-    if (uris.length >= limit) {
-      Alert.alert("Limit Reached", `You can only upload up to ${limit} ${type}(s).`);
-      return;
-    }
-
-    const granted = await requestLibraryPermission();
-    if (!granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: type === "video" ? ImagePicker.MediaTypeOptions.Videos : ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: limit > 1,
-      quality: 0.8,
-      selectionLimit: limit - uris.length,
-    });
-    if (!result.canceled && result.assets?.length > 0) {
-      const newUris = result.assets.map((a) => a.uri);
-      let merged = [...uris, ...newUris];
-      if (merged.length > limit) merged = merged.slice(0, limit);
-      onChange(merged.length === 1 ? merged[0] : merged);
-    }
-  };
-
   const takeFromCamera = async () => {
-    setPickerVisible(false);
     if (uris.length >= limit) {
       Alert.alert("Limit Reached", `You can only upload up to ${limit} ${type}(s).`);
       return;
@@ -366,11 +363,33 @@ export const MediaUpload = ({
       {/* Uploaded previews / video player */}
       {uris.length > 0 && (
         isVideo ? (
-          <View style={styles.videoPlayerWrapper}>
-            <ReadOnlyVideoPlayer uri={uris[0]} />
+          <View style={styles.videoPreviewCard}>
+            <View style={styles.videoIconContainer}>
+              <Ionicons name="videocam" size={24} color={COLORS.fourth} />
+            </View>
+            <View style={styles.videoInfo}>
+              <Text style={styles.videoTitle} numberOfLines={1}>
+                {label || "Recorded Video"}
+              </Text>
+              <Text style={styles.videoSubtitle}>
+                {uris[0].startsWith("http") ? "Cloud Video" : "Local Recording"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.playButton}
+              onPress={() => setIsPlayerOpen(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="play" size={16} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={styles.playButtonText}>Preview</Text>
+            </TouchableOpacity>
             {!isReadOnly && (
-              <TouchableOpacity style={styles.videoRemoveButton} onPress={() => removeMedia(0)}>
-                <Ionicons name="close-circle" size={26} color={COLORS.danger} />
+              <TouchableOpacity
+                style={styles.videoRemoveBtn}
+                onPress={() => removeMedia(0)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="trash-outline" size={20} color={COLORS.danger} />
               </TouchableOpacity>
             )}
           </View>
@@ -391,8 +410,8 @@ export const MediaUpload = ({
       )}
 
       {/* Upload button */}
-      {!isReadOnly && (
-        <TouchableOpacity style={styles.uploadButton} onPress={() => setPickerVisible(true)} activeOpacity={0.7}>
+      {!isReadOnly && uris.length < limit && (
+        <TouchableOpacity style={styles.uploadButton} onPress={takeFromCamera} activeOpacity={0.7}>
           <Ionicons name={isVideo ? "videocam-outline" : "camera-outline"} size={24} color={COLORS.fourth} />
           <Text style={styles.uploadButtonText}>
             {uris.length > 0 ? "Add More" : "Upload"} {isVideo ? "Video" : "Photo"}
@@ -409,45 +428,44 @@ export const MediaUpload = ({
         </View>
       )}
 
-      {/* ── Beautiful Upload Source Modal ──────────────────────────── */}
-      <Modal visible={pickerVisible} transparent animationType="fade">
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setPickerVisible(false)}
+      {/* Video Player Modal */}
+      {isVideo && (
+        <Modal
+          visible={isPlayerOpen}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setIsPlayerOpen(false)}
         >
-          <View style={styles.pickerModal}>
-            {/* Header */}
-            <View style={styles.pickerHeader}>
-              <View style={styles.pickerIconBg}>
-                <Ionicons name={isVideo ? "videocam" : "camera"} size={26} color={COLORS.fourth} />
+          <View style={styles.modalOverlay}>
+            <View style={styles.videoModalContent}>
+              <View style={styles.videoModalHeader}>
+                <Text style={styles.videoModalTitle} numberOfLines={1}>
+                  {label}
+                </Text>
+                <TouchableOpacity
+                  style={styles.videoModalCloseBtn}
+                  onPress={() => setIsPlayerOpen(false)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close" size={24} color="#fff" />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.pickerTitle}>{isVideo ? "Upload Video" : "Upload Photo"}</Text>
-              <Text style={styles.pickerSubtitle}>Choose a source</Text>
+              
+              <View style={styles.videoModalPlayerContainer}>
+                {isPlayerOpen && <ReadOnlyVideoPlayer uri={uris[0]} />}
+              </View>
+              
+              <TouchableOpacity
+                style={styles.videoModalCloseFullBtn}
+                onPress={() => setIsPlayerOpen(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.videoModalCloseFullBtnText}>Close Preview</Text>
+              </TouchableOpacity>
             </View>
- 
-            {/* Divider */}
-            <View style={styles.pickerDivider} />
- 
-            {/* Options */}
-            <TouchableOpacity style={styles.pickerOption} onPress={takeFromCamera} activeOpacity={0.7}>
-              <View style={[styles.pickerOptionIcon, { backgroundColor: "rgba(0, 123, 255, 0.12)" }]}>
-                <Ionicons name="camera" size={22} color={COLORS.fourth} />
-              </View>
-              <View style={styles.pickerOptionText}>
-                <Text style={styles.pickerOptionTitle}>Camera</Text>
-                <Text style={styles.pickerOptionSub}>{isVideo ? "Record a new video" : "Take a new photo"}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#AEAEB2" />
-            </TouchableOpacity>
-
-            {/* Cancel */}
-            <TouchableOpacity style={styles.pickerCancel} onPress={() => setPickerVisible(false)} activeOpacity={0.7}>
-              <Text style={styles.pickerCancelText}>Cancel</Text>
-            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </Modal>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -809,5 +827,117 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 14,
     resizeMode: "cover",
+  },
+  // Video Preview Card
+  videoPreviewCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+  },
+  videoIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: "rgba(0, 123, 255, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  videoInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  videoTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.secondary,
+    marginBottom: 2,
+  },
+  videoSubtitle: {
+    fontSize: 12,
+    color: COLORS.third,
+  },
+  playButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.fourth,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  playButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  videoRemoveBtn: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Video Modal Styles
+  videoModalContent: {
+    backgroundColor: "#1A1919",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderBottomWidth: 0,
+    paddingBottom: 40,
+  },
+  videoModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  videoModalTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: COLORS.secondary,
+    flex: 1,
+    marginRight: 12,
+  },
+  videoModalCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoModalPlayerContainer: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#000",
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  videoModalCloseFullBtn: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoModalCloseFullBtnText: {
+    color: COLORS.secondary,
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

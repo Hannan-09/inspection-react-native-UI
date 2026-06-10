@@ -2,9 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const normalizeEnum = (val) => {
   if (!val) return null;
-  if (val === "NA") return "N/A";
-  if (val === "NONE") return "None";
-  return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+  if (val === "NA" || val === "N/A") return "N/A";
+  return val.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
 };
 
 export const mapReportToSectionState = (report, key, category) => {
@@ -72,17 +71,25 @@ export const mapReportToSectionState = (report, key, category) => {
       battery_soh_percent: s.batterySohPercent !== undefined && s.batterySohPercent !== null ? s.batterySohPercent : "",
       battery_soc_percent: s.batterySocPercent !== undefined && s.batterySocPercent !== null ? s.batterySocPercent : "",
       battery_pack_condition: normalizeEnum(s.batteryPackCondition),
+      battery_pack_condition_photo: s.batteryPackPhoto || null,
       battery_thermal_cooling: normalizeEnum(s.batteryThermalCooling),
+      battery_thermal_cooling_photo: s.batteryThermalCoolingPhoto || null,
       charging_port_condition: normalizeEnum(s.chargingPortCondition),
       charging_port_condition_photo: s.chargingPortPhoto || null,
       bms_warning_light: normalizeEnum(s.bmsWarningLight),
+      bms_warning_light_photo: s.bmsWarningLightPhoto || null,
       range_indicator_functional: normalizeEnum(s.rangeIndicatorFunctional),
+      range_indicator_functional_photo: s.rangeIndicatorFunctionalPhoto || null,
       motor_noise_vibration: normalizeEnum(s.motorNoiseVibration),
+      motor_noise_vibration_photo: s.motorNoiseVibrationPhoto || null,
       regenerative_braking_active: normalizeEnum(s.regenerativeBrakingActive),
+      regenerative_braking_active_photo: s.regenerativeBrakingActivePhoto || null,
       hv_wiring_harness: normalizeEnum(s.hvWiringHarness),
       hv_wiring_harness_photo: s.hvWiringHarnessPhoto || null,
       dc_dc_converter: normalizeEnum(s.dcDcConverter),
-      onboard_charger_status: normalizeEnum(s.onboardChargerStatus)
+      dc_dc_converter_photo: s.dcDcConverterPhoto || null,
+      onboard_charger_status: normalizeEnum(s.onboardChargerStatus),
+      onboard_charger_status_photo: s.onboardChargerStatusPhoto || null
     };
   }
   if (key === "section_2_mechanical") {
@@ -111,22 +118,32 @@ export const mapReportToSectionState = (report, key, category) => {
       suspension_noise: normalizeEnum(s.suspensionNoise),
       disc_drum_brake_condition: normalizeEnum(s.discDrumBrakeCondition),
       disc_drum_brake_condition_photo: s.discDrumBrakePhoto || null,
+      mag_wheel_brake_condition: normalizeEnum(s.magWheelBrakeCondition),
+      mag_wheel_brake_condition_photo: s.magWheelBrakePhoto || null,
       brake_pad_life_percent: s.brakePadLifePercent !== undefined && s.brakePadLifePercent !== null ? s.brakePadLifePercent : "",
+      mag_wheel_brake_pad_life_percent: s.magWheelBrakePadLifePercent !== undefined && s.magWheelBrakePadLifePercent !== null ? s.magWheelBrakePadLifePercent : "",
       brake_fluid_lines: normalizeEnum(s.brakeFluidLines),
-      abs_warning_light: normalizeEnum(s.absWarningLight)
+      abs_warning_light: normalizeEnum(s.absWarningLight),
+      abs_warning_light_photo: s.absWarningLightPhoto || null,
+      drum_brake: s.drumBrake !== undefined && s.drumBrake !== null ? s.drumBrake : null,
+      mag_wheel: s.magWheel !== undefined && s.magWheel !== null ? s.magWheel : null
     };
   }
   if (key === "section_3_exterior_panels") {
     const panels = {};
     const s = report.exteriorPanels || {};
     (s.panels || []).forEach(p => {
+      const isNa = p.dentSeverity === "NA" && p.scratchSeverity === "NA";
       panels[p.panelName] = {
+        is_na: isNa,
         original_paint: p.originalPaint,
         repainted: p.repainted,
         dent_severity: normalizeEnum(p.dentSeverity),
         scratch_severity: normalizeEnum(p.scratchSeverity),
         rust_present: p.rustPresent,
-        panel_photo: p.panelPhoto || null
+        dent_photo: p.dentPhoto ? (Array.isArray(p.dentPhoto) ? p.dentPhoto : [p.dentPhoto]) : [],
+        scratch_photo: p.scratchPhoto ? (Array.isArray(p.scratchPhoto) ? p.scratchPhoto : [p.scratchPhoto]) : [],
+        panel_photo: p.panelPhoto ? (Array.isArray(p.panelPhoto) ? p.panelPhoto : [p.panelPhoto]) : []
       };
     });
     return panels;
@@ -261,17 +278,20 @@ export const mapReportToSectionState = (report, key, category) => {
         condition: normalizeEnum(s.rearRightTyreCondition),
         tyre_photo: s.rearRightTyrePhoto || null
       },
-      spare_tyre_condition: normalizeEnum(s.spareTyreCondition)
+      spare_tyre_condition: normalizeEnum(s.spareTyreCondition),
+      spare_tyre_condition_photo: s.spareTyrePhoto || null
     };
   }
   if (key === "section_8_obd_diagnostics") {
     const s = report.obdDiagnostics || {};
     return {
       obd_scan_done: normalizeEnum(s.obdScanDone),
+      obd_scan_done_photo: s.obdScanDonePhoto || null,
       error_codes_present: s.errorCodesPresent === true,
       error_code_details: s.errorCodeDetails || "",
       error_codes_present_photo: s.errorCodesPhoto || null,
-      emission_status: normalizeEnum(s.emissionStatus)
+      emission_status: normalizeEnum(s.emissionStatus),
+      emission_status_photo: s.emissionStatusPhoto || null
     };
   }
   if (key === "section_9_modifications") {

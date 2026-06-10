@@ -20,6 +20,12 @@ export const COLORS = {
   danger: "#EF4444",      // Soft red danger
   info: "#007BFF",
 
+  // Condition colors based on enums
+  conditionGood: "#10B981",       // Good / Working / None / Low / Pass
+  conditionFair: "#F59E0B",       // Fair / Partially Working / Minor / Medium
+  conditionPoor: "#EF4444",       // Poor / Not Working / Major / High / Fail
+  conditionNeutral: "#8E8E93",    // NA / N/A / Default
+
   // Neutral colors (Reversed for dark theme)
   white: "#ffffff",
   black: "#000000",

@@ -5,7 +5,7 @@ import {
 import { useState, useEffect, useCallback, memo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { MiniToggle, MediaUpload, NumberInput, SliderInput, TextArea, TapButtons, ConditionButtons } from "../components/inspection/FormField";
+import { MiniToggle, MediaUpload, NumberInput, SliderInput, TextArea, TapButtons, ConditionButtons, getConditionColor } from "../components/inspection/FormField";
 import inspectionSchema2W from "../reecomm_inspection_2W.json";
 import inspectionSchema4W from "../reecomm_inspection_4W.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -55,17 +55,79 @@ const TextInputField = ({ value, onChange, label, required, placeholder = "", is
   );
 };
 
-const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, renderField }) => {
+const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, renderField, isReadOnly }) => {
+  const isNa = !!panelData.is_na;
+
   return (
     <View style={styles.panelCard}>
       <View style={styles.panelHeader}>
-        <View style={styles.panelHeaderIcon}>
-          <Ionicons name="car-sport-outline" size={18} color={COLORS.fourth} />
+        <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+          <View style={styles.panelHeaderIcon}>
+            <Ionicons name="car-sport-outline" size={18} color={COLORS.fourth} />
+          </View>
+          <Text style={styles.panelTitle}>{panelName}</Text>
         </View>
-        <Text style={styles.panelTitle}>{panelName}</Text>
+        
+        <TouchableOpacity
+          style={[
+            styles.naBadge,
+            isNa && styles.naBadgeActive,
+            isReadOnly && { opacity: 0.8 }
+          ]}
+          onPress={() => {
+            if (isReadOnly) return;
+            const nextNa = !isNa;
+            if (nextNa) {
+              // Reset all fields to default N/A when marking N/A
+              onUpdate("is_na", true);
+              onUpdate("original_paint", false);
+              onUpdate("repainted", false);
+              onUpdate("dent_severity", "N/A");
+              onUpdate("scratch_severity", "N/A");
+              onUpdate("rust_present", false);
+              onUpdate("dent_photo", []);
+              onUpdate("scratch_photo", []);
+              onUpdate("panel_photo", []);
+            } else {
+              onUpdate("is_na", false);
+              onUpdate("original_paint", null);
+              onUpdate("repainted", null);
+              onUpdate("dent_severity", null);
+              onUpdate("scratch_severity", null);
+              onUpdate("rust_present", null);
+              onUpdate("dent_photo", []);
+              onUpdate("scratch_photo", []);
+              onUpdate("panel_photo", []);
+            }
+          }}
+          activeOpacity={isReadOnly ? 1 : 0.7}
+        >
+          <Text style={[styles.naBadgeText, isNa && styles.naBadgeTextActive]}>
+            {isNa ? "N/A" : "Mark N/A"}
+          </Text>
+        </TouchableOpacity>
       </View>
-      {Object.entries(perPanelFields).map(([fk, fc]) =>
-        renderField(fk, fc, panelData[fk], (val) => onUpdate(fk, val))
+
+      {isNa ? (
+        <View style={styles.naPlaceholder}>
+          <Text style={styles.naPlaceholderText}>This panel is marked as Not Applicable (N/A).</Text>
+        </View>
+      ) : (
+        Object.entries(perPanelFields).map(([fk, fc]) => {
+          let fieldConfig = fc;
+          if (fk === "dent_photo") {
+            const dentVal = panelData.dent_severity;
+            const hasDent = dentVal && (dentVal === "Minor" || dentVal === "Major");
+            if (!hasDent) return null;
+            fieldConfig = { ...fc, required: true };
+          } else if (fk === "scratch_photo") {
+            const scratchVal = panelData.scratch_severity;
+            const hasScratch = scratchVal && (scratchVal === "Minor" || scratchVal === "Major");
+            if (!hasScratch) return null;
+            fieldConfig = { ...fc, required: true };
+          }
+          return renderField(fk, fieldConfig, panelData[fk], (val) => onUpdate(fk, val));
+        })
       )}
     </View>
   );
@@ -136,10 +198,8 @@ export default function InspectionSectionScreen() {
 
   const normalizeEnum = (val) => {
     if (!val) return null;
-    if (val === "NA") return "N/A";
-    if (val === "NONE") return "None";
-    // Convert "MAJOR" to "Major", "PASS" to "Pass", "GOOD" to "Good"
-    return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+    if (val === "NA" || val === "N/A") return "N/A";
+    return val.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
   };
 
   const mapReportToSectionState = (report, key, category) => {
@@ -207,17 +267,25 @@ export default function InspectionSectionScreen() {
         battery_soh_percent: s.batterySohPercent,
         battery_soc_percent: s.batterySocPercent,
         battery_pack_condition: normalizeEnum(s.batteryPackCondition),
+        battery_pack_condition_photo: s.batteryPackPhoto || null,
         battery_thermal_cooling: normalizeEnum(s.batteryThermalCooling),
+        battery_thermal_cooling_photo: s.batteryThermalCoolingPhoto || null,
         charging_port_condition: normalizeEnum(s.chargingPortCondition),
         charging_port_condition_photo: s.chargingPortPhoto || null,
         bms_warning_light: normalizeEnum(s.bmsWarningLight),
+        bms_warning_light_photo: s.bmsWarningLightPhoto || null,
         range_indicator_functional: normalizeEnum(s.rangeIndicatorFunctional),
+        range_indicator_functional_photo: s.rangeIndicatorFunctionalPhoto || null,
         motor_noise_vibration: normalizeEnum(s.motorNoiseVibration),
+        motor_noise_vibration_photo: s.motorNoiseVibrationPhoto || null,
         regenerative_braking_active: normalizeEnum(s.regenerativeBrakingActive),
+        regenerative_braking_active_photo: s.regenerativeBrakingActivePhoto || null,
         hv_wiring_harness: normalizeEnum(s.hvWiringHarness),
         hv_wiring_harness_photo: s.hvWiringHarnessPhoto || null,
         dc_dc_converter: normalizeEnum(s.dcDcConverter),
-        onboard_charger_status: normalizeEnum(s.onboardChargerStatus)
+        dc_dc_converter_photo: s.dcDcConverterPhoto || null,
+        onboard_charger_status: normalizeEnum(s.onboardChargerStatus),
+        onboard_charger_status_photo: s.onboardChargerStatusPhoto || null
       };
     }
     if (key === "section_2_mechanical") {
@@ -246,22 +314,32 @@ export default function InspectionSectionScreen() {
         suspension_noise: normalizeEnum(s.suspensionNoise),
         disc_drum_brake_condition: normalizeEnum(s.discDrumBrakeCondition),
         disc_drum_brake_condition_photo: s.discDrumBrakePhoto || null,
+        mag_wheel_brake_condition: normalizeEnum(s.magWheelBrakeCondition),
+        mag_wheel_brake_condition_photo: s.magWheelBrakePhoto || null,
         brake_pad_life_percent: s.brakePadLifePercent,
+        mag_wheel_brake_pad_life_percent: s.magWheelBrakePadLifePercent,
         brake_fluid_lines: normalizeEnum(s.brakeFluidLines),
-        abs_warning_light: normalizeEnum(s.absWarningLight)
+        abs_warning_light: normalizeEnum(s.absWarningLight),
+        abs_warning_light_photo: s.absWarningLightPhoto || null,
+        drum_brake: s.drumBrake !== undefined && s.drumBrake !== null ? s.drumBrake : null,
+        mag_wheel: s.magWheel !== undefined && s.magWheel !== null ? s.magWheel : null
       };
     }
     if (key === "section_3_exterior_panels") {
       const panels = {};
       const s = report.exteriorPanels || {};
       (s.panels || []).forEach(p => {
+        const isNa = p.dentSeverity === "NA" && p.scratchSeverity === "NA";
         panels[p.panelName] = {
+          is_na: isNa,
           original_paint: p.originalPaint,
           repainted: p.repainted,
           dent_severity: normalizeEnum(p.dentSeverity),
           scratch_severity: normalizeEnum(p.scratchSeverity),
           rust_present: p.rustPresent,
-          panel_photo: p.panelPhoto
+          dent_photo: p.dentPhoto ? (Array.isArray(p.dentPhoto) ? p.dentPhoto : [p.dentPhoto]) : [],
+          scratch_photo: p.scratchPhoto ? (Array.isArray(p.scratchPhoto) ? p.scratchPhoto : [p.scratchPhoto]) : [],
+          panel_photo: p.panelPhoto ? (Array.isArray(p.panelPhoto) ? p.panelPhoto : [p.panelPhoto]) : []
         };
       });
       return panels;
@@ -380,17 +458,20 @@ export default function InspectionSectionScreen() {
           condition: normalizeEnum(s.rearRightTyreCondition),
           tyre_photo: s.rearRightTyrePhoto
         },
-        spare_tyre_condition: normalizeEnum(s.spareTyreCondition)
+        spare_tyre_condition: normalizeEnum(s.spareTyreCondition),
+        spare_tyre_condition_photo: s.spareTyrePhoto || null
       };
     }
     if (key === "section_8_obd_diagnostics") {
       const s = report.obdDiagnostics || {};
       return {
         obd_scan_done: normalizeEnum(s.obdScanDone),
+        obd_scan_done_photo: s.obdScanDonePhoto || null,
         error_codes_present: s.errorCodesPresent,
         error_code_details: s.errorCodeDetails,
         error_codes_present_photo: s.errorCodesPhoto || null,
-        emission_status: normalizeEnum(s.emissionStatus)
+        emission_status: normalizeEnum(s.emissionStatus),
+        emission_status_photo: s.emissionStatusPhoto || null
       };
     }
     if (key === "section_9_modifications") {
@@ -456,7 +537,19 @@ export default function InspectionSectionScreen() {
 
   const update = (key, value) => {
     if (isReadOnly) return;
-    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [key]: value };
+      if (key === "drum_brake" && value === true) {
+        next.mag_wheel = false;
+        next.mag_wheel_brake_condition = null;
+        next.mag_wheel_brake_pad_life_percent = "";
+      } else if (key === "mag_wheel" && value === true) {
+        next.drum_brake = false;
+        next.disc_drum_brake_condition = null;
+        next.brake_pad_life_percent = "";
+      }
+      return next;
+    });
   };
   const updateNested = (group, key, value) => {
     if (isReadOnly) return;
@@ -465,8 +558,8 @@ export default function InspectionSectionScreen() {
 
   const mapEnum = (val) => {
     if (!val) return null;
-    if (val === "N/A") return "NA";
-    return val.toUpperCase();
+    if (val === "N/A" || val === "NA") return "NA";
+    return val.toUpperCase().replace(/\s+/g, "_");
   };
 
   const mapEngineData = (data, category) => {
@@ -532,17 +625,25 @@ export default function InspectionSectionScreen() {
       batterySohPercent: data.battery_soh_percent ? parseInt(data.battery_soh_percent) : null,
       batterySocPercent: data.battery_soc_percent ? parseInt(data.battery_soc_percent) : null,
       batteryPackCondition: mapEnum(data.battery_pack_condition),
+      batteryPackPhoto: data.battery_pack_condition_photo || null,
       batteryThermalCooling: mapEnum(data.battery_thermal_cooling),
+      batteryThermalCoolingPhoto: data.battery_thermal_cooling_photo || null,
       chargingPortCondition: mapEnum(data.charging_port_condition),
       chargingPortPhoto: data.charging_port_condition_photo || null,
       bmsWarningLight: mapEnum(data.bms_warning_light),
+      bmsWarningLightPhoto: data.bms_warning_light_photo || null,
       rangeIndicatorFunctional: mapEnum(data.range_indicator_functional),
+      rangeIndicatorFunctionalPhoto: data.range_indicator_functional_photo || null,
       motorNoiseVibration: mapEnum(data.motor_noise_vibration),
+      motorNoiseVibrationPhoto: data.motor_noise_vibration_photo || null,
       regenerativeBrakingActive: mapEnum(data.regenerative_braking_active),
+      regenerativeBrakingActivePhoto: data.regenerative_braking_active_photo || null,
       hvWiringHarness: mapEnum(data.hv_wiring_harness),
       hvWiringHarnessPhoto: data.hv_wiring_harness_photo || null,
       dcDcConverter: mapEnum(data.dc_dc_converter),
-      onboardChargerStatus: mapEnum(data.onboard_charger_status)
+      dcDcConverterPhoto: data.dc_dc_converter_photo || null,
+      onboardChargerStatus: mapEnum(data.onboard_charger_status),
+      onboardChargerStatusPhoto: data.onboard_charger_status_photo || null
     };
   };
 
@@ -571,9 +672,15 @@ export default function InspectionSectionScreen() {
       suspensionNoise: mapEnum(data.suspension_noise),
       discDrumBrakeCondition: mapEnum(data.disc_drum_brake_condition),
       discDrumBrakePhoto: data.disc_drum_brake_condition_photo || null,
+      magWheelBrakeCondition: mapEnum(data.mag_wheel_brake_condition),
+      magWheelBrakePhoto: data.mag_wheel_brake_condition_photo || null,
       brakePadLifePercent: data.brake_pad_life_percent ? parseInt(data.brake_pad_life_percent) : null,
+      magWheelBrakePadLifePercent: data.mag_wheel_brake_pad_life_percent ? parseInt(data.mag_wheel_brake_pad_life_percent) : null,
       brakeFluidLines: mapEnum(data.brake_fluid_lines),
-      absWarningLight: mapEnum(data.abs_warning_light)
+      absWarningLight: mapEnum(data.abs_warning_light),
+      absWarningLightPhoto: data.abs_warning_light_photo || null,
+      drumBrake: data.drum_brake !== undefined && data.drum_brake !== null ? data.drum_brake : null,
+      magWheel: data.mag_wheel !== undefined && data.mag_wheel !== null ? data.mag_wheel : null
     };
   };
 
@@ -581,13 +688,48 @@ export default function InspectionSectionScreen() {
     const photos = [];
     const panels = (panelsList || []).map((panelName) => {
       const panelData = data[panelName] || {};
-      let photoIndex = null;
+      let dentPhotoIndex = null;
+      let scratchPhotoIndex = null;
       
-      // If there's a new photo, add it to the photos array and set the index
-      if (panelData.panel_photo && typeof panelData.panel_photo === "string" && (panelData.panel_photo.startsWith("file://") || panelData.panel_photo.startsWith("content://"))) {
-        photoIndex = photos.length;
-        photos.push(panelData.panel_photo);
-      }
+      const dPhotos = Array.isArray(panelData.dent_photo) 
+        ? panelData.dent_photo 
+        : (panelData.dent_photo ? [panelData.dent_photo] : []);
+        
+      dPhotos.forEach(photo => {
+        if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
+          if (dentPhotoIndex === null) {
+            dentPhotoIndex = photos.length;
+          }
+          photos.push(photo);
+        }
+      });
+
+      const sPhotos = Array.isArray(panelData.scratch_photo) 
+        ? panelData.scratch_photo 
+        : (panelData.scratch_photo ? [panelData.scratch_photo] : []);
+        
+      sPhotos.forEach(photo => {
+        if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
+          if (scratchPhotoIndex === null) {
+            scratchPhotoIndex = photos.length;
+          }
+          photos.push(photo);
+        }
+      });
+
+      let photoIndex = null;
+      const pPhotos = Array.isArray(panelData.panel_photo) 
+        ? panelData.panel_photo 
+        : (panelData.panel_photo ? [panelData.panel_photo] : []);
+        
+      pPhotos.forEach(photo => {
+        if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
+          if (photoIndex === null) {
+            photoIndex = photos.length;
+          }
+          photos.push(photo);
+        }
+      });
 
       return {
         panelName,
@@ -596,6 +738,8 @@ export default function InspectionSectionScreen() {
         dentSeverity: mapEnum(panelData.dent_severity),
         scratchSeverity: mapEnum(panelData.scratch_severity),
         rustPresent: !!panelData.rust_present,
+        dentPhotoIndex,
+        scratchPhotoIndex,
         photoIndex
       };
     });
@@ -701,7 +845,8 @@ export default function InspectionSectionScreen() {
     };
 
     const payload = {
-      spareTyreCondition: mapEnum(data.spare_tyre_condition)
+      spareTyreCondition: mapEnum(data.spare_tyre_condition),
+      spareTyrePhoto: data.spare_tyre_condition_photo || null
     };
 
     Object.keys(posMap).forEach(pos => {
@@ -719,10 +864,12 @@ export default function InspectionSectionScreen() {
   const mapObdData = (data) => {
     return {
       obdScanDone: mapEnum(data.obd_scan_done),
+      obdScanDonePhoto: data.obd_scan_done_photo || null,
       errorCodesPresent: data.error_codes_present === true,
       errorCodeDetails: data.error_code_details || null,
       errorCodesPhoto: data.error_codes_present_photo || null,
-      emissionStatus: mapEnum(data.emission_status)
+      emissionStatus: mapEnum(data.emission_status),
+      emissionStatusPhoto: data.emission_status_photo || null
     };
   };
 
@@ -883,14 +1030,16 @@ export default function InspectionSectionScreen() {
     <View style={styles.enumRow}>
       {options.map(opt => {
         const sel = value === opt;
+        const activeColor = color || getConditionColor(opt);
+        const activeBg = activeColor + "12"; // ~7% opacity tint for background
         return (
           <TouchableOpacity
             key={opt}
-            style={[styles.enumBtn, sel && { backgroundColor: color || COLORS.fourth, borderColor: color || COLORS.fourth }]}
+            style={[styles.enumBtn, sel && { borderColor: activeColor, backgroundColor: activeBg }]}
             onPress={() => !isReadOnly && onChange(sel ? null : opt)}
             activeOpacity={isReadOnly ? 1 : 0.7}
           >
-            <Text style={[styles.enumBtnText, sel && { color: "#fff" }]}>{opt}</Text>
+            <Text style={[styles.enumBtnText, sel && { color: activeColor }]}>{opt}</Text>
           </TouchableOpacity>
         );
       })}
@@ -973,7 +1122,7 @@ export default function InspectionSectionScreen() {
         <MediaUpload key={fieldName} label={label} value={value} onChange={onChange}
           required={fieldConfig.required}
           type={isVideo ? "video" : "photo"}
-          maxCount={isVideo ? 1 : undefined}
+          maxCount={1}
           isReadOnly={isReadOnly} />
       );
     } else if (fieldConfig.type === "array" && fieldConfig.items?.type === "media_url") {
@@ -1055,9 +1204,11 @@ export default function InspectionSectionScreen() {
       );
     } else if (fieldConfig.input_ui === "tap_buttons") {
       const isBool = fieldConfig.type === "boolean";
-      const opts = isBool ? ["True", "False", "N/A"] : ["Pass", "Fail", "N/A"];
+      const opts = isBool 
+        ? (fieldConfig.enum ? fieldConfig.enum : ["True", "False", "N/A"]) 
+        : (fieldConfig.enum ? fieldConfig.enum.map(normalizeEnum) : ["Pass", "Fail", "N/A"]);
       const displayVal = isBool 
-        ? (value === true ? "True" : value === false ? "False" : (value === "NA" ? "N/A" : value))
+        ? (value === true ? (fieldConfig.enum ? fieldConfig.enum[0] : "True") : value === false ? (fieldConfig.enum ? fieldConfig.enum[1] : "False") : (value === "NA" ? "N/A" : value))
         : value;
 
       inputComponent = (
@@ -1070,7 +1221,11 @@ export default function InspectionSectionScreen() {
             if (v === null) {
               onChange(null);
             } else if (isBool) {
-              onChange(v === "True" ? true : v === "False" ? false : "NA");
+              if (fieldConfig.enum) {
+                onChange(v === fieldConfig.enum[0]);
+              } else {
+                onChange(v === "True" ? true : v === "False" ? false : "NA");
+              }
             } else {
               onChange(v);
             }
@@ -1079,7 +1234,16 @@ export default function InspectionSectionScreen() {
         />
       );
     } else if (fieldConfig.input_ui === "condition_buttons") {
-      inputComponent = <ConditionButtons key={fieldName} label={label} value={value} onChange={onChange} required={fieldConfig.required} />;
+      inputComponent = (
+        <ConditionButtons
+          key={fieldName}
+          label={label}
+          value={value}
+          onChange={onChange}
+          required={fieldConfig.required}
+          options={fieldConfig.enum}
+        />
+      );
     } else if (fieldConfig.input_ui === "mini_buttons" || (fieldConfig.enum && !fieldConfig.input_ui)) {
       inputComponent = (
         <View key={fieldName} style={styles.fieldWrap}>
@@ -1101,8 +1265,20 @@ export default function InspectionSectionScreen() {
     let showPhotoUpload = false;
     if (fieldConfig.photo_required === true) {
       showPhotoUpload = true;
+    } else if (fieldConfig.photo_required_on_values && Array.isArray(fieldConfig.photo_required_on_values)) {
+      const upperVal = String(value || "").toUpperCase().replace(/\s+/g, "_");
+      showPhotoUpload = fieldConfig.photo_required_on_values.some(
+        v => String(v).toUpperCase().replace(/\s+/g, "_") === upperVal
+      );
     } else if (fieldConfig.photo_required_on_fail === true) {
-      showPhotoUpload = value === "Fail" || value === "Minor" || value === "Major";
+      const upperVal = String(value || "").toUpperCase().replace(/\s+/g, "_");
+      showPhotoUpload = upperVal === "FAIL" || upperVal === "MINOR" || upperVal === "MAJOR" || 
+                        upperVal === "POOR" || upperVal === "FAIR" || 
+                        upperVal === "NOT_WORKING" || upperVal === "PARTIALLY_WORKING";
+    } else if (fieldConfig.photo_required_on_value) {
+      const upperVal = String(value || "").toUpperCase().replace(/\s+/g, "_");
+      const targetVal = String(fieldConfig.photo_required_on_value).toUpperCase().replace(/\s+/g, "_");
+      showPhotoUpload = upperVal === targetVal;
     } else if (fieldConfig.photo_required_if_not_none === true) {
       showPhotoUpload = value !== undefined && value !== null && value !== "" && value !== "None";
     } else if (fieldConfig.photo_required_if_true === true) {
@@ -1120,6 +1296,7 @@ export default function InspectionSectionScreen() {
             onChange={onPhotoChange}
             required={true}
             type="photo"
+            maxCount={fieldConfig.photo_multiple ? 99 : 1}
             isReadOnly={isReadOnly}
           />
         </View>
@@ -1136,10 +1313,25 @@ export default function InspectionSectionScreen() {
 
     return panels.map(panelName => {
       const onUpdate = (key, val) => {
-        setFormData(prev => ({
-          ...prev,
-          [panelName]: { ...(prev[panelName] || {}), [key]: val },
-        }));
+        setFormData(prev => {
+          const panelData = prev[panelName] || {};
+          const nextPanelData = { ...panelData, [key]: val };
+          if (key === "original_paint" && val === true) {
+            nextPanelData.repainted = false;
+          } else if (key === "repainted" && val === true) {
+            nextPanelData.original_paint = false;
+          }
+          if (key === "dent_severity" && (val === "None" || val === "N/A" || !val)) {
+            nextPanelData.dent_photo = [];
+          }
+          if (key === "scratch_severity" && (val === "None" || val === "N/A" || !val)) {
+            nextPanelData.scratch_photo = [];
+          }
+          return {
+            ...prev,
+            [panelName]: nextPanelData
+          };
+        });
       };
 
       return (
@@ -1150,6 +1342,7 @@ export default function InspectionSectionScreen() {
           perPanelFields={perPanelFields}
           onUpdate={onUpdate}
           renderField={renderField}
+          isReadOnly={isReadOnly}
         />
       );
     });
@@ -1190,13 +1383,15 @@ export default function InspectionSectionScreen() {
               </View>
               <Text style={styles.panelTitle}>Spare Tyre</Text>
             </View>
-            <View style={styles.fieldWrap}>
-              <Text style={styles.fieldLabel}>Spare Tyre Condition</Text>
-              <EnumRow
-                options={spareConfig.enum}
-                value={formData.spare_tyre_condition}
-                onChange={val => update("spare_tyre_condition", val)}
-              />
+            <View style={{ paddingHorizontal: 4 }}>
+              {renderField(
+                "spare_tyre_condition",
+                spareConfig,
+                formData.spare_tyre_condition,
+                val => update("spare_tyre_condition", val),
+                formData.spare_tyre_condition_photo,
+                val => update("spare_tyre_condition_photo", val)
+              )}
             </View>
           </View>
         )}
@@ -1473,6 +1668,12 @@ const styles = StyleSheet.create({
   panelHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "rgba(255, 255, 255, 0.08)" },
   panelHeaderIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: "rgba(59, 130, 246, 0.15)", borderWidth: 1, borderColor: "rgba(59, 130, 246, 0.3)", alignItems: "center", justifyContent: "center", marginRight: 10 },
   panelTitle: { fontSize: 15, fontWeight: "700", color: COLORS.secondary },
+  naBadge: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, backgroundColor: "rgba(255, 255, 255, 0.05)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)" },
+  naBadgeActive: { backgroundColor: "rgba(239, 68, 68, 0.15)", borderColor: "rgba(239, 68, 68, 0.3)" },
+  naBadgeText: { fontSize: 12, fontWeight: "700", color: "rgba(255, 255, 255, 0.6)" },
+  naBadgeTextActive: { color: "#EF4444" },
+  naPlaceholder: { paddingVertical: 24, alignItems: "center", justifyContent: "center" },
+  naPlaceholderText: { fontSize: 13, color: "rgba(255, 255, 255, 0.4)", fontStyle: "italic" },
 
   // Modification section
   subSectionTitle: { fontSize: 16, fontWeight: "700", color: COLORS.secondary, marginTop: 16, marginBottom: 8 },

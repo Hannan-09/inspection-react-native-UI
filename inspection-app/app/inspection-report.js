@@ -427,6 +427,17 @@ const generatePDFReport = (report) => {
   // Helper to safely format labels
   const toLabel = (str) => {
     if (!str) return "N/A";
+    if (str === "NA" || str === "N/A") return "N/A";
+    
+    // If it's already ALL_CAPS with underscores
+    if (str === str.toUpperCase()) {
+      const formatted = str
+        .split("_")
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+      return escapeHtml(formatted);
+    }
+
     const formatted = str
       .replace(/([A-Z])/g, " $1")
       .replace(/^./, (s) => s.toUpperCase())
@@ -438,6 +449,16 @@ const generatePDFReport = (report) => {
   const formatVal = (val) => {
     if (val === null || val === undefined) return "N/A";
     if (typeof val === "boolean") return val ? "Yes" : "No";
+    if (Array.isArray(val)) {
+      if (val.length === 0) return "N/A";
+      return val.map((item, idx) => {
+        if (typeof item === "string" && (item.startsWith("http://") || item.startsWith("https://") || item.startsWith("file://") || item.startsWith("content://"))) {
+          const escapedUrl = item.replace(/&/g, "&amp;");
+          return `<a href="${escapedUrl}" target="_blank" style="color: #007BFF; text-decoration: underline; font-size: 12px; word-break: break-all;">View Link ${idx + 1}</a>`;
+        }
+        return escapeHtml(String(item));
+      }).join(", ");
+    }
     if (typeof val === "string" && (val.startsWith("http://") || val.startsWith("https://") || val.startsWith("file://") || val.startsWith("content://"))) {
       const escapedUrl = val.replace(/&/g, "&amp;");
       return `<a href="${escapedUrl}" target="_blank" style="color: #007BFF; text-decoration: underline; font-size: 12px; word-break: break-all;">View Media Link</a>`;
@@ -504,6 +525,28 @@ const generatePDFReport = (report) => {
 
   // 2. Mechanical
   const mech = report.mechanical || {};
+  let brakeRowsHTML = "";
+  
+  // Drum Brake
+  const drumBrakeVal = mech.drumBrake === true ? "Yes" : mech.drumBrake === false ? "No" : "N/A";
+  brakeRowsHTML += `<tr><td>Drum Brake</td><td>${drumBrakeVal}</td></tr>`;
+  if (mech.drumBrake === true) {
+    brakeRowsHTML += `
+      <tr><td>Disc / Drum Brake Condition</td><td>${toLabel(mech.discDrumBrakeCondition)}</td></tr>
+      <tr><td>Brake Pad Life Percent</td><td>${mech.brakePadLifePercent !== undefined && mech.brakePadLifePercent !== null ? mech.brakePadLifePercent + "%" : "N/A"}</td></tr>
+    `;
+  }
+
+  // Mag Wheel
+  const magWheelVal = mech.magWheel === true ? "Yes" : mech.magWheel === false ? "No" : "N/A";
+  brakeRowsHTML += `<tr><td>Mag Wheel</td><td>${magWheelVal}</td></tr>`;
+  if (mech.magWheel === true) {
+    brakeRowsHTML += `
+      <tr><td>Mag Wheel Brake Condition</td><td>${toLabel(mech.magWheelBrakeCondition)}</td></tr>
+      <tr><td>Mag Wheel Brake Pad Life Percent</td><td>${mech.magWheelBrakePadLifePercent !== undefined && mech.magWheelBrakePadLifePercent !== null ? mech.magWheelBrakePadLifePercent + "%" : "N/A"}</td></tr>
+    `;
+  }
+
   const mechanicalHTML = `
     <div class="section-card">
       <h3>Section 2: Mechanical Components</h3>
@@ -513,8 +556,7 @@ const generatePDFReport = (report) => {
         <tr><td>Shocks / Struts</td><td>${toLabel(mech.shocksStruts)}</td></tr>
         <tr><td>Ball Joints & Bushes</td><td>${toLabel(mech.ballJointsBushes)}</td></tr>
         <tr><td>Suspension Noise</td><td>${toLabel(mech.suspensionNoise)}</td></tr>
-        <tr><td>Disc / Drum Brake Condition</td><td>${toLabel(mech.discDrumBrakeCondition)}</td></tr>
-        <tr><td>Brake Pad Life Percent</td><td>${mech.brakePadLifePercent !== undefined ? mech.brakePadLifePercent + "%" : "N/A"}</td></tr>
+        ${brakeRowsHTML}
         <tr><td>Brake Fluid Lines</td><td>${toLabel(mech.brakeFluidLines)}</td></tr>
         ${is4W ? `<tr><td>ABS Warning Light</td><td>${toLabel(mech.absWarningLight)}</td></tr>` : ""}
       </table>
@@ -537,7 +579,9 @@ const generatePDFReport = (report) => {
               <th>Dent</th>
               <th>Scratch</th>
               <th>Rust</th>
-              <th>Photo Link</th>
+              <th>Dent Photo</th>
+              <th>Scratch Photo</th>
+              <th>Panel Photo</th>
             </tr>
           </thead>
           <tbody>
@@ -549,6 +593,8 @@ const generatePDFReport = (report) => {
                 <td>${toLabel(p.dentSeverity)}</td>
                 <td>${toLabel(p.scratchSeverity)}</td>
                 <td>${p.rustPresent ? "Yes" : "No"}</td>
+                <td>${formatVal(p.dentPhoto)}</td>
+                <td>${formatVal(p.scratchPhoto)}</td>
                 <td>${formatVal(p.panelPhoto)}</td>
               </tr>
             `).join("")}
@@ -686,7 +732,8 @@ const generatePDFReport = (report) => {
           </tr>
           <tr>
             <td colspan="3"><strong>Spare Tyre Condition</strong></td>
-            <td colspan="2">${toLabel(tyres.spareTyreCondition)}</td>
+            <td>${toLabel(tyres.spareTyreCondition)}</td>
+            <td>${formatVal(tyres.spareTyrePhoto)}</td>
           </tr>
         </tbody>
       </table>
@@ -702,12 +749,14 @@ const generatePDFReport = (report) => {
         <h3>Section 8: OBD / Diagnostics</h3>
         <table class="data-table">
           <tr><td>OBD Scan Done</td><td>${toLabel(obd.obdScanDone)}</td></tr>
+          ${obd.obdScanDonePhoto ? `<tr><td>OBD Scan Photo</td><td>${formatVal(obd.obdScanDonePhoto)}</td></tr>` : ""}
           <tr><td>Error Codes Present</td><td>${formatVal(obd.errorCodesPresent)}</td></tr>
           ${obd.errorCodesPresent ? `
             <tr><td>Error Code Details</td><td><strong>${obd.errorCodeDetails || "N/A"}</strong></td></tr>
             ${obd.errorCodesPhoto ? `<tr><td>OBD Scan Photo</td><td>${formatVal(obd.errorCodesPhoto)}</td></tr>` : ""}
           ` : ""}
           <tr><td>Emission Status</td><td>${toLabel(obd.emissionStatus)}</td></tr>
+          ${obd.emissionStatusPhoto ? `<tr><td>Emission Status Photo</td><td>${formatVal(obd.emissionStatusPhoto)}</td></tr>` : ""}
         </table>
       </div>
     `;

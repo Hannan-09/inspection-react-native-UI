@@ -30,7 +30,6 @@
     "section_1_engine_powertrain": {
       "label": "Engine & Powertrain",
       "applicable_fuel_types": ["Petrol", "CNG", "Hybrid"],
-      "note": "Skip this entire section for Electric Scooter. Use section_1_ev_battery instead.",
       "fields": {
         "engine_sound_video": { "type": "media_url", "required": true, "description": "30s video of engine running" },
         "overheating": { "type": "string", "enum": ["Pass", "Fail", "N/A"], "input_ui": "tap_buttons" },
@@ -58,7 +57,6 @@
     "section_1_ev_battery": {
       "label": "Battery & EV Powertrain",
       "applicable_fuel_types": ["EV (Electric)"],
-      "note": "Only shown when subtype = Electric Scooter. Replaces section_1_engine_powertrain.",
       "fields": {
         "motor_running_video": { "type": "media_url", "required": true, "description": "30s video with display visible" },
         "battery_soh_percent": { "type": "integer", "minimum": 0, "maximum": 100, "input_ui": "slider", "unit": "%", "description": "State of Health from OBD or onboard display" },
@@ -99,11 +97,13 @@
       ],
       "per_panel_fields": {
         "original_paint": { "type": "boolean", "input_ui": "mini_toggle" },
-        "repainted": { "type": "boolean", "input_ui": "mini_toggle", "photo_required_if_true": true },
-        "dent_severity": { "type": "string", "enum": ["None", "Minor", "Moderate", "Major"], "input_ui": "mini_buttons", "photo_required_if_not_none": true },
-        "scratch_severity": { "type": "string", "enum": ["None", "Minor", "Moderate", "Major"], "input_ui": "mini_buttons" },
+        "repainted": { "type": "boolean", "input_ui": "mini_toggle" },
+        "dent_severity": { "type": "string", "enum": ["NONE", "MINOR", "MAJOR", "NA"], "input_ui": "tap_buttons" },
+        "dent_photo": { "type": "array", "items": { "type": "media_url" } },
+        "scratch_severity": { "type": "string", "enum": ["NONE", "MINOR", "MAJOR", "NA"], "input_ui": "tap_buttons" },
+        "scratch_photo": { "type": "array", "items": { "type": "media_url" } },
         "rust_present": { "type": "boolean", "input_ui": "mini_toggle", "photo_required_if_true": true },
-        "panel_photo": { "type": "media_url", "optional": true }
+        "panel_photo": { "type": "array", "items": { "type": "media_url" } }
       },
       "example_record": {
         "panel_name": "Front Cowl",
@@ -112,7 +112,9 @@
         "dent_severity": "None",
         "scratch_severity": "Minor",
         "rust_present": false,
-        "panel_photo": "https://cdn.reecomm.in/media/insp_002_front_cowl.jpg"
+        "dent_photo": ["https://cdn.reecomm.in/media/insp_002_front_cowl_dent.jpg"],
+        "scratch_photo": [],
+        "panel_photo": ["https://cdn.reecomm.in/media/insp_002_front_cowl.jpg"]
       }
     },
 

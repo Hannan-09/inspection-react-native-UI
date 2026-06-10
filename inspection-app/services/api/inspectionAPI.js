@@ -171,6 +171,12 @@ class InspectionAPI {
         formData.append(`panels[${index}].dentSeverity`, panel.dentSeverity || "NONE");
         formData.append(`panels[${index}].scratchSeverity`, panel.scratchSeverity || "NONE");
         formData.append(`panels[${index}].rustPresent`, panel.rustPresent);
+        if (panel.dentPhotoIndex !== null && panel.dentPhotoIndex !== undefined) {
+          formData.append(`panels[${index}].dentPhotoIndex`, panel.dentPhotoIndex);
+        }
+        if (panel.scratchPhotoIndex !== null && panel.scratchPhotoIndex !== undefined) {
+          formData.append(`panels[${index}].scratchPhotoIndex`, panel.scratchPhotoIndex);
+        }
         if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
           formData.append(`panels[${index}].photoIndex`, panel.photoIndex);
         }
@@ -340,8 +346,35 @@ class InspectionAPI {
   async saveSectionObd(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_OBD.replace(":id", id);
-      const response = await apiService.put(endpoint, data);
-      return response.data || response;
+      const hasPhoto = Object.values(data).some(value => 
+        typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))
+      );
+      
+      if (hasPhoto) {
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+          const value = data[key];
+          if (value !== null && value !== undefined) {
+            if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
+              const filename = value.split("/").pop();
+              const match = /\.(\w+)$/.exec(filename);
+              const type = match ? `image/${match[1]}` : "image/jpeg";
+              formData.append(key, {
+                uri: value,
+                name: filename,
+                type: type
+              });
+            } else {
+              formData.append(key, value);
+            }
+          }
+        });
+        const response = await apiService.putMultipart(endpoint, formData);
+        return response.data || response;
+      } else {
+        const response = await apiService.put(endpoint, data);
+        return response.data || response;
+      }
     } catch (error) {
       console.error("Error saving OBD section:", error);
       throw error;
@@ -575,6 +608,12 @@ class InspectionAPI {
         if (panel.dentSeverity) formData.append(`panels[${index}].dentSeverity`, panel.dentSeverity);
         if (panel.scratchSeverity) formData.append(`panels[${index}].scratchSeverity`, panel.scratchSeverity);
         formData.append(`panels[${index}].rustPresent`, panel.rustPresent);
+        if (panel.dentPhotoIndex !== null && panel.dentPhotoIndex !== undefined) {
+          formData.append(`panels[${index}].dentPhotoIndex`, panel.dentPhotoIndex);
+        }
+        if (panel.scratchPhotoIndex !== null && panel.scratchPhotoIndex !== undefined) {
+          formData.append(`panels[${index}].scratchPhotoIndex`, panel.scratchPhotoIndex);
+        }
         if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
           formData.append(`panels[${index}].photoIndex`, panel.photoIndex);
         }
