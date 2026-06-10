@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated, Image } from "react-native";
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { apiService } from "../services/api/api";
@@ -59,8 +59,10 @@ export default function SplashScreen() {
           alignItems: "center",
         }}
       >
-        <Text style={styles.title}>Reecomm</Text>
-        <Text style={styles.subtitle}>Inspector</Text>
+        <Image
+          source={require("../assets/REECOMM_PNG.png")}
+          style={styles.logo}
+        />
       </Animated.View>
     </ThemeBackground>
   );
@@ -72,18 +74,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  title: {
-    fontSize: 42,
-    fontWeight: "800",
-    color: COLORS.secondary,
-    letterSpacing: 1.5,
-  },
-  subtitle: {
-    marginTop: 10,
-    fontSize: 20,
-    fontWeight: "600",
-    color: COLORS.fourth,
-    letterSpacing: 4,
-    textTransform: "uppercase",
+  logo: {
+    width: 250,
+    height: 250,
+    resizeMode: "contain",
   },
 });
