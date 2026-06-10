@@ -536,15 +536,24 @@ export default function InspectionDetailsScreen() {
         {(details.assignmentStatus?.toUpperCase() === "COMPLETED" || details.assignmentStatus?.toUpperCase() === "SUBMITTED") && (
           <TouchableOpacity 
             style={[styles.acceptButton, { marginLeft: 0, backgroundColor: COLORS.fourth }]} 
-            onPress={() => router.push(
-              `/inspection-report?id=${details.id}` +
-              `&vehicleCategory=${encodeURIComponent(details.vehicleType || "")}` +
-              `&vehicleSubtype=${encodeURIComponent(details.vehicleSubType || "")}` +
-              `&fuelType=${encodeURIComponent(details.fuelType || "")}` +
-              `&makerName=${encodeURIComponent(details.makerName || "")}` +
-              `&modelName=${encodeURIComponent(details.modelName || "")}` +
-              `&regNumber=${encodeURIComponent(details.regNumber || "")}`
-            )}
+            onPress={() => {
+              if (details.reportPdfUrl) {
+                Linking.openURL(details.reportPdfUrl).catch((err) => {
+                  console.error("Failed to open report PDF:", err);
+                  Alert.alert("Error", "Could not open the report link.");
+                });
+              } else {
+                router.push(
+                  `/inspection-report?id=${details.id}` +
+                  `&vehicleCategory=${encodeURIComponent(details.vehicleType || "")}` +
+                  `&vehicleSubtype=${encodeURIComponent(details.vehicleSubType || "")}` +
+                  `&fuelType=${encodeURIComponent(details.fuelType || "")}` +
+                  `&makerName=${encodeURIComponent(details.makerName || "")}` +
+                  `&modelName=${encodeURIComponent(details.modelName || "")}` +
+                  `&regNumber=${encodeURIComponent(details.regNumber || "")}`
+                );
+              }
+            }}
           >
             <Ionicons name="document-text" size={22} color="#FFFFFF" />
             <Text style={styles.acceptButtonText}>View Inspection Report</Text>

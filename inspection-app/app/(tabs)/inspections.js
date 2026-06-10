@@ -514,15 +514,24 @@ export default function InspectionsTab() {
           {(item.assignmentStatus === "COMPLETED" || item.assignmentStatus === "SUBMITTED") && (
             <TouchableOpacity
               style={[styles.cardAcceptButton, { backgroundColor: COLORS.fourth }]}
-              onPress={() => router.push(
-                `/inspection-report?id=${item.id}` +
-                `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
-                `&vehicleSubtype=${encodeURIComponent(item.vehicleSubType || "")}` +
-                `&fuelType=${encodeURIComponent(item.fuelType || "")}` +
-                `&makerName=${encodeURIComponent(item.makerName || "")}` +
-                `&modelName=${encodeURIComponent(item.modelName || "")}` +
-                `&regNumber=${encodeURIComponent(item.regNumber || "")}`
-              )}
+              onPress={() => {
+                if (item.reportPdfUrl) {
+                  Linking.openURL(item.reportPdfUrl).catch((err) => {
+                    console.error("Failed to open report PDF:", err);
+                    Alert.alert("Error", "Could not open the report link.");
+                  });
+                } else {
+                  router.push(
+                    `/inspection-report?id=${item.id}` +
+                    `&vehicleCategory=${encodeURIComponent(item.vehicleType || "")}` +
+                    `&vehicleSubtype=${encodeURIComponent(item.vehicleSubType || "")}` +
+                    `&fuelType=${encodeURIComponent(item.fuelType || "")}` +
+                    `&makerName=${encodeURIComponent(item.makerName || "")}` +
+                    `&modelName=${encodeURIComponent(item.modelName || "")}` +
+                    `&regNumber=${encodeURIComponent(item.regNumber || "")}`
+                  );
+                }
+              }}
             >
               <Text style={styles.cardAcceptButtonText}>View Report</Text>
             </TouchableOpacity>
