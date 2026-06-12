@@ -604,6 +604,7 @@ export default function InspectionSectionScreen() {
       throttleBody: mapEnum(data.throttle_body),
       exhaustLeaks: mapEnum(data.exhaust_leaks),
       catalyticConverter: mapEnum(data.catalytic_converter),
+      catalyticConverterPhoto: data.catalytic_converter_photo || null,
       fuelTank: mapEnum(data.fuel_tank),
       fuelLines: mapEnum(data.fuel_lines),
       fuelRailsInjectors: mapEnum(data.fuel_rails_injectors),
@@ -854,7 +855,7 @@ export default function InspectionSectionScreen() {
       const tData = data[pos] || {};
       payload[`${camel}TreadDepthMm`] = tData.tread_depth_mm ? parseFloat(tData.tread_depth_mm) : null;
       payload[`${camel}TyreAgeYears`] = tData.tyre_age_years ? parseInt(tData.tyre_age_years) : null;
-      payload[`${camel}TyreCondition`] = mapEnum(tData.condition);
+      payload[`${camel}TyreCondition`] = tData.tyre_condition ? parseInt(tData.tyre_condition) : null;
       payload[`${camel}TyrePhoto`] = tData.tyre_photo || null;
     });
 

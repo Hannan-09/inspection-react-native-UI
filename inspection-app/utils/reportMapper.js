@@ -50,6 +50,7 @@ export const mapReportToSectionState = (report, key, category) => {
       throttle_body: normalizeEnum(s.throttleBody),
       exhaust_leaks: normalizeEnum(s.exhaustLeaks),
       catalytic_converter: normalizeEnum(s.catalyticConverter),
+      catalytic_converter_photo: s.catalyticConverterPhoto || null,
       fuel_tank: normalizeEnum(s.fuelTank),
       fuel_lines: normalizeEnum(s.fuelLines),
       fuel_rails_injectors: normalizeEnum(s.fuelRailsInjectors),
@@ -255,27 +256,27 @@ export const mapReportToSectionState = (report, key, category) => {
     }
     return {
       "Front Left": {
-        tread_depth_mm: s.frontLeftTreadDepthMm !== undefined && s.frontLeftTreadDepthMm !== null ? s.frontLeftTreadDepthMm : "",
-        tyre_age_years: s.frontLeftTyreAgeYears !== undefined && s.frontLeftTyreAgeYears !== null ? s.frontLeftTyreAgeYears : "",
-        condition: normalizeEnum(s.frontLeftTyreCondition),
+        tread_depth_mm: s.frontLeftTreadDepthMm !== undefined && s.frontLeftTreadDepthMm !== null ? s.frontLeftTreadDepthMm.toString() : "",
+        tyre_age_years: s.frontLeftTyreAgeYears !== undefined && s.frontLeftTyreAgeYears !== null ? s.frontLeftTyreAgeYears.toString() : "",
+        tyre_condition: s.frontLeftTyreCondition !== undefined && s.frontLeftTyreCondition !== null ? s.frontLeftTyreCondition.toString() : "",
         tyre_photo: s.frontLeftTyrePhoto || null
       },
       "Front Right": {
-        tread_depth_mm: s.frontRightTreadDepthMm !== undefined && s.frontRightTreadDepthMm !== null ? s.frontRightTreadDepthMm : "",
-        tyre_age_years: s.frontRightTyreAgeYears !== undefined && s.frontRightTyreAgeYears !== null ? s.frontRightTyreAgeYears : "",
-        condition: normalizeEnum(s.frontRightTyreCondition),
+        tread_depth_mm: s.frontRightTreadDepthMm !== undefined && s.frontRightTreadDepthMm !== null ? s.frontRightTreadDepthMm.toString() : "",
+        tyre_age_years: s.frontRightTyreAgeYears !== undefined && s.frontRightTyreAgeYears !== null ? s.frontRightTyreAgeYears.toString() : "",
+        tyre_condition: s.frontRightTyreCondition !== undefined && s.frontRightTyreCondition !== null ? s.frontRightTyreCondition.toString() : "",
         tyre_photo: s.frontRightTyrePhoto || null
       },
       "Rear Left": {
-        tread_depth_mm: s.rearLeftTreadDepthMm !== undefined && s.rearLeftTreadDepthMm !== null ? s.rearLeftTreadDepthMm : "",
-        tyre_age_years: s.rearLeftTyreAgeYears !== undefined && s.rearLeftTyreAgeYears !== null ? s.rearLeftTyreAgeYears : "",
-        condition: normalizeEnum(s.rearLeftTyreCondition),
+        tread_depth_mm: s.rearLeftTreadDepthMm !== undefined && s.rearLeftTreadDepthMm !== null ? s.rearLeftTreadDepthMm.toString() : "",
+        tyre_age_years: s.rearLeftTyreAgeYears !== undefined && s.rearLeftTyreAgeYears !== null ? s.rearLeftTyreAgeYears.toString() : "",
+        tyre_condition: s.rearLeftTyreCondition !== undefined && s.rearLeftTyreCondition !== null ? s.rearLeftTyreCondition.toString() : "",
         tyre_photo: s.rearLeftTyrePhoto || null
       },
       "Rear Right": {
-        tread_depth_mm: s.rearRightTreadDepthMm !== undefined && s.rearRightTreadDepthMm !== null ? s.rearRightTreadDepthMm : "",
-        tyre_age_years: s.rearRightTyreAgeYears !== undefined && s.rearRightTyreAgeYears !== null ? s.rearRightTyreAgeYears : "",
-        condition: normalizeEnum(s.rearRightTyreCondition),
+        tread_depth_mm: s.rearRightTreadDepthMm !== undefined && s.rearRightTreadDepthMm !== null ? s.rearRightTreadDepthMm.toString() : "",
+        tyre_age_years: s.rearRightTyreAgeYears !== undefined && s.rearRightTyreAgeYears !== null ? s.rearRightTyreAgeYears.toString() : "",
+        tyre_condition: s.rearRightTyreCondition !== undefined && s.rearRightTyreCondition !== null ? s.rearRightTyreCondition.toString() : "",
         tyre_photo: s.rearRightTyrePhoto || null
       },
       spare_tyre_condition: normalizeEnum(s.spareTyreCondition),

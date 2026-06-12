@@ -177,8 +177,10 @@ class InspectionAPI {
         if (panel.scratchPhotoIndex !== null && panel.scratchPhotoIndex !== undefined) {
           formData.append(`panels[${index}].scratchPhotoIndex`, panel.scratchPhotoIndex);
         }
-        if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
-          formData.append(`panels[${index}].photoIndex`, panel.photoIndex);
+        if (panel.panelPhotoIndex !== null && panel.panelPhotoIndex !== undefined) {
+          formData.append(`panels[${index}].panelPhotoIndex`, panel.panelPhotoIndex);
+        } else if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
+          formData.append(`panels[${index}].panelPhotoIndex`, panel.photoIndex);
         }
       });
 
@@ -283,17 +285,21 @@ class InspectionAPI {
       Object.keys(data).forEach(key => {
         const value = data[key];
         if (value !== null && value !== undefined) {
-          // If value is a local file URI, append as file object
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
+          if (Array.isArray(value)) {
+            // Handle array of files
+            value.forEach(fileUri => {
+              if (typeof fileUri === "string" && (fileUri.startsWith("file://") || fileUri.startsWith("content://"))) {
+                const filename = fileUri.split("/").pop();
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : "image/jpeg";
+                formData.append(key, { uri: fileUri, name: filename, type });
+              }
+            });
+          } else if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
             const filename = value.split("/").pop();
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
+            formData.append(key, { uri: value, name: filename, type });
           } else {
             formData.append(key, value);
           }
@@ -346,35 +352,8 @@ class InspectionAPI {
   async saveSectionObd(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_OBD.replace(":id", id);
-      const hasPhoto = Object.values(data).some(value => 
-        typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))
-      );
-      
-      if (hasPhoto) {
-        const formData = new FormData();
-        Object.keys(data).forEach(key => {
-          const value = data[key];
-          if (value !== null && value !== undefined) {
-            if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-              const filename = value.split("/").pop();
-              const match = /\.(\w+)$/.exec(filename);
-              const type = match ? `image/${match[1]}` : "image/jpeg";
-              formData.append(key, {
-                uri: value,
-                name: filename,
-                type: type
-              });
-            } else {
-              formData.append(key, value);
-            }
-          }
-        });
-        const response = await apiService.putMultipart(endpoint, formData);
-        return response.data || response;
-      } else {
-        const response = await apiService.put(endpoint, data);
-        return response.data || response;
-      }
+      const response = await apiService.put(endpoint, data);
+      return response.data || response;
     } catch (error) {
       console.error("Error saving OBD section:", error);
       throw error;
@@ -614,8 +593,10 @@ class InspectionAPI {
         if (panel.scratchPhotoIndex !== null && panel.scratchPhotoIndex !== undefined) {
           formData.append(`panels[${index}].scratchPhotoIndex`, panel.scratchPhotoIndex);
         }
-        if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
-          formData.append(`panels[${index}].photoIndex`, panel.photoIndex);
+        if (panel.panelPhotoIndex !== null && panel.panelPhotoIndex !== undefined) {
+          formData.append(`panels[${index}].panelPhotoIndex`, panel.panelPhotoIndex);
+        } else if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
+          formData.append(`panels[${index}].panelPhotoIndex`, panel.photoIndex);
         }
       });
 
@@ -665,7 +646,16 @@ class InspectionAPI {
       Object.keys(data).forEach(key => {
         const value = data[key];
         if (value !== null && value !== undefined) {
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
+          if (Array.isArray(value)) {
+            value.forEach(fileUri => {
+              if (typeof fileUri === "string" && (fileUri.startsWith("file://") || fileUri.startsWith("content://"))) {
+                const filename = fileUri.split("/").pop();
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : "image/jpeg";
+                formData.append(key, { uri: fileUri, name: filename, type });
+              }
+            });
+          } else if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
             const filename = value.split("/").pop();
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : "image/jpeg";
@@ -715,33 +705,8 @@ class InspectionAPI {
   async saveSectionObd2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_OBD.replace(":id", id);
-      const hasPhoto = data.errorCodesPhoto && 
-                       (data.errorCodesPhoto.startsWith("file://") || data.errorCodesPhoto.startsWith("content://"));
-      if (hasPhoto) {
-        const formData = new FormData();
-        Object.keys(data).forEach(key => {
-          const value = data[key];
-          if (value !== null && value !== undefined) {
-            if (key === "errorCodesPhoto" && typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-              const filename = value.split("/").pop();
-              const match = /\.(\w+)$/.exec(filename);
-              const type = match ? `image/${match[1]}` : "image/jpeg";
-              formData.append(key, {
-                uri: value,
-                name: filename,
-                type: type
-              });
-            } else {
-              formData.append(key, value);
-            }
-          }
-        });
-        const response = await apiService.putMultipart(endpoint, formData);
-        return response.data || response;
-      } else {
-        const response = await apiService.put(endpoint, data);
-        return response.data || response;
-      }
+      const response = await apiService.put(endpoint, data);
+      return response.data || response;
     } catch (error) {
       console.error("Error saving 2W OBD section:", error);
       throw error;
