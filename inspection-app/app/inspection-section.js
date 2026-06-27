@@ -230,7 +230,7 @@ export default function InspectionSectionScreen() {
           carburetor_or_injector: normalizeEnum(s.carburetorOrInjector),
           battery_and_voltage: normalizeEnum(s.batteryAndVoltage),
           self_start_functioning: normalizeEnum(s.selfStartFunctioning),
-          chain_sprocket_condition: normalizeEnum(s.chain_sprocket_condition),
+          chain_sprocket_condition: normalizeEnum(s.chainSprocketCondition),
           clutch_condition: normalizeEnum(s.clutchCondition)
         };
       }
@@ -1027,25 +1027,29 @@ export default function InspectionSectionScreen() {
   const toLabel = (key) => key.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   // ── Enum button row (handles any enum array) ─────────────────────────────────
-  const EnumRow = ({ options, value, onChange, color }) => (
-    <View style={styles.enumRow}>
-      {options.map(opt => {
-        const sel = value === opt;
-        const activeColor = color || getConditionColor(opt);
-        const activeBg = activeColor + "12"; // ~7% opacity tint for background
-        return (
-          <TouchableOpacity
-            key={opt}
-            style={[styles.enumBtn, sel && { borderColor: activeColor, backgroundColor: activeBg }]}
-            onPress={() => !isReadOnly && onChange(sel ? null : opt)}
-            activeOpacity={isReadOnly ? 1 : 0.7}
-          >
-            <Text style={[styles.enumBtnText, sel && { color: activeColor }]}>{opt}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
+  const EnumRow = ({ options, value, onChange, color }) => {
+    const normalizedOptions = options.map(normalizeEnum);
+    return (
+      <View style={styles.enumRow}>
+        {normalizedOptions.map((opt, idx) => {
+          const rawOpt = options[idx];
+          const sel = value === opt || value === rawOpt;
+          const activeColor = color || getConditionColor(opt);
+          const activeBg = activeColor + "12"; // ~7% opacity tint for background
+          return (
+            <TouchableOpacity
+              key={opt}
+              style={[styles.enumBtn, sel && { borderColor: activeColor, backgroundColor: activeBg }]}
+              onPress={() => !isReadOnly && onChange(sel ? null : opt)}
+              activeOpacity={isReadOnly ? 1 : 0.7}
+            >
+              <Text style={[styles.enumBtnText, sel && { color: activeColor }]}>{opt}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
 
   // ── Field Visibility Helper ─────────────────────────────────────────────────
   const shouldShowField = useCallback((fieldName, fieldConfig) => {
