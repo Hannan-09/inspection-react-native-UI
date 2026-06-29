@@ -343,28 +343,36 @@ export const mapReportToSectionState = (report, key, category) => {
     };
   }
   if (key === "section_11_vehicle_specs") {
-    const s = report.vehicleSpecs || {};
+    const s = report.vehicleDocuments || report.vehicleSpecs || {};
     return {
-      chassis_no: s.chassisNo || "",
-      engine_no: s.engineNo || "",
-      owner_count: s.ownerCount !== undefined && s.ownerCount !== null ? s.ownerCount : "",
-      reg_date: s.regDate || "",
-      rc_upto_date: s.rcUptoDate || "",
+      chassis_no: s.chassisNumber || s.chassisNo || "",
+      engine_no: s.engineNumber || s.engineNo || "",
+      owner_count: (s.ownerCount !== undefined && s.ownerCount !== null) ? s.ownerCount : "",
+      reg_date: s.registrationDate || s.regDate || "",
+      rc_upto_date: s.rcValidUptoDate || s.rcUptoDate || "",
       vehicle_tax_upto_date: s.vehicleTaxUptoDate || "",
       insurance_upto_date: s.insuranceUptoDate || "",
-      vehicle_cc: s.vehicleCc !== undefined && s.vehicleCc !== null ? s.vehicleCc : "",
-      vehicle_gross_weight: s.vehicleGrossWeight !== undefined && s.vehicleGrossWeight !== null ? s.vehicleGrossWeight : "",
-      vehicle_cylinder: s.vehicleCylinder !== undefined && s.vehicleCylinder !== null ? s.vehicleCylinder : "",
-      puc_no: s.pucNo || "",
-      puc_upto_date: s.pucUptoDate || "",
+      vehicle_cc: (s.vehicleCc !== undefined && s.vehicleCc !== null) ? s.vehicleCc : "",
+      vehicle_gross_weight: (s.vehicleGrossWeight !== undefined && s.vehicleGrossWeight !== null) ? s.vehicleGrossWeight : "",
+      vehicle_cylinder: (s.vehicleCylinderCount !== undefined && s.vehicleCylinderCount !== null) ? s.vehicleCylinderCount : ((s.vehicleCylinder !== undefined && s.vehicleCylinder !== null) ? s.vehicleCylinder : ""),
+      puc_no: s.pucNumber || s.pucNo || "",
+      puc_upto_date: s.pucValidUptoDate || s.pucUptoDate || "",
       blacklist_details: s.blacklistDetails || [],
-      challan_details: s.challanDetails || [],
-      permit_no: s.permitNo || "",
+      challan_details: s.challanDetails ? s.challanDetails.map(c => ({
+          challan_no: c.challanNumber || c.challan_no || "",
+          challan_date: c.challanDate ? c.challanDate.replace("T", " ") : (c.challan_date || ""),
+          challan_amount: c.amount || c.challan_amount || "",
+          challan_location: c.location || c.challan_location || "",
+          owner_name: c.ownerName || c.owner_name || "",
+          violation_details: c.offence ? [{ offence: c.offence, penalty: c.penaltyAmount || 0 }] : (c.violation_details || []),
+          challan_status: c.status || c.challan_status || ""
+      })) : [],
+      permit_no: s.permitNumber || s.permitNo || "",
       permit_type: s.permitType || "",
       permit_from_date: s.permitFromDate || "",
       permit_to_date: s.permitToDate || "",
-      national_permit_no: s.nationalPermitNo || "",
-      national_permit_upto_date: s.nationalPermitUptoDate || "",
+      national_permit_no: s.nationalPermitNumber || s.nationalPermitNo || "",
+      national_permit_upto_date: s.nationalPermitValidUptoDate || s.nationalPermitUptoDate || "",
       rto_code: s.rtoCode || ""
     };
   }
