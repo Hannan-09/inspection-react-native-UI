@@ -1119,7 +1119,7 @@ export default function InspectionSectionScreen() {
             permitToDate: formData.permit_to_date || null,
             nationalPermitNo: formData.national_permit_no || null,
             nationalPermitUptoDate: formData.national_permit_upto_date || null,
-            rtoCode: formData.rto_code || null
+            rtoCode: formData.rto_code || null 
           };
           await inspectionAPI.saveSectionVehicleSpecs2W(inspectionId, payload2W);
         } else {
