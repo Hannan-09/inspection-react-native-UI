@@ -424,9 +424,9 @@ export default function InspectionSectionScreen() {
           dent_severity: normalizeEnum(p.dentSeverity),
           scratch_severity: normalizeEnum(p.scratchSeverity),
           rust_present: p.rustPresent,
-          dent_photo: p.dentPhoto ? (Array.isArray(p.dentPhoto) ? p.dentPhoto : [p.dentPhoto]) : [],
-          scratch_photo: p.scratchPhoto ? (Array.isArray(p.scratchPhoto) ? p.scratchPhoto : [p.scratchPhoto]) : [],
-          panel_photo: p.panelPhoto ? (Array.isArray(p.panelPhoto) ? p.panelPhoto : [p.panelPhoto]) : []
+          dent_photo: p.dentPhotos ? p.dentPhotos : (p.dentPhoto ? (Array.isArray(p.dentPhoto) ? p.dentPhoto : [p.dentPhoto]) : []),
+          scratch_photo: p.scratchPhotos ? p.scratchPhotos : (p.scratchPhoto ? (Array.isArray(p.scratchPhoto) ? p.scratchPhoto : [p.scratchPhoto]) : []),
+          panel_photo: p.panelPhotos ? p.panelPhotos : (p.panelPhoto ? (Array.isArray(p.panelPhoto) ? p.panelPhoto : [p.panelPhoto]) : [])
         };
       });
       return panels;
@@ -776,8 +776,8 @@ export default function InspectionSectionScreen() {
     const photos = [];
     const panels = (panelsList || []).map((panelName) => {
       const panelData = data[panelName] || {};
-      let dentPhotoIndex = null;
-      let scratchPhotoIndex = null;
+      const dentPhotoIndices = [];
+      const scratchPhotoIndices = [];
 
       const dPhotos = Array.isArray(panelData.dent_photo)
         ? panelData.dent_photo
@@ -785,9 +785,7 @@ export default function InspectionSectionScreen() {
 
       dPhotos.forEach(photo => {
         if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
-          if (dentPhotoIndex === null) {
-            dentPhotoIndex = photos.length;
-          }
+          dentPhotoIndices.push(photos.length);
           photos.push(photo);
         }
       });
@@ -798,23 +796,19 @@ export default function InspectionSectionScreen() {
 
       sPhotos.forEach(photo => {
         if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
-          if (scratchPhotoIndex === null) {
-            scratchPhotoIndex = photos.length;
-          }
+          scratchPhotoIndices.push(photos.length);
           photos.push(photo);
         }
       });
 
-      let photoIndex = null;
+      const panelPhotoIndices = [];
       const pPhotos = Array.isArray(panelData.panel_photo)
         ? panelData.panel_photo
         : (panelData.panel_photo ? [panelData.panel_photo] : []);
 
       pPhotos.forEach(photo => {
         if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
-          if (photoIndex === null) {
-            photoIndex = photos.length;
-          }
+          panelPhotoIndices.push(photos.length);
           photos.push(photo);
         }
       });
@@ -826,9 +820,9 @@ export default function InspectionSectionScreen() {
         dentSeverity: mapEnum(panelData.dent_severity),
         scratchSeverity: mapEnum(panelData.scratch_severity),
         rustPresent: !!panelData.rust_present,
-        dentPhotoIndex,
-        scratchPhotoIndex,
-        photoIndex
+        dentPhotoIndices,
+        scratchPhotoIndices,
+        panelPhotoIndices
       };
     });
 

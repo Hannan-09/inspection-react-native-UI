@@ -171,16 +171,20 @@ class InspectionAPI {
         formData.append(`panels[${index}].dentSeverity`, panel.dentSeverity || "NONE");
         formData.append(`panels[${index}].scratchSeverity`, panel.scratchSeverity || "NONE");
         formData.append(`panels[${index}].rustPresent`, panel.rustPresent);
-        if (panel.dentPhotoIndex !== null && panel.dentPhotoIndex !== undefined) {
-          formData.append(`panels[${index}].dentPhotoIndex`, panel.dentPhotoIndex);
+        if (panel.dentPhotoIndices && panel.dentPhotoIndices.length > 0) {
+          panel.dentPhotoIndices.forEach(photoIndex => {
+            formData.append(`panels[${index}].dentPhotoIndices`, photoIndex);
+          });
         }
-        if (panel.scratchPhotoIndex !== null && panel.scratchPhotoIndex !== undefined) {
-          formData.append(`panels[${index}].scratchPhotoIndex`, panel.scratchPhotoIndex);
+        if (panel.scratchPhotoIndices && panel.scratchPhotoIndices.length > 0) {
+          panel.scratchPhotoIndices.forEach(photoIndex => {
+            formData.append(`panels[${index}].scratchPhotoIndices`, photoIndex);
+          });
         }
-        if (panel.panelPhotoIndex !== null && panel.panelPhotoIndex !== undefined) {
-          formData.append(`panels[${index}].panelPhotoIndex`, panel.panelPhotoIndex);
-        } else if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
-          formData.append(`panels[${index}].panelPhotoIndex`, panel.photoIndex);
+        if (panel.panelPhotoIndices && panel.panelPhotoIndices.length > 0) {
+          panel.panelPhotoIndices.forEach(photoIndex => {
+            formData.append(`panels[${index}].panelPhotoIndices`, photoIndex);
+          });
         }
       });
 
@@ -624,16 +628,20 @@ class InspectionAPI {
         if (panel.dentSeverity) formData.append(`panels[${index}].dentSeverity`, panel.dentSeverity);
         if (panel.scratchSeverity) formData.append(`panels[${index}].scratchSeverity`, panel.scratchSeverity);
         formData.append(`panels[${index}].rustPresent`, panel.rustPresent);
-        if (panel.dentPhotoIndex !== null && panel.dentPhotoIndex !== undefined) {
-          formData.append(`panels[${index}].dentPhotoIndex`, panel.dentPhotoIndex);
+        if (panel.dentPhotoIndices && panel.dentPhotoIndices.length > 0) {
+          panel.dentPhotoIndices.forEach(photoIndex => {
+            formData.append(`panels[${index}].dentPhotoIndices`, photoIndex);
+          });
         }
-        if (panel.scratchPhotoIndex !== null && panel.scratchPhotoIndex !== undefined) {
-          formData.append(`panels[${index}].scratchPhotoIndex`, panel.scratchPhotoIndex);
+        if (panel.scratchPhotoIndices && panel.scratchPhotoIndices.length > 0) {
+          panel.scratchPhotoIndices.forEach(photoIndex => {
+            formData.append(`panels[${index}].scratchPhotoIndices`, photoIndex);
+          });
         }
-        if (panel.panelPhotoIndex !== null && panel.panelPhotoIndex !== undefined) {
-          formData.append(`panels[${index}].panelPhotoIndex`, panel.panelPhotoIndex);
-        } else if (panel.photoIndex !== null && panel.photoIndex !== undefined) {
-          formData.append(`panels[${index}].panelPhotoIndex`, panel.photoIndex);
+        if (panel.panelPhotoIndices && panel.panelPhotoIndices.length > 0) {
+          panel.panelPhotoIndices.forEach(photoIndex => {
+            formData.append(`panels[${index}].panelPhotoIndices`, photoIndex);
+          });
         }
       });
 
