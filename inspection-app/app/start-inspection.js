@@ -343,7 +343,7 @@ export default function StartInspectionScreen() {
                 activeOpacity={0.7}
                 onPress={() => {
                   router.push(
-                    `/inspection-section?sectionKey=${section.key}&vehicleCategory=${resolvedCategory}&inspectionId=${inspectionId}&fuelType=${encodeURIComponent(activeFuelType)}&vehicleSubType=${encodeURIComponent(activeSubtype)}`
+                    `/inspection-section?sectionKey=${section.key}&vehicleCategory=${resolvedCategory}&inspectionId=${inspectionId}&fuelType=${encodeURIComponent(activeFuelType)}&vehicleSubType=${encodeURIComponent(activeSubtype)}&regNumber=${encodeURIComponent(params.regNumber || "")}`
                   );
                 }}
               >

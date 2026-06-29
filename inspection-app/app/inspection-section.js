@@ -67,7 +67,7 @@ const PanelCard = memo(({ panelName, panelData, perPanelFields, onUpdate, render
           </View>
           <Text style={styles.panelTitle}>{panelName}</Text>
         </View>
-        
+
         <TouchableOpacity
           style={[
             styles.naBadge,
@@ -153,25 +153,107 @@ export default function InspectionSectionScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
 
-  const sectionKey      = params.sectionKey      || "section_1_engine_powertrain";
+  const sectionKey = params.sectionKey || "section_1_engine_powertrain";
   const vehicleCategory = normalizeCategory(params.vehicleCategory);
-  const inspectionId    = params.inspectionId    || "unknown";
-  const isReadOnly      = params.readOnly        === "true";
+  const inspectionId = params.inspectionId || "unknown";
+  const isReadOnly = params.readOnly === "true";
+  const regNumber = params.regNumber || "";
 
-  const schema      = vehicleCategory === "4W" ? inspectionSchema4W : inspectionSchema2W;
+  const schema = vehicleCategory === "4W" ? inspectionSchema4W : inspectionSchema2W;
   const sectionData = schema.sections?.[sectionKey];
 
-  const [formData, setFormData]       = useState({});
-  const [loading, setLoading]         = useState(true);
-  const [saving, setSaving]           = useState(false);
+  const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [vehicleDocFetching, setVehicleDocFetching] = useState(false);
   // For modifications — add item modal
   const [addModModal, setAddModModal] = useState(false);
-  const [newMod, setNewMod]           = useState({});
+  const [newMod, setNewMod] = useState({});
 
   const storageKey = `inspection_${inspectionId}_${sectionKey}`;
   const [fuelType, setFuelType] = useState(normalizeFuelType(params.fuelType || ""));
   const [subType, setSubType] = useState(params.vehicleSubType || "");
+
+  // ── Vehicle Doc API (RC + Challan) ──────────────────────────────────────────
+  const VEHICLE_DOC_API_CREDS = {
+    api_id: "APID0809",
+    api_key: "20d33714-36c4-4a21-8edd-0fb606c04bc9",
+    token_id: "fdAIrhhHDy5yBN9KQUi4Nv2YfkuELbWZ"
+  };
+
+  const fetchVehicleDocData = async (regNo) => {
+    if (!regNo) return;
+    setVehicleDocFetching(true);
+    try {
+      const [rcRes, challanRes] = await Promise.allSettled([
+        fetch("https://javabackend.idspay.in/api/v1/prod/srv2/validation/rc", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...VEHICLE_DOC_API_CREDS, reg_no: regNo })
+        }),
+        fetch("https://javabackend.idspay.in/api/v1/prod/srv2/validation/echallan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...VEHICLE_DOC_API_CREDS, reg_no: regNo })
+        })
+      ]);
+
+      const rcData = rcRes.status === "fulfilled" && rcRes.value.ok ? await rcRes.value.json() : null;
+      const challanData = challanRes.status === "fulfilled" && challanRes.value.ok ? await challanRes.value.json() : null;
+
+      const rc = rcData?.result || rcData?.data || rcData || {};
+      const challans = challanData?.data?.data || challanData?.data || [];
+
+      const mappedChallans = Array.isArray(challans)
+        ? challans.map(c => ({
+          challan_no: c.challan_no || "",
+          challan_date: c.challan_date || "",
+          challan_amount: c.challan_amount || "",
+          challan_status: c.status || "",
+          challan_location: c.challan_location || "",
+          challan_state: c.state || "",
+          owner_name: c.owner_name || "",
+          court_status: c.court_status || "",
+          violation_details: Array.isArray(c.violation_details) ? c.violation_details.map(v => ({
+            offence: v.offence || "",
+            penalty: v.penalty || ""
+          })) : []
+        }))
+        : [];
+
+      setFormData(prev => ({
+        ...prev,
+        // RC fields
+        chassis_no: rc.chassis || "",
+        engine_no: rc.engine || "",
+        owner_count: rc.owner_count || "",
+        reg_date: rc.reg_date || "",
+        rc_upto_date: rc.rc_expiry_date || "",
+        vehicle_tax_upto_date: rc.vehicle_tax_upto || "",
+        insurance_upto_date: rc.vehicle_insurance_upto || "",
+        vehicle_cc: rc.vehicle_cubic_capacity || "",
+        vehicle_gross_weight: rc.gross_vehicle_weight || "",
+        vehicle_cylinder: rc.vehicle_cylinders_no || "",
+        puc_no: rc.pucc_number || "",
+        puc_upto_date: rc.pucc_upto || "",
+        permit_no: rc.permit_number || "",
+        permit_type: rc.permit_type || "",
+        permit_from_date: rc.permit_valid_from || "",
+        permit_to_date: rc.permit_valid_upto || "",
+        national_permit_no: rc.national_permit_number || "",
+        national_permit_upto_date: rc.national_permit_upto || "",
+        rto_code: rc.rto_code || "",
+
+        // Challan details
+        challan_details: mappedChallans
+      }));
+    } catch (e) {
+      console.error("Vehicle doc API error:", e);
+    } finally {
+      setVehicleDocFetching(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -186,7 +268,12 @@ export default function InspectionSectionScreen() {
           setFormData(mappedData);
         } else {
           const saved = await AsyncStorage.getItem(storageKey);
-          if (saved) setFormData(JSON.parse(saved));
+          if (saved) {
+            setFormData(JSON.parse(saved));
+          } else if (sectionKey === "section_11_vehicle_specs" && regNumber) {
+            // Auto-fetch RC & Challan data when opening section 11 for the first time
+            await fetchVehicleDocData(regNumber);
+          }
         }
       } catch (e) {
         console.error("Load Error:", e);
@@ -691,11 +778,11 @@ export default function InspectionSectionScreen() {
       const panelData = data[panelName] || {};
       let dentPhotoIndex = null;
       let scratchPhotoIndex = null;
-      
-      const dPhotos = Array.isArray(panelData.dent_photo) 
-        ? panelData.dent_photo 
+
+      const dPhotos = Array.isArray(panelData.dent_photo)
+        ? panelData.dent_photo
         : (panelData.dent_photo ? [panelData.dent_photo] : []);
-        
+
       dPhotos.forEach(photo => {
         if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
           if (dentPhotoIndex === null) {
@@ -705,10 +792,10 @@ export default function InspectionSectionScreen() {
         }
       });
 
-      const sPhotos = Array.isArray(panelData.scratch_photo) 
-        ? panelData.scratch_photo 
+      const sPhotos = Array.isArray(panelData.scratch_photo)
+        ? panelData.scratch_photo
         : (panelData.scratch_photo ? [panelData.scratch_photo] : []);
-        
+
       sPhotos.forEach(photo => {
         if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
           if (scratchPhotoIndex === null) {
@@ -719,10 +806,10 @@ export default function InspectionSectionScreen() {
       });
 
       let photoIndex = null;
-      const pPhotos = Array.isArray(panelData.panel_photo) 
-        ? panelData.panel_photo 
+      const pPhotos = Array.isArray(panelData.panel_photo)
+        ? panelData.panel_photo
         : (panelData.panel_photo ? [panelData.panel_photo] : []);
-        
+
       pPhotos.forEach(photo => {
         if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
           if (photoIndex === null) {
@@ -759,20 +846,22 @@ export default function InspectionSectionScreen() {
       };
     }
     return {
-      glassScratches: mapEnum(data.glass_scratches),
+      frontWindshield: mapEnum(data.front_windshield),
       glassCracksChips: mapEnum(data.glass_cracks_chips),
-      glassCracksChipsPhoto: data.glass_cracks_chips_photo || null,
-      sideMirrors: mapEnum(data.side_mirrors),
+      leftSideMirror: mapEnum(data.left_side_mirror),
+      rightSideMirror: mapEnum(data.right_side_mirror),
       parkingSensors: mapEnum(data.parking_sensors),
+      parkingSensorsPhoto: data.parking_sensors_photo || null,
       exteriorLightsAll: mapEnum(data.exterior_lights_all),
       wipersWashers: mapEnum(data.wipers_washers),
       headlight: mapEnum(data.headlight),
       fogLamp: mapEnum(data.fog_lamp),
+      fogLampPhoto: data.fog_lamp_photo || null,
       tailLight: mapEnum(data.tail_light),
       frontWiper: mapEnum(data.front_wiper),
       rearWiper: mapEnum(data.rear_wiper),
-      rearWindshield: mapEnum(data.rear_windshield),
-      rearWindshieldPhoto: data.rear_windshield_photo || null
+      rearWiperPhoto: data.rear_wiper_photo || null,
+      rearWindshield: mapEnum(data.rear_windshield)
     };
   };
 
@@ -795,20 +884,31 @@ export default function InspectionSectionScreen() {
       acGasLeakage: mapEnum(data.ac_gas_leakage),
       hvacClimateControl: mapEnum(data.hvac_climate_control),
       speakers: mapEnum(data.speakers),
+      musicSystem: mapEnum(data.music_system),
       infotainmentSystem: mapEnum(data.infotainment_system),
       ventilatedSeat: mapEnum(data.ventilated_seat),
+      ventilatedSeatPhoto: data.ventilated_seat_photo || null,
       backCamera: mapEnum(data.back_camera),
+      backCameraPhoto: data.back_camera_photo || null,
       camera360: mapEnum(data.camera_360),
+      camera360Photo: data.camera_360_photo || null,
       cruiseControl: mapEnum(data.cruise_control),
+      cruiseControlPhoto: data.cruise_control_photo || null,
       interiorLights: mapEnum(data.interior_lights),
       centralLocking: mapEnum(data.central_locking),
       powerWindowsAll: mapEnum(data.power_windows_all),
-      manualPowerWindowCount: data.manual_power_windows_count !== undefined && data.manual_power_windows_count !== null && data.manual_power_windows_count !== "" ? parseInt(data.manual_power_windows_count) : null,
+      frontLeftWindowCondition: mapEnum(data.front_left_window_condition),
+      frontRightWindowCondition: mapEnum(data.front_right_window_condition),
+      rearLeftWindowCondition: mapEnum(data.rear_left_window_condition),
+      rearRightWindowCondition: mapEnum(data.rear_right_window_condition),
       reverseCameraSensors: mapEnum(data.reverse_camera_sensors),
+      reverseCameraSensorsPhoto: data.reverse_camera_sensors_photo || null,
+      airbag: mapEnum(data.airbag),
       seatCondition: mapEnum(data.seat_condition),
       dashboardCondition: mapEnum(data.dashboard_condition),
-      waterFloodDamageSigns: mapEnum(data.water_flood_damage_signs),
-      waterFloodDamagePhoto: data.water_flood_damage_signs_photo || null
+      odometerReading: data.odometer_reading ? parseInt(data.odometer_reading) : null,
+      speedometerPhoto: data.speedometer_photo || null,
+      interiorFullVideo: data.interior_full_video || null
     };
   };
 
@@ -827,11 +927,15 @@ export default function InspectionSectionScreen() {
     }
     return {
       structuralDamage: mapEnum(data.structural_damage),
-      structuralDamagePhoto: data.structural_damage_photo || null,
+      structuralDamagePhotos: data.structural_damage_photo || [],
       floodDamageConfirmed: mapEnum(data.flood_damage_confirmed),
+      floodDamageConfirmedPhotos: data.flood_damage_confirmed_photo || [],
       underbodyCondition: mapEnum(data.underbody_condition),
-      underbodyConditionPhoto: data.underbody_condition_photo || null,
-      chassisAlignment: mapEnum(data.chassis_alignment)
+      underbodyConditionPhotos: data.underbody_condition_photo || [],
+      otherRusting: mapEnum(data.other_rusting),
+      otherRustingPhotos: data.other_rusting_photo || [],
+      chassisAlignment: mapEnum(data.chassis_alignment),
+      chassisAlignmentPhotos: data.chassis_alignment_photo || []
     };
   };
 
@@ -854,8 +958,8 @@ export default function InspectionSectionScreen() {
       const camel = posMap[pos];
       const tData = data[pos] || {};
       payload[`${camel}TreadDepthMm`] = tData.tread_depth_mm ? parseFloat(tData.tread_depth_mm) : null;
-      payload[`${camel}TyreAgeYears`] = tData.tyre_age_years ? parseInt(tData.tyre_age_years) : null;
       payload[`${camel}TyreCondition`] = tData.tyre_condition ? parseInt(tData.tyre_condition) : null;
+      payload[`${camel}Condition`] = mapEnum(tData.condition);
       payload[`${camel}TyrePhoto`] = tData.tyre_photo || null;
     });
 
@@ -865,19 +969,17 @@ export default function InspectionSectionScreen() {
   const mapObdData = (data) => {
     return {
       obdScanDone: mapEnum(data.obd_scan_done),
-      obdScanDonePhoto: data.obd_scan_done_photo || null,
       errorCodesPresent: data.error_codes_present === true,
       errorCodeDetails: data.error_code_details || null,
       errorCodesPhoto: data.error_codes_present_photo || null,
-      emissionStatus: mapEnum(data.emission_status),
-      emissionStatusPhoto: data.emission_status_photo || null
+      emissionStatus: mapEnum(data.emission_status)
     };
   };
 
   const mapModificationsData = (data) => {
     const items = data.modification_items || [];
     const photos = [];
-    
+
     const mappedItems = items.map(item => {
       let photoIndex = null;
       // If there's a new photo, add it to the photos array and set the index
@@ -917,8 +1019,8 @@ export default function InspectionSectionScreen() {
         engineNumberPhoto: data.engine_number_photo || null,
         fullVehicleWalkaroundPhotos: data.full_vehicle_walkaround_photos
           ? (Array.isArray(data.full_vehicle_walkaround_photos)
-              ? data.full_vehicle_walkaround_photos
-              : [data.full_vehicle_walkaround_photos])
+            ? data.full_vehicle_walkaround_photos
+            : [data.full_vehicle_walkaround_photos])
           : []
       };
     }
@@ -982,31 +1084,84 @@ export default function InspectionSectionScreen() {
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionMedia2W(inspectionId, payload);
         else await inspectionAPI.saveSectionMedia(inspectionId, payload);
       } else if (sectionKey === "section_11_vehicle_specs") {
-        const payload = {
-          chassisNo: formData.chassis_no || null,
-          engineNo: formData.engine_no || null,
-          ownerCount: formData.owner_count ? parseInt(formData.owner_count) : null,
-          regDate: formData.reg_date || null,
-          rcUptoDate: formData.rc_upto_date || null,
-          vehicleTaxUptoDate: formData.vehicle_tax_upto_date || null,
-          insuranceUptoDate: formData.insurance_upto_date || null,
-          vehicleCc: formData.vehicle_cc ? parseInt(formData.vehicle_cc) : null,
-          vehicleGrossWeight: formData.vehicle_gross_weight ? parseInt(formData.vehicle_gross_weight) : null,
-          vehicleCylinder: formData.vehicle_cylinder ? parseInt(formData.vehicle_cylinder) : null,
-          pucNo: formData.puc_no || null,
-          pucUptoDate: formData.puc_upto_date || null,
-          blacklistDetails: Array.isArray(formData.blacklist_details) ? formData.blacklist_details.filter(Boolean) : [],
-          challanDetails: Array.isArray(formData.challan_details) ? formData.challan_details.filter(Boolean) : [],
-          permitNo: formData.permit_no || null,
-          permitType: formData.permit_type || null,
-          permitFromDate: formData.permit_from_date || null,
-          permitToDate: formData.permit_to_date || null,
-          nationalPermitNo: formData.national_permit_no || null,
-          nationalPermitUptoDate: formData.national_permit_upto_date || null,
-          rtoCode: formData.rto_code || null
+        const parseDate = (dStr) => {
+          if (!dStr) return null;
+          const parts = dStr.split("-");
+          if (parts.length === 3 && parts[2].length === 4) {
+             return `${parts[2]}-${parts[1]}-${parts[0]}`; // DD-MM-YYYY to YYYY-MM-DD
+          }
+          if (parts.length === 3 && parts[0].length === 4) {
+             return dStr; // already YYYY-MM-DD
+          }
+          return null;
         };
-        if (vehicleCategory === "2W") await inspectionAPI.saveSectionVehicleSpecs2W(inspectionId, payload);
-        else await inspectionAPI.saveSectionVehicleSpecs(inspectionId, payload);
+
+        if (vehicleCategory === "2W") {
+          // Keep legacy logic for 2W
+          const payload2W = {
+            chassisNo: formData.chassis_no || null,
+            engineNo: formData.engine_no || null,
+            ownerCount: formData.owner_count ? parseInt(formData.owner_count) : null,
+            regDate: formData.reg_date || null,
+            rcUptoDate: formData.rc_upto_date || null,
+            vehicleTaxUptoDate: formData.vehicle_tax_upto_date || null,
+            insuranceUptoDate: formData.insurance_upto_date || null,
+            vehicleCc: formData.vehicle_cc ? parseInt(formData.vehicle_cc) : null,
+            vehicleGrossWeight: formData.vehicle_gross_weight ? parseInt(formData.vehicle_gross_weight) : null,
+            vehicleCylinder: formData.vehicle_cylinder ? parseInt(formData.vehicle_cylinder) : null,
+            pucNo: formData.puc_no || null,
+            pucUptoDate: formData.puc_upto_date || null,
+            blacklistDetails: Array.isArray(formData.blacklist_details) ? formData.blacklist_details.filter(Boolean) : [],
+            challanDetails: Array.isArray(formData.challan_details) ? formData.challan_details.filter(Boolean) : [],
+            permitNo: formData.permit_no || null,
+            permitType: formData.permit_type || null,
+            permitFromDate: formData.permit_from_date || null,
+            permitToDate: formData.permit_to_date || null,
+            nationalPermitNo: formData.national_permit_no || null,
+            nationalPermitUptoDate: formData.national_permit_upto_date || null,
+            rtoCode: formData.rto_code || null
+          };
+          await inspectionAPI.saveSectionVehicleSpecs2W(inspectionId, payload2W);
+        } else {
+          // Use new DTO for 4W
+          const payload4W = {
+            chassisNumber: formData.chassis_no || null,
+            engineNumber: formData.engine_no || null,
+            ownerCount: formData.owner_count ? parseInt(formData.owner_count) : null,
+            registrationDate: parseDate(formData.reg_date),
+            rcValidUptoDate: parseDate(formData.rc_upto_date),
+            vehicleTaxUptoDate: parseDate(formData.vehicle_tax_upto_date),
+            insuranceUptoDate: parseDate(formData.insurance_upto_date),
+            vehicleCc: formData.vehicle_cc ? parseFloat(formData.vehicle_cc) : null,
+            vehicleGrossWeight: formData.vehicle_gross_weight ? parseFloat(formData.vehicle_gross_weight) : null,
+            vehicleCylinderCount: formData.vehicle_cylinder ? parseInt(formData.vehicle_cylinder) : null,
+            pucNumber: formData.puc_no || null,
+            pucValidUptoDate: parseDate(formData.puc_upto_date),
+            blacklisted: formData.blacklist_details && formData.blacklist_details.length > 0,
+            blacklistDetails: Array.isArray(formData.blacklist_details) ? formData.blacklist_details : [],
+            challanCount: Array.isArray(formData.challan_details) ? formData.challan_details.length : 0,
+            totalChallanAmount: Array.isArray(formData.challan_details) ? formData.challan_details.reduce((sum, c) => sum + (parseFloat(c.challan_amount) || 0), 0) : 0.0,
+            challanDetails: Array.isArray(formData.challan_details) ? formData.challan_details.map(c => ({
+              challanNumber: c.challan_no || null,
+              challanDate: c.challan_date ? c.challan_date.replace(" ", "T") : null,
+              amount: parseFloat(c.challan_amount) || 0.0,
+              location: c.challan_location || null,
+              issuedBy: null,
+              ownerName: c.owner_name || null,
+              offence: c.violation_details && c.violation_details.length > 0 ? c.violation_details.map(v => v.offence).join(", ") : null,
+              penaltyAmount: c.violation_details && c.violation_details.length > 0 ? parseFloat(c.violation_details[0].penalty) || 0.0 : 0.0,
+              status: c.challan_status ? (c.challan_status.toUpperCase() === "PAID" ? "PAID" : "UNPAID") : "UNPAID"
+            })) : [],
+            permitNumber: formData.permit_no || null,
+            permitType: formData.permit_type || null,
+            permitFromDate: parseDate(formData.permit_from_date),
+            permitToDate: parseDate(formData.permit_to_date),
+            nationalPermitNumber: formData.national_permit_no || null,
+            nationalPermitValidUptoDate: parseDate(formData.national_permit_upto_date),
+            rtoCode: formData.rto_code || null
+          };
+          await inspectionAPI.saveSectionVehicleDocuments(inspectionId, payload4W);
+        }
       }
 
       // 3. Update progress locally
@@ -1015,7 +1170,7 @@ export default function InspectionSectionScreen() {
       const progress = raw ? JSON.parse(raw) : {};
       progress[sectionKey] = "completed";
       await AsyncStorage.setItem(progressKey, JSON.stringify(progress));
-      
+
       setSaveSuccess(true);
     } catch (e) {
       console.error("Save Error:", e);
@@ -1068,12 +1223,12 @@ export default function InspectionSectionScreen() {
 
     // 2. Subtype / Note Check (Simple version: if note says "4W only" and we are 2W, or vice versa)
     if (fieldConfig.note && fieldConfig.note.toLowerCase().includes("only")) {
-       const note = fieldConfig.note.toLowerCase();
-       if (note.includes("4w only") && vehicleCategory !== "4W") return false;
-       if (note.includes("2w only") && vehicleCategory !== "2W") return false;
-       
-       // Handle specific subtypes if mentioned in note e.g. "4W RWD only"
-       if (note.includes("rwd only") && subType && !subType.toLowerCase().includes("rwd")) return false;
+      const note = fieldConfig.note.toLowerCase();
+      if (note.includes("4w only") && vehicleCategory !== "4W") return false;
+      if (note.includes("2w only") && vehicleCategory !== "2W") return false;
+
+      // Handle specific subtypes if mentioned in note e.g. "4W RWD only"
+      if (note.includes("rwd only") && subType && !subType.toLowerCase().includes("rwd")) return false;
     }
 
     // 3. Conditional Show check
@@ -1083,7 +1238,7 @@ export default function InspectionSectionScreen() {
         if (parts.length === 3) {
           const [condField, condOp, condVal] = parts;
           const actualVal = formData[condField];
-          
+
           if (fieldName === "error_code_details") {
             console.log("[OBD Debug] field:", fieldName, "condField:", condField, "actualVal:", actualVal, "type:", typeof actualVal, "parts:", parts);
           }
@@ -1209,19 +1364,19 @@ export default function InspectionSectionScreen() {
       );
     } else if (fieldConfig.input_ui === "tap_buttons") {
       const isBool = fieldConfig.type === "boolean";
-      const opts = isBool 
-        ? (fieldConfig.enum ? fieldConfig.enum : ["True", "False", "N/A"]) 
+      const opts = isBool
+        ? (fieldConfig.enum ? fieldConfig.enum : ["True", "False", "N/A"])
         : (fieldConfig.enum ? fieldConfig.enum.map(normalizeEnum) : ["Pass", "Fail", "N/A"]);
-      const displayVal = isBool 
+      const displayVal = isBool
         ? (value === true ? (fieldConfig.enum ? fieldConfig.enum[0] : "True") : value === false ? (fieldConfig.enum ? fieldConfig.enum[1] : "False") : (value === "NA" ? "N/A" : value))
         : value;
 
       inputComponent = (
-        <TapButtons 
-          key={fieldName} 
-          label={label} 
+        <TapButtons
+          key={fieldName}
+          label={label}
           options={opts}
-          value={displayVal} 
+          value={displayVal}
           onChange={(v) => {
             if (v === null) {
               onChange(null);
@@ -1234,8 +1389,8 @@ export default function InspectionSectionScreen() {
             } else {
               onChange(v);
             }
-          }} 
-          required={fieldConfig.required} 
+          }}
+          required={fieldConfig.required}
         />
       );
     } else if (fieldConfig.input_ui === "condition_buttons") {
@@ -1277,9 +1432,9 @@ export default function InspectionSectionScreen() {
       );
     } else if (fieldConfig.photo_required_on_fail === true) {
       const upperVal = String(value || "").toUpperCase().replace(/\s+/g, "_");
-      showPhotoUpload = upperVal === "FAIL" || upperVal === "MINOR" || upperVal === "MAJOR" || 
-                        upperVal === "POOR" || upperVal === "FAIR" || 
-                        upperVal === "NOT_WORKING" || upperVal === "PARTIALLY_WORKING";
+      showPhotoUpload = upperVal === "FAIL" || upperVal === "MINOR" || upperVal === "MAJOR" ||
+        upperVal === "POOR" || upperVal === "FAIR" ||
+        upperVal === "NOT_WORKING" || upperVal === "PARTIALLY_WORKING";
     } else if (fieldConfig.photo_required_on_value) {
       const upperVal = String(value || "").toUpperCase().replace(/\s+/g, "_");
       const targetVal = String(fieldConfig.photo_required_on_value).toUpperCase().replace(/\s+/g, "_");
@@ -1355,9 +1510,9 @@ export default function InspectionSectionScreen() {
 
   // ── Section 7: Tyre Inspection ────────────────────────────────────────────────
   const renderTyreSection = () => {
-    const positions     = sectionData.positions || [];
+    const positions = sectionData.positions || [];
     const perTyreFields = sectionData.per_tyre_fields || {};
-    const spareConfig   = sectionData.spare_tyre_condition;
+    const spareConfig = sectionData.spare_tyre_condition;
 
     return (
       <>
@@ -1407,9 +1562,9 @@ export default function InspectionSectionScreen() {
   // ── Section 9: Modifications ──────────────────────────────────────────────────
   const renderModificationSection = () => {
     const summaryFields = sectionData.summary_fields || {};
-    const itemFields    = sectionData.modification_items?.item_fields || {};
-    const modDetected   = formData.modifications_detected === true || formData.modifications_detected === "true";
-    const modItems      = formData.modification_items || [];
+    const itemFields = sectionData.modification_items?.item_fields || {};
+    const modDetected = formData.modifications_detected === true || formData.modifications_detected === "true";
+    const modItems = formData.modification_items || [];
 
     const addModItem = () => {
       setFormData(prev => ({
@@ -1474,9 +1629,9 @@ export default function InspectionSectionScreen() {
                 {Object.entries(itemFields).map(([fk, fc]) => {
                   const val = item[fk];
                   return renderField(
-                    fk, 
-                    fc, 
-                    val, 
+                    fk,
+                    fc,
+                    val,
                     (v) => {
                       if (isReadOnly) return;
                       const updated = [...modItems];
@@ -1517,9 +1672,9 @@ export default function InspectionSectionScreen() {
               <ScrollView showsVerticalScrollIndicator={false}>
                 {Object.entries(itemFields).map(([fk, fc]) =>
                   renderField(
-                    fk, 
-                    fc, 
-                    newMod[fk], 
+                    fk,
+                    fc,
+                    newMod[fk],
                     (v) => setNewMod(prev => ({ ...prev, [fk]: v })),
                     newMod[`${fk}_photo`],
                     (v) => setNewMod(prev => ({ ...prev, [`${fk}_photo`]: v }))
@@ -1555,19 +1710,70 @@ export default function InspectionSectionScreen() {
     if (sectionData.fields) {
       return (
         <View style={styles.formCard}>
-          {Object.entries(sectionData.fields).map(([fk, fc]) => (
-            <View key={fk}>
-              {renderField(
-                fk, 
-                fc, 
-                formData[fk], 
-                (val) => update(fk, val),
-                formData[`${fk}_photo`],
-                (val) => update(`${fk}_photo`, val)
-              )}
-              {fc.note && <Text style={styles.fieldNote}>{fc.note}</Text>}
-            </View>
-          ))}
+          {Object.entries(sectionData.fields).map(([fk, fc]) => {
+            if (fk === "challan_details") {
+              const challans = Array.isArray(formData[fk]) ? formData[fk] : [];
+              return (
+                <View key={fk} style={{ marginTop: 16, marginBottom: 16 }}>
+                  <Text style={[styles.fieldLabel, { marginBottom: 12, fontSize: 16, fontWeight: "bold", color: COLORS.secondary }]}>
+                    Challan Details ({challans.length})
+                  </Text>
+                  {challans.length === 0 ? (
+                    <Text style={{ color: "#9CA3AF", fontStyle: "italic", marginBottom: 8 }}>No challans found.</Text>
+                  ) : (
+                    challans.map((c, i) => (
+                      <View key={i} style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: 16, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" }}>
+                        <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 15, marginBottom: 8 }}>{c.challan_no || "Unknown Challan No"}</Text>
+                        
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                          <Text style={{ color: "#9CA3AF", fontSize: 13 }}>Date:</Text>
+                          <Text style={{ color: "#fff", fontSize: 13 }}>{c.challan_date || "N/A"}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                          <Text style={{ color: "#9CA3AF", fontSize: 13 }}>Amount:</Text>
+                          <Text style={{ color: "#fff", fontSize: 13 }}>₹{c.challan_amount || "0"} ({c.challan_status || "Unknown"})</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                          <Text style={{ color: "#9CA3AF", fontSize: 13 }}>Location:</Text>
+                          <Text style={{ color: "#fff", fontSize: 13 }}>{c.challan_location || "N/A"}, {c.challan_state || ""}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                          <Text style={{ color: "#9CA3AF", fontSize: 13 }}>Owner:</Text>
+                          <Text style={{ color: "#fff", fontSize: 13 }}>{c.owner_name || "N/A"}</Text>
+                        </View>
+                        
+                        {c.violation_details && c.violation_details.length > 0 && (
+                          <View style={{ marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)" }}>
+                            <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600", marginBottom: 8 }}>Violations:</Text>
+                            {c.violation_details.map((v, idx) => (
+                              <View key={idx} style={{ marginBottom: 6, backgroundColor: "rgba(0,0,0,0.2)", padding: 8, borderRadius: 8 }}>
+                                <Text style={{ color: "#EAB308", fontSize: 13, marginBottom: 4 }}>{v.offence}</Text>
+                                <Text style={{ color: "#9CA3AF", fontSize: 12 }}>Penalty: ₹{v.penalty}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    ))
+                  )}
+                </View>
+              );
+            }
+
+            return (
+              <View key={fk}>
+                {renderField(
+                  fk, 
+                  fc, 
+                  formData[fk], 
+                  (val) => update(fk, val),
+                  formData[`${fk}_photo`],
+                  (val) => update(`${fk}_photo`, val)
+                )}
+                {fc.note && <Text style={styles.fieldNote}>{fc.note}</Text>}
+              </View>
+            );
+          })}
         </View>
       );
     }
@@ -1601,6 +1807,31 @@ export default function InspectionSectionScreen() {
           <View style={styles.noteCard}>
             <Ionicons name="information-circle" size={20} color={COLORS.fourth} />
             <Text style={styles.noteText}>{sectionData.note}</Text>
+          </View>
+        )}
+
+        {/* Vehicle Doc Fetch Banner - Section 11 only */}
+        {sectionKey === "section_11_vehicle_specs" && !isReadOnly && (
+          <View style={styles.vehicleDocBanner}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.vehicleDocBannerTitle}>Vehicle Registry Lookup</Text>
+              <Text style={styles.vehicleDocBannerSub}>
+                {regNumber ? `Reg No: ${regNumber}` : "No registration number available"}
+              </Text>
+            </View>
+            {vehicleDocFetching ? (
+              <ActivityIndicator size="small" color={COLORS.fourth} />
+            ) : (
+              <TouchableOpacity
+                style={[styles.vehicleDocRefreshBtn, !regNumber && { opacity: 0.4 }]}
+                onPress={() => regNumber && fetchVehicleDocData(regNumber)}
+                disabled={!regNumber || vehicleDocFetching}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh" size={16} color="#fff" />
+                <Text style={styles.vehicleDocRefreshText}>Refresh</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -1706,4 +1937,11 @@ const styles = StyleSheet.create({
   successHint: { fontSize: 13, color: COLORS.third, textAlign: "center", marginBottom: 28 },
   successButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: COLORS.fourth, paddingVertical: 16, borderRadius: 16, width: "100%", gap: 8, shadowColor: COLORS.fourth, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
   successButtonText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF" },
+
+  // Vehicle Doc Banner (Section 11)
+  vehicleDocBanner: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(59, 130, 246, 0.1)", borderWidth: 1, borderColor: "rgba(59, 130, 246, 0.25)", borderRadius: 14, padding: 14, marginBottom: 14 },
+  vehicleDocBannerTitle: { fontSize: 13, fontWeight: "700", color: "#93C5FD", marginBottom: 2 },
+  vehicleDocBannerSub: { fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: "500" },
+  vehicleDocRefreshBtn: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.fourth, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, gap: 6 },
+  vehicleDocRefreshText: { fontSize: 13, fontWeight: "700", color: "#fff" },
 });

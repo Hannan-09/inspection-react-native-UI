@@ -161,20 +161,22 @@ export const mapReportToSectionState = (report, key, category) => {
       };
     }
     return {
-      glass_scratches: normalizeEnum(s.glassScratches),
+      front_windshield: normalizeEnum(s.frontWindshield),
       glass_cracks_chips: normalizeEnum(s.glassCracksChips),
-      glass_cracks_chips_photo: s.glassCracksChipsPhoto || null,
-      side_mirrors: normalizeEnum(s.sideMirrors),
+      left_side_mirror: normalizeEnum(s.leftSideMirror),
+      right_side_mirror: normalizeEnum(s.rightSideMirror),
       parking_sensors: normalizeEnum(s.parkingSensors),
+      parking_sensors_photo: s.parkingSensorsPhoto || null,
       exterior_lights_all: normalizeEnum(s.exteriorLightsAll),
       wipers_washers: normalizeEnum(s.wipersWashers),
       headlight: normalizeEnum(s.headlight),
       fog_lamp: normalizeEnum(s.fogLamp),
+      fog_lamp_photo: s.fogLampPhoto || null,
       tail_light: normalizeEnum(s.tailLight),
       front_wiper: normalizeEnum(s.frontWiper),
       rear_wiper: normalizeEnum(s.rearWiper),
-      rear_windshield: normalizeEnum(s.rearWindshield),
-      rear_windshield_photo: s.rearWindshieldPhoto || null
+      rear_wiper_photo: s.rearWiperPhoto || null,
+      rear_windshield: normalizeEnum(s.rearWindshield)
     };
   }
   if (key === "section_5_interior_cabin" || key === "section_5_comfort_electronics") {
@@ -197,20 +199,31 @@ export const mapReportToSectionState = (report, key, category) => {
       ac_gas_leakage: normalizeEnum(s.acGasLeakage),
       hvac_climate_control: normalizeEnum(s.hvacClimateControl),
       speakers: normalizeEnum(s.speakers),
+      music_system: normalizeEnum(s.musicSystem),
       infotainment_system: normalizeEnum(s.infotainmentSystem),
       ventilated_seat: normalizeEnum(s.ventilatedSeat),
+      ventilated_seat_photo: s.ventilatedSeatPhoto || null,
       back_camera: normalizeEnum(s.backCamera),
+      back_camera_photo: s.backCameraPhoto || null,
       camera_360: normalizeEnum(s.camera360),
+      camera_360_photo: s.camera360Photo || null,
       cruise_control: normalizeEnum(s.cruiseControl),
+      cruise_control_photo: s.cruiseControlPhoto || null,
       interior_lights: normalizeEnum(s.interiorLights),
       central_locking: normalizeEnum(s.centralLocking),
       power_windows_all: normalizeEnum(s.powerWindowsAll),
-      manual_power_windows_count: s.manualPowerWindowCount !== undefined && s.manualPowerWindowCount !== null ? s.manualPowerWindowCount : "",
+      front_left_window_condition: normalizeEnum(s.frontLeftWindowCondition),
+      front_right_window_condition: normalizeEnum(s.frontRightWindowCondition),
+      rear_left_window_condition: normalizeEnum(s.rearLeftWindowCondition),
+      rear_right_window_condition: normalizeEnum(s.rearRightWindowCondition),
       reverse_camera_sensors: normalizeEnum(s.reverseCameraSensors),
+      reverse_camera_sensors_photo: s.reverseCameraSensorsPhoto || null,
+      airbag: normalizeEnum(s.airbag),
       seat_condition: normalizeEnum(s.seatCondition),
       dashboard_condition: normalizeEnum(s.dashboardCondition),
-      water_flood_damage_signs: normalizeEnum(s.waterFloodDamageSigns),
-      water_flood_damage_signs_photo: s.waterFloodDamagePhoto || null
+      odometer_reading: s.odometerReading !== undefined && s.odometerReading !== null ? s.odometerReading.toString() : "",
+      speedometer_photo: s.speedometerPhoto || null,
+      interior_full_video: s.interiorFullVideo || null
     };
   }
   if (key === "section_6_structural_history") {
@@ -229,11 +242,15 @@ export const mapReportToSectionState = (report, key, category) => {
     }
     return {
       structural_damage: normalizeEnum(s.structuralDamage),
-      structural_damage_photo: s.structuralDamagePhoto || null,
+      structural_damage_photo: s.structuralDamagePhotos || [],
       flood_damage_confirmed: normalizeEnum(s.floodDamageConfirmed),
+      flood_damage_confirmed_photo: s.floodDamageConfirmedPhotos || [],
       underbody_condition: normalizeEnum(s.underbodyCondition),
-      underbody_condition_photo: s.underbodyConditionPhoto || null,
-      chassis_alignment: normalizeEnum(s.chassisAlignment)
+      underbody_condition_photo: s.underbodyConditionPhotos || [],
+      other_rusting: normalizeEnum(s.otherRusting),
+      other_rusting_photo: s.otherRustingPhotos || [],
+      chassis_alignment: normalizeEnum(s.chassisAlignment),
+      chassis_alignment_photo: s.chassisAlignmentPhotos || []
     };
   }
   if (key === "section_7_tyres") {
@@ -241,15 +258,15 @@ export const mapReportToSectionState = (report, key, category) => {
     if (category === "2W") {
       return {
         "Front": {
-          tread_depth_mm: s.frontTreadDepthMm !== undefined && s.frontTreadDepthMm !== null ? s.frontTreadDepthMm : "",
-          tyre_age_years: s.frontTyreAgeYears !== undefined && s.frontTyreAgeYears !== null ? s.frontTyreAgeYears : "",
-          condition: normalizeEnum(s.frontTyreCondition),
+          tread_depth_mm: s.frontTreadDepthMm !== undefined && s.frontTreadDepthMm !== null ? s.frontTreadDepthMm.toString() : "",
+          tyre_condition: s.frontTyreCondition !== undefined && s.frontTyreCondition !== null ? s.frontTyreCondition.toString() : "",
+          condition: normalizeEnum(s.frontCondition) || "",
           tyre_photo: s.frontTyrePhoto || null
         },
         "Rear": {
-          tread_depth_mm: s.rearTreadDepthMm !== undefined && s.rearTreadDepthMm !== null ? s.rearTreadDepthMm : "",
-          tyre_age_years: s.rearTyreAgeYears !== undefined && s.rearTyreAgeYears !== null ? s.rearTyreAgeYears : "",
-          condition: normalizeEnum(s.rearTyreCondition),
+          tread_depth_mm: s.rearTreadDepthMm !== undefined && s.rearTreadDepthMm !== null ? s.rearTreadDepthMm.toString() : "",
+          tyre_condition: s.rearTyreCondition !== undefined && s.rearTyreCondition !== null ? s.rearTyreCondition.toString() : "",
+          condition: normalizeEnum(s.rearCondition) || "",
           tyre_photo: s.rearTyrePhoto || null
         }
       };
@@ -257,26 +274,26 @@ export const mapReportToSectionState = (report, key, category) => {
     return {
       "Front Left": {
         tread_depth_mm: s.frontLeftTreadDepthMm !== undefined && s.frontLeftTreadDepthMm !== null ? s.frontLeftTreadDepthMm.toString() : "",
-        tyre_age_years: s.frontLeftTyreAgeYears !== undefined && s.frontLeftTyreAgeYears !== null ? s.frontLeftTyreAgeYears.toString() : "",
         tyre_condition: s.frontLeftTyreCondition !== undefined && s.frontLeftTyreCondition !== null ? s.frontLeftTyreCondition.toString() : "",
+        condition: normalizeEnum(s.frontLeftCondition) || "",
         tyre_photo: s.frontLeftTyrePhoto || null
       },
       "Front Right": {
         tread_depth_mm: s.frontRightTreadDepthMm !== undefined && s.frontRightTreadDepthMm !== null ? s.frontRightTreadDepthMm.toString() : "",
-        tyre_age_years: s.frontRightTyreAgeYears !== undefined && s.frontRightTyreAgeYears !== null ? s.frontRightTyreAgeYears.toString() : "",
         tyre_condition: s.frontRightTyreCondition !== undefined && s.frontRightTyreCondition !== null ? s.frontRightTyreCondition.toString() : "",
+        condition: normalizeEnum(s.frontRightCondition) || "",
         tyre_photo: s.frontRightTyrePhoto || null
       },
       "Rear Left": {
         tread_depth_mm: s.rearLeftTreadDepthMm !== undefined && s.rearLeftTreadDepthMm !== null ? s.rearLeftTreadDepthMm.toString() : "",
-        tyre_age_years: s.rearLeftTyreAgeYears !== undefined && s.rearLeftTyreAgeYears !== null ? s.rearLeftTyreAgeYears.toString() : "",
         tyre_condition: s.rearLeftTyreCondition !== undefined && s.rearLeftTyreCondition !== null ? s.rearLeftTyreCondition.toString() : "",
+        condition: normalizeEnum(s.rearLeftCondition) || "",
         tyre_photo: s.rearLeftTyrePhoto || null
       },
       "Rear Right": {
         tread_depth_mm: s.rearRightTreadDepthMm !== undefined && s.rearRightTreadDepthMm !== null ? s.rearRightTreadDepthMm.toString() : "",
-        tyre_age_years: s.rearRightTyreAgeYears !== undefined && s.rearRightTyreAgeYears !== null ? s.rearRightTyreAgeYears.toString() : "",
         tyre_condition: s.rearRightTyreCondition !== undefined && s.rearRightTyreCondition !== null ? s.rearRightTyreCondition.toString() : "",
+        condition: normalizeEnum(s.rearRightCondition) || "",
         tyre_photo: s.rearRightTyrePhoto || null
       },
       spare_tyre_condition: normalizeEnum(s.spareTyreCondition),
@@ -287,12 +304,10 @@ export const mapReportToSectionState = (report, key, category) => {
     const s = report.obdDiagnostics || {};
     return {
       obd_scan_done: normalizeEnum(s.obdScanDone),
-      obd_scan_done_photo: s.obdScanDonePhoto || null,
       error_codes_present: s.errorCodesPresent === true,
       error_code_details: s.errorCodeDetails || "",
       error_codes_present_photo: s.errorCodesPhoto || null,
-      emission_status: normalizeEnum(s.emissionStatus),
-      emission_status_photo: s.emissionStatusPhoto || null
+      emission_status: normalizeEnum(s.emissionStatus)
     };
   }
   if (key === "section_9_modifications") {

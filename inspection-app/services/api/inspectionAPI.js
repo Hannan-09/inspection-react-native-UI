@@ -352,7 +352,28 @@ class InspectionAPI {
   async saveSectionObd(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_OBD.replace(":id", id);
-      const response = await apiService.put(endpoint, data);
+      
+      const formData = new FormData();
+      Object.keys(data).forEach(key => {
+        const value = data[key];
+        if (value !== null && value !== undefined) {
+          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
+            const filename = value.split("/").pop();
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : "image/jpeg";
+
+            formData.append(key, {
+              uri: value,
+              name: filename,
+              type: type
+            });
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      const response = await apiService.putMultipart(endpoint, formData);
       return response.data || response;
     } catch (error) {
       console.error("Error saving OBD section:", error);
@@ -461,11 +482,27 @@ class InspectionAPI {
     }
   }
 
-  // Save Section 11: Vehicle Specs
+  // Save Section 11: Vehicle Documents (4W)
+  async saveSectionVehicleDocuments(id, data) {
+    console.log("Vehicle Documents Payload:", data);
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_VEHICLE_DOCUMENTS.replace(":id", id);
+      const response = await apiService.put(endpoint, data);
+      console.log("Vehicle Documents Response:", response);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error saving vehicle documents section:", error);
+      throw error;
+    }
+  }
+
+  // Save Section 11: Vehicle Specs (Legacy/2W)
   async saveSectionVehicleSpecs(id, data) {
+    console.log("payload Data",data);
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_VEHICLE_SPECS.replace(":id", id);
       const response = await apiService.put(endpoint, data);
+      console.log("Response Data",response);
       return response.data || response;
     } catch (error) {
       console.error("Error saving vehicle specs section:", error);

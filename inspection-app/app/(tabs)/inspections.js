@@ -39,8 +39,7 @@ export default function InspectionsTab() {
   const [rejectReason, setRejectReason] = useState("");
   const [videoModalVisible, setVideoModalVisible] = useState(false);
   const [activeItemForVideo, setActiveItemForVideo] = useState(null);
-
-  // Animated values for scroll indicator
+  const [preVideoModalVisible, setPreVideoModalVisible] = useState(false);
   const scrollX = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef(null);
   const [scrollMetrics, setScrollMetrics] = useState({
@@ -265,9 +264,8 @@ export default function InspectionsTab() {
           }
 
           const phone = fullDetails?.whatsappNumber || fullDetails?.ownerPhone || fullDetails?.phone || rawPhone;
-          openWhatsApp(phone);
           setActiveItemForVideo(fullDetails);
-          setVideoModalVisible(true);
+          setPreVideoModalVisible(true);
         }
       } else {
         navigateToInspectionForm(item);
@@ -1002,6 +1000,42 @@ export default function InspectionsTab() {
               <TouchableOpacity
                 style={styles.modalCancelButton}
                 onPress={() => setVideoModalVisible(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Pre-Video Call Verification Modal */}
+      <Modal visible={preVideoModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { alignItems: "center", paddingVertical: 30 }]}>
+            <View style={styles.videoIconRing}>
+              <Ionicons name="videocam-outline" size={40} color={COLORS.fourth} />
+            </View>
+            <Text style={styles.modalTitle}>Start Video Call</Text>
+            <Text style={styles.modalSubtitle}>Please start and complete the video call with the vehicle owner before proceeding with the inspection.</Text>
+
+            <View style={{ width: "100%", marginTop: 24, gap: 12 }}>
+              <TouchableOpacity
+                style={styles.modalDoneButton}
+                onPress={() => {
+                  setPreVideoModalVisible(false);
+                  if (activeItemForVideo) {
+                    openWhatsApp(activeItemForVideo.whatsappNumber || activeItemForVideo.ownerPhone || activeItemForVideo.phone);
+                  }
+                  setVideoModalVisible(true);
+                }}
+              >
+                <Ionicons name="call" size={20} color="#fff" />
+                <Text style={styles.modalDoneButtonText}>Continue to Video Call</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setPreVideoModalVisible(false)}
               >
                 <Text style={styles.modalCancelButtonText}>Cancel</Text>
               </TouchableOpacity>

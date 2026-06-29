@@ -51,6 +51,7 @@ export const API_CONFIG = {
       SECTION_MODIFICATIONS: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/section/modifications",
       SECTION_MEDIA: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/section/media",
       SECTION_VEHICLE_SPECS: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/section/vehicle-specs",
+      SECTION_VEHICLE_DOCUMENTS: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/section/vehicle-documents",
       SUBMIT: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/submit",
       GET_REPORT: "/api/v1/website/vehicle/inspector/inspection/four-wheeler/:id/report",
       INCOME_HISTORY: "/api/v1/website/vehicle/inspector/income-history",

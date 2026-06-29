@@ -42,6 +42,7 @@ export default function InspectionDetailsScreen() {
   const [rejectReason, setRejectReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [videoModalVisible, setVideoModalVisible] = useState(false);
+  const [preVideoModalVisible, setPreVideoModalVisible] = useState(false);
 
   useEffect(() => {
     loadDetails();
@@ -232,8 +233,7 @@ export default function InspectionDetailsScreen() {
           if (completedVal === "true") {
             navigateToInspectionForm();
           } else {
-            openWhatsApp(details.whatsappNumber || details.ownerPhone || details.phone);
-            setVideoModalVisible(true);
+            setPreVideoModalVisible(true);
           }
         } else {
           navigateToInspectionForm();
@@ -653,6 +653,40 @@ export default function InspectionDetailsScreen() {
               <TouchableOpacity 
                 style={styles.modalCancelButton} 
                 onPress={() => setVideoModalVisible(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Pre-Video Call Verification Modal */}
+      <Modal visible={preVideoModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { alignItems: "center", paddingVertical: 30 }]}>
+            <View style={styles.videoIconRing}>
+              <Ionicons name="videocam-outline" size={40} color={COLORS.fourth} />
+            </View>
+            <Text style={styles.modalTitle}>Start Video Call</Text>
+            <Text style={styles.modalSubtitle}>Please start and complete the video call with the vehicle owner before proceeding with the inspection.</Text>
+            
+            <View style={{ width: "100%", marginTop: 24, gap: 12 }}>
+              <TouchableOpacity 
+                style={styles.modalDoneButton} 
+                onPress={() => {
+                  setPreVideoModalVisible(false);
+                  openWhatsApp(details?.whatsappNumber || details?.ownerPhone || details?.phone);
+                  setVideoModalVisible(true);
+                }}
+              >
+                <Ionicons name="call" size={20} color="#FFFFFF" />
+                <Text style={styles.modalDoneButtonText}>Continue to Video Call</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.modalCancelButton} 
+                onPress={() => setPreVideoModalVisible(false)}
               >
                 <Text style={styles.modalCancelButtonText}>Cancel</Text>
               </TouchableOpacity>
