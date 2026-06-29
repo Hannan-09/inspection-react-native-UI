@@ -875,7 +875,7 @@
         "CNG",
         "Hybrid"
       ],
-      "note": "Optional for 2W ICE. Mandatory if FI (fuel injection) bike.",
+      "note": "",
       "fields": {
         "obd_scan_done": {
           "type": "string",
@@ -889,7 +889,8 @@
         },
         "error_codes_present": {
           "type": "boolean",
-          "input_ui": "tap_buttons"
+          "input_ui": "tap_buttons",
+          "photo_required_if_true": true
         },
         "error_code_details": {
           "type": "string",
@@ -928,9 +929,10 @@
         "modification_risk_level": {
           "type": "string",
           "enum": [
-            "Low",
-            "Moderate",
-            "High"
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "NA"
           ],
           "conditional_show": "modifications_detected === true"
         },
@@ -976,8 +978,7 @@
             "enum": [
               "None",
               "Minor",
-              "Major",
-              "Unknown"
+              "Major"
             ]
           },
           "impact_on_safety": {

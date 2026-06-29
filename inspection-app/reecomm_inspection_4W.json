@@ -231,7 +231,7 @@
       "summary_fields": {
         "modifications_detected": { "type": "boolean", "input_ui": "tap_buttons" },
         "modification_count": { "type": "integer", "conditional_show": "modifications_detected === true" },
-        "modification_risk_level": { "type": "string", "enum": ["Low", "Moderate", "High"], "conditional_show": "modifications_detected === true" },
+        "modification_risk_level": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "NA"], "conditional_show": "modifications_detected === true" },
         "seller_declaration_match": { "type": "boolean", "conditional_show": "modifications_detected === true" }
       },
       "modification_items": {
@@ -250,7 +250,7 @@
           },
           "modification_type": { "type": "string", "enum": ["Cosmetic", "Performance", "Structural", "Electrical"] },
           "is_oem": { "type": "boolean" },
-          "impact_on_warranty": { "type": "string", "enum": ["None", "Minor", "Major", "Unknown"] },
+          "impact_on_warranty": { "type": "string", "enum": ["None", "Minor", "Major"] },
           "impact_on_safety": { "type": "string", "enum": ["None", "Minor", "Major"] },
           "documentation_available": { "type": "boolean" },
           "photo": { "type": "media_url", "required": true },

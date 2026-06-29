@@ -951,10 +951,18 @@ export default function InspectionSectionScreen() {
     Object.keys(posMap).forEach(pos => {
       const camel = posMap[pos];
       const tData = data[pos] || {};
-      payload[`${camel}TreadDepthMm`] = tData.tread_depth_mm ? parseFloat(tData.tread_depth_mm) : null;
-      payload[`${camel}TyreCondition`] = tData.tyre_condition ? parseInt(tData.tyre_condition) : null;
-      payload[`${camel}Condition`] = mapEnum(tData.condition);
-      payload[`${camel}TyrePhoto`] = tData.tyre_photo || null;
+      
+      if (vehicleCategory === "2W") {
+        payload[`${camel}TreadDepthMm`] = tData.tread_depth_mm ? parseFloat(tData.tread_depth_mm) : null;
+        payload[`${camel}TyreAgeYears`] = tData.tyre_age_years ? parseInt(tData.tyre_age_years) : null;
+        payload[`${camel}TyreCondition`] = mapEnum(tData.condition);
+        payload[`${camel}TyrePhoto`] = tData.tyre_photo || null;
+      } else {
+        payload[`${camel}TreadDepthMm`] = tData.tread_depth_mm ? parseFloat(tData.tread_depth_mm) : null;
+        payload[`${camel}TyreCondition`] = tData.tyre_condition ? parseInt(tData.tyre_condition) : null;
+        payload[`${camel}Condition`] = mapEnum(tData.condition);
+        payload[`${camel}TyrePhoto`] = tData.tyre_photo || null;
+      }
     });
 
     return payload;
@@ -1090,71 +1098,47 @@ export default function InspectionSectionScreen() {
           return null;
         };
 
+        const payload = {
+          chassisNumber: formData.chassis_no || null,
+          engineNumber: formData.engine_no || null,
+          ownerCount: formData.owner_count ? parseInt(formData.owner_count) : null,
+          registrationDate: parseDate(formData.reg_date),
+          rcValidUptoDate: parseDate(formData.rc_upto_date),
+          vehicleTaxUptoDate: parseDate(formData.vehicle_tax_upto_date),
+          insuranceUptoDate: parseDate(formData.insurance_upto_date),
+          vehicleCc: formData.vehicle_cc ? parseFloat(formData.vehicle_cc) : null,
+          vehicleGrossWeight: formData.vehicle_gross_weight ? parseFloat(formData.vehicle_gross_weight) : null,
+          vehicleCylinderCount: formData.vehicle_cylinder ? parseInt(formData.vehicle_cylinder) : null,
+          pucNumber: formData.puc_no || null,
+          pucValidUptoDate: parseDate(formData.puc_upto_date),
+          blacklisted: formData.blacklist_details && formData.blacklist_details.length > 0,
+          blacklistDetails: Array.isArray(formData.blacklist_details) ? formData.blacklist_details : [],
+          challanCount: Array.isArray(formData.challan_details) ? formData.challan_details.length : 0,
+          totalChallanAmount: Array.isArray(formData.challan_details) ? formData.challan_details.reduce((sum, c) => sum + (parseFloat(c.challan_amount) || 0), 0) : 0.0,
+          challanDetails: Array.isArray(formData.challan_details) ? formData.challan_details.map(c => ({
+            challanNumber: c.challan_no || null,
+            challanDate: c.challan_date ? c.challan_date.replace(" ", "T") : null,
+            amount: parseFloat(c.challan_amount) || 0.0,
+            location: c.challan_location || null,
+            issuedBy: null,
+            ownerName: c.owner_name || null,
+            offence: c.violation_details && c.violation_details.length > 0 ? c.violation_details.map(v => v.offence).join(", ") : null,
+            penaltyAmount: c.violation_details && c.violation_details.length > 0 ? parseFloat(c.violation_details[0].penalty) || 0.0 : 0.0,
+            status: c.challan_status ? (c.challan_status.toUpperCase() === "PAID" ? "PAID" : "UNPAID") : "UNPAID"
+          })) : [],
+          permitNumber: formData.permit_no || null,
+          permitType: formData.permit_type || null,
+          permitFromDate: parseDate(formData.permit_from_date),
+          permitToDate: parseDate(formData.permit_to_date),
+          nationalPermitNumber: formData.national_permit_no || null,
+          nationalPermitValidUptoDate: parseDate(formData.national_permit_upto_date),
+          rtoCode: formData.rto_code || null
+        };
+
         if (vehicleCategory === "2W") {
-          // Keep legacy logic for 2W
-          const payload2W = {
-            chassisNo: formData.chassis_no || null,
-            engineNo: formData.engine_no || null,
-            ownerCount: formData.owner_count ? parseInt(formData.owner_count) : null,
-            regDate: formData.reg_date || null,
-            rcUptoDate: formData.rc_upto_date || null,
-            vehicleTaxUptoDate: formData.vehicle_tax_upto_date || null,
-            insuranceUptoDate: formData.insurance_upto_date || null,
-            vehicleCc: formData.vehicle_cc ? parseInt(formData.vehicle_cc) : null,
-            vehicleGrossWeight: formData.vehicle_gross_weight ? parseInt(formData.vehicle_gross_weight) : null,
-            vehicleCylinder: formData.vehicle_cylinder ? parseInt(formData.vehicle_cylinder) : null,
-            pucNo: formData.puc_no || null,
-            pucUptoDate: formData.puc_upto_date || null,
-            blacklistDetails: Array.isArray(formData.blacklist_details) ? formData.blacklist_details.filter(Boolean) : [],
-            challanDetails: Array.isArray(formData.challan_details) ? formData.challan_details.filter(Boolean) : [],
-            permitNo: formData.permit_no || null,
-            permitType: formData.permit_type || null,
-            permitFromDate: formData.permit_from_date || null,
-            permitToDate: formData.permit_to_date || null,
-            nationalPermitNo: formData.national_permit_no || null,
-            nationalPermitUptoDate: formData.national_permit_upto_date || null,
-            rtoCode: formData.rto_code || null 
-          };
-          await inspectionAPI.saveSectionVehicleSpecs2W(inspectionId, payload2W);
+          await inspectionAPI.saveSectionVehicleDocuments2W(inspectionId, payload);
         } else {
-          // Use new DTO for 4W
-          const payload4W = {
-            chassisNumber: formData.chassis_no || null,
-            engineNumber: formData.engine_no || null,
-            ownerCount: formData.owner_count ? parseInt(formData.owner_count) : null,
-            registrationDate: parseDate(formData.reg_date),
-            rcValidUptoDate: parseDate(formData.rc_upto_date),
-            vehicleTaxUptoDate: parseDate(formData.vehicle_tax_upto_date),
-            insuranceUptoDate: parseDate(formData.insurance_upto_date),
-            vehicleCc: formData.vehicle_cc ? parseFloat(formData.vehicle_cc) : null,
-            vehicleGrossWeight: formData.vehicle_gross_weight ? parseFloat(formData.vehicle_gross_weight) : null,
-            vehicleCylinderCount: formData.vehicle_cylinder ? parseInt(formData.vehicle_cylinder) : null,
-            pucNumber: formData.puc_no || null,
-            pucValidUptoDate: parseDate(formData.puc_upto_date),
-            blacklisted: formData.blacklist_details && formData.blacklist_details.length > 0,
-            blacklistDetails: Array.isArray(formData.blacklist_details) ? formData.blacklist_details : [],
-            challanCount: Array.isArray(formData.challan_details) ? formData.challan_details.length : 0,
-            totalChallanAmount: Array.isArray(formData.challan_details) ? formData.challan_details.reduce((sum, c) => sum + (parseFloat(c.challan_amount) || 0), 0) : 0.0,
-            challanDetails: Array.isArray(formData.challan_details) ? formData.challan_details.map(c => ({
-              challanNumber: c.challan_no || null,
-              challanDate: c.challan_date ? c.challan_date.replace(" ", "T") : null,
-              amount: parseFloat(c.challan_amount) || 0.0,
-              location: c.challan_location || null,
-              issuedBy: null,
-              ownerName: c.owner_name || null,
-              offence: c.violation_details && c.violation_details.length > 0 ? c.violation_details.map(v => v.offence).join(", ") : null,
-              penaltyAmount: c.violation_details && c.violation_details.length > 0 ? parseFloat(c.violation_details[0].penalty) || 0.0 : 0.0,
-              status: c.challan_status ? (c.challan_status.toUpperCase() === "PAID" ? "PAID" : "UNPAID") : "UNPAID"
-            })) : [],
-            permitNumber: formData.permit_no || null,
-            permitType: formData.permit_type || null,
-            permitFromDate: parseDate(formData.permit_from_date),
-            permitToDate: parseDate(formData.permit_to_date),
-            nationalPermitNumber: formData.national_permit_no || null,
-            nationalPermitValidUptoDate: parseDate(formData.national_permit_upto_date),
-            rtoCode: formData.rto_code || null
-          };
-          await inspectionAPI.saveSectionVehicleDocuments(inspectionId, payload4W);
+          await inspectionAPI.saveSectionVehicleDocuments(inspectionId, payload);
         }
       }
 
@@ -1595,8 +1579,11 @@ export default function InspectionSectionScreen() {
                 onChange={v => update("modification_count", v)} />
               <View style={styles.fieldWrap}>
                 <Text style={styles.fieldLabel}>Modification Risk Level</Text>
-                <EnumRow options={["Low", "Moderate", "High"]} value={formData.modification_risk_level}
-                  onChange={v => update("modification_risk_level", v)} color="#F59E0B" />
+                <EnumRow 
+                  options={sectionData?.summary_fields?.modification_risk_level?.enum || ["Low", "Moderate", "High"]} 
+                  value={formData.modification_risk_level}
+                  onChange={v => update("modification_risk_level", v)} color="#F59E0B" 
+                />
               </View>
               <MiniToggle label="Seller Declaration Match" value={formData.seller_declaration_match}
                 onChange={v => update("seller_declaration_match", v)} />

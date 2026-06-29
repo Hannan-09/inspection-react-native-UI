@@ -750,7 +750,28 @@ class InspectionAPI {
   async saveSectionObd2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_OBD.replace(":id", id);
-      const response = await apiService.put(endpoint, data);
+      
+      const formData = new FormData();
+      Object.keys(data).forEach(key => {
+        const value = data[key];
+        if (value !== null && value !== undefined) {
+          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
+            const filename = value.split("/").pop();
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : "image/jpeg";
+
+            formData.append(key, {
+              uri: value,
+              name: filename,
+              type: type
+            });
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      const response = await apiService.putMultipart(endpoint, formData);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W OBD section:", error);
@@ -860,6 +881,18 @@ class InspectionAPI {
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W vehicle specs section:", error);
+      throw error;
+    }
+  }
+
+  // Save Section 11: 2W Vehicle Documents
+  async saveSectionVehicleDocuments2W(id, data) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_VEHICLE_DOCUMENTS.replace(":id", id);
+      const response = await apiService.put(endpoint, data);
+      return response.data || response;
+    } catch (error) {
+      console.error("Error saving 2W vehicle documents section:", error);
       throw error;
     }
   }

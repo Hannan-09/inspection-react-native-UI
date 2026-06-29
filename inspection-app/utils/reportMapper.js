@@ -259,14 +259,14 @@ export const mapReportToSectionState = (report, key, category) => {
       return {
         "Front": {
           tread_depth_mm: s.frontTreadDepthMm !== undefined && s.frontTreadDepthMm !== null ? s.frontTreadDepthMm.toString() : "",
-          tyre_condition: s.frontTyreCondition !== undefined && s.frontTyreCondition !== null ? s.frontTyreCondition.toString() : "",
-          condition: normalizeEnum(s.frontCondition) || "",
+          tyre_age_years: s.frontTyreAgeYears !== undefined && s.frontTyreAgeYears !== null ? s.frontTyreAgeYears.toString() : "",
+          condition: normalizeEnum(s.frontTyreCondition) || "",
           tyre_photo: s.frontTyrePhoto || null
         },
         "Rear": {
           tread_depth_mm: s.rearTreadDepthMm !== undefined && s.rearTreadDepthMm !== null ? s.rearTreadDepthMm.toString() : "",
-          tyre_condition: s.rearTyreCondition !== undefined && s.rearTyreCondition !== null ? s.rearTyreCondition.toString() : "",
-          condition: normalizeEnum(s.rearCondition) || "",
+          tyre_age_years: s.rearTyreAgeYears !== undefined && s.rearTyreAgeYears !== null ? s.rearTyreAgeYears.toString() : "",
+          condition: normalizeEnum(s.rearTyreCondition) || "",
           tyre_photo: s.rearTyrePhoto || null
         }
       };
@@ -315,7 +315,7 @@ export const mapReportToSectionState = (report, key, category) => {
     return {
       modifications_detected: s.modificationsDetected === true,
       modification_count: s.modificationCount !== undefined && s.modificationCount !== null ? s.modificationCount : "",
-      modification_risk_level: normalizeEnum(s.modificationRiskLevel),
+      modification_risk_level: s.modificationRiskLevel ? (s.modificationRiskLevel === "NA" || s.modificationRiskLevel === "N/A" ? "NA" : s.modificationRiskLevel.toUpperCase()) : null,
       seller_declaration_match: s.sellerDeclarationMatch === true,
       modification_items: (s.modificationItems || []).map(m => ({
         modification_category: m.modificationCategory || "",
