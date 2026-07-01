@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
+import messaging from "@react-native-firebase/messaging";
 import { authAPI } from "../services/api/authAPI";
 import { COLORS } from "../constants";
 import ThemeBackground from "../components/ThemeBackground";
@@ -54,6 +55,28 @@ export default function LoginScreen() {
 
     try {
       await authAPI.login(username.trim(), password);
+
+      try {
+        // Request permissions for iOS
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+        if (enabled) {
+          // Get the device token
+          const fcmToken = await messaging().getToken();
+          if (fcmToken) {
+            await authAPI.sendFCMToken(fcmToken);
+            console.log("FCM token sent successfully:", fcmToken);
+          }
+        } else {
+          console.log("User declined messaging permissions");
+        }
+      } catch (fcmErr) {
+        console.error("Failed to fetch or send FCM token", fcmErr);
+      }
+
       Toast.show({
         type: "success",
         text1: "Login Successful",

@@ -129,6 +129,19 @@ class AuthAPI {
     }
   }
 
+  // Send FCM Token
+  async sendFCMToken(token) {
+    console.log("FCM api call");
+    try {
+      const response = await apiService.post(API_CONFIG.ENDPOINTS.AUTH.FCM, { token });
+      console.log("FCM api call response : ", response);
+      return response;
+    } catch (error) {
+      console.error("Send FCM token error:", error);
+      throw error;
+    }
+  }
+
   // Address Utilities
   async getStates() {
     try {

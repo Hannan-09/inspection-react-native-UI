@@ -25,6 +25,7 @@ export const API_CONFIG = {
       UPDATE_PROFILE: "/api/v1/website/vehicle/inspector/profile",
       STATES: "/api/v1/website/util/address/states/101",
       CITIES: "/api/v1/website/util/address/cities/:stateId",
+      FCM: "/api/v1/website/users/profile/fcm",
     },
     INSPECTIONS: {
       LIST: "/api/inspections",

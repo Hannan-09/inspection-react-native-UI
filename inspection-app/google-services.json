@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "627030040807",
+    "project_id": "reecomm-1",
+    "storage_bucket": "reecomm-1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:627030040807:android:c93704787527dcc8fe8242",
+        "android_client_info": {
+          "package_name": "com.reecomm.inspector"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApoPnfMd0uxNV9lEPNFs4sSVZgj1X94CM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

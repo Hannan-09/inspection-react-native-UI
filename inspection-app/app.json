@@ -13,7 +13,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.reecomm.inspector"
+      "bundleIdentifier": "com.reecomm.inspector",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,6 +22,7 @@
         "backgroundColor": "#1E56A0"
       },
       "package": "com.reecomm.inspector",
+      "googleServicesFile": "./google-services.json",
       "versionCode": 1,
       "permissions": [
         "CAMERA",
@@ -42,7 +44,16 @@
         }
       ],
       "expo-video",
-      "expo-font"
+      "expo-font",
+      "@react-native-firebase/app",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {},
