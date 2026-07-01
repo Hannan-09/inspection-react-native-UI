@@ -31,7 +31,7 @@
         "buildConfiguration": "Release"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://reecomm-spring-fcde06afd95d.herokuapp.com",
+        "EXPO_PUBLIC_API_URL": "https://api.reecomm.online",
         "EXPO_PUBLIC_ENV": "production",
         "EXPO_PUBLIC_APP_NAME": "Reecomm Inspector",
         "EXPO_PUBLIC_APP_VERSION": "1.0.0"
