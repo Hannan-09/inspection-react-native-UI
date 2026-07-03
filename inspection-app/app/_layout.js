@@ -3,8 +3,41 @@ import { StatusBar } from "expo-status-bar";
 import Toast from "react-native-toast-message";
 import "../global.css";
 import { COLORS } from "../constants";
+import { useEffect } from "react";
+import messaging from "@react-native-firebase/messaging";
+import { PermissionsAndroid, Platform } from "react-native";
 
 export default function RootLayout() {
+  useEffect(() => {
+    const requestNotificationPermission = async () => {
+      try {
+        if (Platform.OS === 'android' && Platform.Version >= 33) {
+          await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+        } else {
+          await messaging().requestPermission();
+        }
+      } catch (error) {
+        console.error("Error requesting notification permission:", error);
+      }
+    };
+
+    requestNotificationPermission();
+
+    // Listen for foreground notifications
+    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      Toast.show({
+        type: 'info',
+        text1: remoteMessage.notification?.title || 'New Notification',
+        text2: remoteMessage.notification?.body || 'You have a new message',
+        position: 'top',
+        visibilityTime: 4000,
+        autoHide: true,
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
   return (
     <>
       <StatusBar style="auto" />
