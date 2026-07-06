@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.reecomm.inspector",
+      "bundleIdentifier": "com.reecomm.vehicle.inspector",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E56A0"
       },
-      "package": "com.reecomm.inspector",
+      "package": "com.reecomm.vehicle.inspector",
       "googleServicesFile": "./google-services.json",
       "versionCode": 1,
       "permissions": [

@@ -1,26 +1,79 @@
 {
   "project_info": {
-    "project_number": "627030040807",
-    "project_id": "reecomm-1",
-    "storage_bucket": "reecomm-1.firebasestorage.app"
+    "project_number": "575352422757",
+    "project_id": "reecomm-marketplace",
+    "storage_bucket": "reecomm-marketplace.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:627030040807:android:c93704787527dcc8fe8242",
+        "mobilesdk_app_id": "1:575352422757:android:357399af309138f95e218c",
         "android_client_info": {
-          "package_name": "com.reecomm.inspector"
+          "package_name": "com.reecomm.vehicle.inspector"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "575352422757-5c945e286ranaom0bf0fgds8cpiv23kc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyApoPnfMd0uxNV9lEPNFs4sSVZgj1X94CM"
+          "current_key": "AIzaSyA2iJscrx3Z4ohrfpuuXUp-BNjrJ0rmlZ0"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "575352422757-5c945e286ranaom0bf0fgds8cpiv23kc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "575352422757-cs2jhsdr6nf5kon0tec3p6i0a5mnava6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.reecommMarketplace"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:575352422757:android:81c4257bb37599895e218c",
+        "android_client_info": {
+          "package_name": "com.reecomm.vehicle.marketplace"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "575352422757-5c945e286ranaom0bf0fgds8cpiv23kc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2iJscrx3Z4ohrfpuuXUp-BNjrJ0rmlZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "575352422757-5c945e286ranaom0bf0fgds8cpiv23kc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "575352422757-cs2jhsdr6nf5kon0tec3p6i0a5mnava6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.reecommMarketplace"
+              }
+            }
+          ]
         }
       }
     }
