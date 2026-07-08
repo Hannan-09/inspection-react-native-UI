@@ -183,6 +183,8 @@ export default function InspectionSectionScreen() {
   };
 
   const fetchVehicleDocData = async (regNo) => {
+    console.log("Vehicle Doc API CREDS", VEHICLE_DOC_API_CREDS);
+    console.log("Reg No ", regNo);
     if (!regNo) return;
     setVehicleDocFetching(true);
     try {
@@ -198,10 +200,12 @@ export default function InspectionSectionScreen() {
           body: JSON.stringify({ ...VEHICLE_DOC_API_CREDS, reg_no: regNo })
         })
       ]);
-
+      console.log("RC Res", rcRes);
+      console.log("Challan Res", challanRes);
       const rcData = rcRes.status === "fulfilled" && rcRes.value.ok ? await rcRes.value.json() : null;
       const challanData = challanRes.status === "fulfilled" && challanRes.value.ok ? await challanRes.value.json() : null;
-
+      console.log("RC Data", rcData);
+      console.log("Challan Data", challanData);
       const rc = rcData?.result || rcData?.data || rcData || {};
       const challans = challanData?.data?.data || challanData?.data || [];
 
@@ -380,7 +384,8 @@ export default function InspectionSectionScreen() {
       if (category === "2W") {
         return {
           steering_performance: normalizeEnum(s.steeringPerformance),
-          front_fork_condition: normalizeEnum(s.frontForkCondition),
+          front_shock_condition: normalizeEnum(s.frontShockCondition),
+          front_shock_condition_photo: s.frontShockConditionPhoto || null,
           rear_shock_condition: normalizeEnum(s.rearShockCondition),
           rear_shock_condition_photo: s.rearShockConditionPhoto || null,
           swingarm_bushings: normalizeEnum(s.swingarmBushings),
@@ -388,8 +393,9 @@ export default function InspectionSectionScreen() {
           front_brake_condition: normalizeEnum(s.frontBrakeCondition),
           front_brake_condition_photo: s.frontBrakeConditionPhoto || null,
           rear_brake_condition: normalizeEnum(s.rearBrakeCondition),
+          rear_brake_condition_photo: s.rearBrakeConditionPhoto || null,
           brake_pad_life_percent: s.brakePadLifePercent,
-          brake_cables_or_lines: normalizeEnum(s.brakeCablesOrLines)
+          brake_cables: normalizeEnum(s.brakeCables)
         };
       }
       return {
@@ -436,10 +442,11 @@ export default function InspectionSectionScreen() {
       if (category === "2W") {
         return {
           headlight_condition: normalizeEnum(s.headlightCondition),
-          tail_light_indicators: normalizeEnum(s.tailLightIndicators),
+          tail_light_condition: normalizeEnum(s.tailLightCondition),
+          indicator_condition: normalizeEnum(s.indicatorCondition),
           speedometer_cluster: normalizeEnum(s.speedometerCluster),
           mirrors: normalizeEnum(s.mirrors),
-          visor_windshield: normalizeEnum(s.visorWindshield)
+          visor_condition: normalizeEnum(s.visorCondition)
         };
       }
       return {
@@ -464,11 +471,9 @@ export default function InspectionSectionScreen() {
       if (category === "2W") {
         return {
           horn: normalizeEnum(s.horn),
-          usb_charging_port: normalizeEnum(s.usbChargingPort),
           instrument_cluster_display: normalizeEnum(s.instrumentClusterDisplay),
           mobile_connectivity_tft: normalizeEnum(s.mobileConnectivityTft),
           seat_condition: normalizeEnum(s.seatCondition),
-          grab_rail_pillion: normalizeEnum(s.grabRailPillion),
           storage_box_underseat: normalizeEnum(s.storageBoxUnderseat)
         };
       }
@@ -499,14 +504,10 @@ export default function InspectionSectionScreen() {
       const s = report.structuralHistory || {};
       if (category === "2W") {
         return {
-          frame_condition: normalizeEnum(s.frameCondition),
-          frame_condition_photo: s.frameConditionPhoto || null,
+          body_condition: normalizeEnum(s.bodyCondition),
+          body_condition_photo: s.bodyConditionPhoto || null,
           accident_repair_visible: normalizeEnum(s.accidentRepairVisible),
-          flood_damage_confirmed: normalizeEnum(s.floodDamageConfirmed),
-          chassis_number_intact: normalizeEnum(s.chassisNumberIntact),
-          chassis_number_intact_photo: s.chassisNumberIntactPhoto || null,
-          engine_number_intact: normalizeEnum(s.engineNumberIntact),
-          engine_number_intact_photo: s.engineNumberIntactPhoto || null
+          flood_damage_confirmed: normalizeEnum(s.floodDamageConfirmed)
         };
       }
       return {
@@ -739,7 +740,8 @@ export default function InspectionSectionScreen() {
     if (category === "2W") {
       return {
         steeringPerformance: mapEnum(data.steering_performance),
-        frontForkCondition: mapEnum(data.front_fork_condition),
+        frontShockCondition: mapEnum(data.front_shock_condition),
+        frontShockConditionPhoto: data.front_shock_condition_photo || null,
         rearShockCondition: mapEnum(data.rear_shock_condition),
         rearShockConditionPhoto: data.rear_shock_condition_photo || null,
         swingarmBushings: mapEnum(data.swingarm_bushings),
@@ -747,8 +749,9 @@ export default function InspectionSectionScreen() {
         frontBrakeCondition: mapEnum(data.front_brake_condition),
         frontBrakeConditionPhoto: data.front_brake_condition_photo || null,
         rearBrakeCondition: mapEnum(data.rear_brake_condition),
+        rearBrakeConditionPhoto: data.rear_brake_condition_photo || null,
         brakePadLifePercent: data.brake_pad_life_percent ? parseInt(data.brake_pad_life_percent) : null,
-        brakeCablesOrLines: mapEnum(data.brake_cables_or_lines)
+        brakeCables: mapEnum(data.brake_cables)
       };
     }
     return {
@@ -833,10 +836,11 @@ export default function InspectionSectionScreen() {
     if (category === "2W") {
       return {
         headlightCondition: mapEnum(data.headlight_condition),
-        tailLightIndicators: mapEnum(data.tail_light_indicators),
+        tailLightCondition: mapEnum(data.tail_light_condition),
+        indicatorCondition: mapEnum(data.indicator_condition),
         speedometerCluster: mapEnum(data.speedometer_cluster),
         mirrors: mapEnum(data.mirrors),
-        visorWindshield: mapEnum(data.visor_windshield)
+        visorCondition: mapEnum(data.visor_condition)
       };
     }
     return {
@@ -863,11 +867,9 @@ export default function InspectionSectionScreen() {
     if (category === "2W") {
       return {
         horn: mapEnum(data.horn),
-        usbChargingPort: mapEnum(data.usb_charging_port),
         instrumentClusterDisplay: mapEnum(data.instrument_cluster_display),
         mobileConnectivityTft: mapEnum(data.mobile_connectivity_tft),
         seatCondition: mapEnum(data.seat_condition),
-        grabRailPillion: mapEnum(data.grab_rail_pillion),
         storageBoxUnderseat: mapEnum(data.storage_box_underseat)
       };
     }
@@ -909,14 +911,10 @@ export default function InspectionSectionScreen() {
   const mapStructuralHistoryData = (data, category) => {
     if (category === "2W") {
       return {
-        frameCondition: mapEnum(data.frame_condition),
-        frameConditionPhoto: data.frame_condition_photo || null,
+        bodyCondition: mapEnum(data.body_condition),
+        bodyConditionPhoto: data.body_condition_photo || null,
         accidentRepairVisible: mapEnum(data.accident_repair_visible),
-        floodDamageConfirmed: mapEnum(data.flood_damage_confirmed),
-        chassisNumberIntact: mapEnum(data.chassis_number_intact),
-        chassisNumberIntactPhoto: data.chassis_number_intact_photo || null,
-        engineNumberIntact: mapEnum(data.engine_number_intact),
-        engineNumberIntactPhoto: data.engine_number_intact_photo || null
+        floodDamageConfirmed: mapEnum(data.flood_damage_confirmed)
       };
     }
     return {

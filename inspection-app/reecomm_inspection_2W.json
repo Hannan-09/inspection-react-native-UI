@@ -445,7 +445,7 @@
           "input_ui": "tap_buttons",
           "description": "Check for play, hardness, wobble"
         },
-        "front_fork_condition": {
+        "front_shock_condition": {
           "type": "string",
           "enum": [
             "GOOD",
@@ -454,7 +454,8 @@
             "NA"
           ],
           "input_ui": "tap_buttons",
-          "description": "Oil leakage, bending"
+          "description": "Oil leakage, bending",
+          "photo_required_on_fail": true
         },
         "rear_shock_condition": {
           "type": "string",
@@ -508,6 +509,10 @@
           ],
           "input_ui": "tap_buttons"
         },
+        "rear_brake_condition_photo": {
+          "type": "media_url",
+          "required": true
+        },
         "brake_pad_life_percent": {
           "type": "integer",
           "minimum": 0,
@@ -515,7 +520,7 @@
           "input_ui": "slider",
           "unit": "%"
         },
-        "brake_cables_or_lines": {
+        "brake_cables": {
           "type": "string",
           "enum": [
             "WORKING",
@@ -631,7 +636,17 @@
           ],
           "input_ui": "tap_buttons"
         },
-        "tail_light_indicators": {
+        "tail_light_condition": {
+          "type": "string",
+          "enum": [
+            "WORKING",
+            "PARTIALLY_WORKING",
+            "NOT_WORKING",
+            "NA"
+          ],
+          "input_ui": "tap_buttons"
+        },
+        "indicator_condition": {
           "type": "string",
           "enum": [
             "WORKING",
@@ -661,7 +676,7 @@
           ],
           "input_ui": "tap_buttons"
         },
-        "visor_windshield": {
+        "visor_condition": {
           "type": "string",
           "enum": [
             "GOOD",
@@ -692,17 +707,6 @@
             "NA"
           ],
           "input_ui": "tap_buttons"
-        },
-        "usb_charging_port": {
-          "type": "string",
-          "enum": [
-            "WORKING",
-            "PARTIALLY_WORKING",
-            "NOT_WORKING",
-            "NA"
-          ],
-          "input_ui": "tap_buttons",
-          "note": "If equipped"
         },
         "instrument_cluster_display": {
           "type": "string",
@@ -735,16 +739,6 @@
           ],
           "input_ui": "tap_buttons"
         },
-        "grab_rail_pillion": {
-          "type": "string",
-          "enum": [
-            "GOOD",
-            "FAIR",
-            "POOR",
-            "NA"
-          ],
-          "input_ui": "tap_buttons"
-        },
         "storage_box_underseat": {
           "type": "string",
           "enum": [
@@ -767,7 +761,7 @@
         "EV (Electric)"
       ],
       "fields": {
-        "frame_condition": {
+        "body_condition": {
           "type": "string",
           "enum": [
             "GOOD",
@@ -797,28 +791,6 @@
             "NA"
           ],
           "input_ui": "tap_buttons"
-        },
-        "chassis_number_intact": {
-          "type": "string",
-          "enum": [
-            "GOOD",
-            "FAIR",
-            "POOR",
-            "NA"
-          ],
-          "input_ui": "tap_buttons",
-          "photo_required": true
-        },
-        "engine_number_intact": {
-          "type": "string",
-          "enum": [
-            "GOOD",
-            "FAIR",
-            "POOR",
-            "NA"
-          ],
-          "input_ui": "tap_buttons",
-          "photo_required": true
         }
       }
     },
@@ -1012,22 +984,6 @@
         "EV (Electric)"
       ],
       "fields": {
-        "engine_or_motor_running_video": {
-          "type": "media_url",
-          "required": true
-        },
-        "full_vehicle_walkaround_photos": {
-          "type": "array",
-          "items": {
-            "type": "media_url"
-          },
-          "min_count": 4,
-          "required": true
-        },
-        "test_ride_video": {
-          "type": "media_url",
-          "required": true
-        },
         "chassis_number_photo": {
           "type": "media_url",
           "required": true
@@ -1036,9 +992,9 @@
           "type": "media_url",
           "required": true
         },
-        "inspection_pdf_url": {
+        "test_ride_video": {
           "type": "media_url",
-          "description": "Auto-generated after submission"
+          "required": true
         }
       }
     },
@@ -1051,31 +1007,34 @@
         "EV (Electric)"
       ],
       "fields": {
-        "chassis_no": {
+        "chassis_number": {
           "type": "string",
           "input_ui": "text",
-          "required": true
+          "required": true,
+          "hidden": true
         },
-        "engine_no": {
+        "engine_number": {
           "type": "string",
           "input_ui": "text",
-          "required": true
+          "required": true,
+          "hidden": true
         },
         "owner_count": {
           "type": "integer",
           "required": true
         },
-        "reg_date": {
+        "registration_date": {
           "type": "string",
           "input_ui": "text",
           "required": true,
           "description": "DD-MM-YYYY"
         },
-        "rc_upto_date": {
+        "rc_valid_upto_date": {
           "type": "string",
           "input_ui": "text",
           "required": true,
-          "description": "DD-MM-YYYY"
+          "description": "DD-MM-YYYY",
+          "hidden": true
         },
         "vehicle_tax_upto_date": {
           "type": "string",
@@ -1090,29 +1049,34 @@
           "description": "DD-MM-YYYY"
         },
         "vehicle_cc": {
-          "type": "integer",
+          "type": "number",
           "unit": "cc",
           "required": true
         },
         "vehicle_gross_weight": {
-          "type": "integer",
+          "type": "number",
           "unit": "kg",
           "required": true
         },
-        "vehicle_cylinder": {
+        "vehicle_cylinder_count": {
           "type": "integer",
           "required": true
         },
-        "puc_no": {
+        "puc_number": {
           "type": "string",
           "input_ui": "text",
           "required": true
         },
-        "puc_upto_date": {
+        "puc_valid_upto_date": {
           "type": "string",
           "input_ui": "text",
           "required": true,
           "description": "DD-MM-YYYY"
+        },
+        "blacklisted": {
+          "type": "boolean",
+          "input_ui": "mini_toggle",
+          "required": false
         },
         "blacklist_details": {
           "type": "array",
@@ -1120,6 +1084,15 @@
             "type": "string"
           },
           "input_ui": "string_array",
+          "required": false,
+          "conditional_show": "blacklisted === true"
+        },
+        "challan_count": {
+          "type": "integer",
+          "required": false
+        },
+        "total_challan_amount": {
+          "type": "number",
           "required": false
         },
         "challan_details": {
@@ -1129,39 +1102,6 @@
           },
           "input_ui": "string_array",
           "required": false
-        },
-        "permit_no": {
-          "type": "string",
-          "input_ui": "text",
-          "required": true
-        },
-        "permit_type": {
-          "type": "string",
-          "input_ui": "text",
-          "required": true
-        },
-        "permit_from_date": {
-          "type": "string",
-          "input_ui": "text",
-          "required": true,
-          "description": "DD-MM-YYYY"
-        },
-        "permit_to_date": {
-          "type": "string",
-          "input_ui": "text",
-          "required": true,
-          "description": "DD-MM-YYYY"
-        },
-        "national_permit_no": {
-          "type": "string",
-          "input_ui": "text",
-          "required": true
-        },
-        "national_permit_upto_date": {
-          "type": "string",
-          "input_ui": "text",
-          "required": true,
-          "description": "DD-MM-YYYY"
         },
         "rto_code": {
           "type": "string",

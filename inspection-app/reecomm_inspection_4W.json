@@ -265,8 +265,8 @@
       "fields": {
         "engine_or_motor_running_video": { "type": "media_url", "required": true },
         "underbody_photos": { "type": "array", "items": { "type": "media_url" }, "min_count": 4, "required": true },
-        "test_drive_video": { "type": "media_url", "required": true },
-        "major_dent_photos": { "type": "array", "items": { "type": "media_url" }, "required_if": "any panel dent_severity = Major" }
+        "major_dent_photos": { "type": "array", "items": { "type": "media_url" }, "required_if": "any panel dent_severity = Major" },
+        "test_drive_video": { "type": "media_url", "required": true }
       }
     },
 

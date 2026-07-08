@@ -98,7 +98,8 @@ export const mapReportToSectionState = (report, key, category) => {
     if (category === "2W") {
       return {
         steering_performance: normalizeEnum(s.steeringPerformance),
-        front_fork_condition: normalizeEnum(s.frontForkCondition),
+        front_shock_condition: normalizeEnum(s.frontShockCondition),
+        front_shock_condition_photo: s.frontShockConditionPhoto || null,
         rear_shock_condition: normalizeEnum(s.rearShockCondition),
         rear_shock_condition_photo: s.rearShockConditionPhoto || null,
         swingarm_bushings: normalizeEnum(s.swingarmBushings),
@@ -106,8 +107,9 @@ export const mapReportToSectionState = (report, key, category) => {
         front_brake_condition: normalizeEnum(s.frontBrakeCondition),
         front_brake_condition_photo: s.frontBrakeConditionPhoto || null,
         rear_brake_condition: normalizeEnum(s.rearBrakeCondition),
+        rear_brake_condition_photo: s.rearBrakeConditionPhoto || null,
         brake_pad_life_percent: s.brakePadLifePercent !== undefined && s.brakePadLifePercent !== null ? s.brakePadLifePercent : "",
-        brake_cables_or_lines: normalizeEnum(s.brakeCablesOrLines)
+        brake_cables: normalizeEnum(s.brakeCables)
       };
     }
     return {
@@ -154,10 +156,11 @@ export const mapReportToSectionState = (report, key, category) => {
     if (category === "2W") {
       return {
         headlight_condition: normalizeEnum(s.headlightCondition),
-        tail_light_indicators: normalizeEnum(s.tailLightIndicators),
+        tail_light_condition: normalizeEnum(s.tailLightCondition),
+        indicator_condition: normalizeEnum(s.indicatorCondition),
         speedometer_cluster: normalizeEnum(s.speedometerCluster),
         mirrors: normalizeEnum(s.mirrors),
-        visor_windshield: normalizeEnum(s.visorWindshield)
+        visor_condition: normalizeEnum(s.visorCondition)
       };
     }
     return {
@@ -184,11 +187,9 @@ export const mapReportToSectionState = (report, key, category) => {
     if (category === "2W") {
       return {
         horn: normalizeEnum(s.horn),
-        usb_charging_port: normalizeEnum(s.usbChargingPort),
         instrument_cluster_display: normalizeEnum(s.instrumentClusterDisplay),
         mobile_connectivity_tft: normalizeEnum(s.mobileConnectivityTft),
         seat_condition: normalizeEnum(s.seatCondition),
-        grab_rail_pillion: normalizeEnum(s.grabRailPillion),
         storage_box_underseat: normalizeEnum(s.storageBoxUnderseat)
       };
     }
@@ -230,14 +231,10 @@ export const mapReportToSectionState = (report, key, category) => {
     const s = report.structuralHistory || {};
     if (category === "2W") {
       return {
-        frame_condition: normalizeEnum(s.frameCondition),
-        frame_condition_photo: s.frameConditionPhoto || null,
+        body_condition: normalizeEnum(s.bodyCondition),
+        body_condition_photo: s.bodyConditionPhoto || null,
         accident_repair_visible: normalizeEnum(s.accidentRepairVisible),
-        flood_damage_confirmed: normalizeEnum(s.floodDamageConfirmed),
-        chassis_number_intact: normalizeEnum(s.chassisNumberIntact),
-        chassis_number_intact_photo: s.chassisNumberIntactPhoto || null,
-        engine_number_intact: normalizeEnum(s.engineNumberIntact),
-        engine_number_intact_photo: s.engineNumberIntactPhoto || null
+        flood_damage_confirmed: normalizeEnum(s.floodDamageConfirmed)
       };
     }
     return {

@@ -23,7 +23,7 @@ class InspectionAPI {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.ASSIGNED_DETAILS.replace(":id", id);
       const response = await apiService.get(endpoint);
-      console.log('assigned&&&',response);
+      console.log('assigned&&&', response);
       return response.data || response;
     } catch (error) {
       console.error("Error fetching assigned inspection details:", error);
@@ -247,7 +247,7 @@ class InspectionAPI {
   }
 
   // Save Section 5: Interior & Cabin
-  async saveSectionInteriorCabin(id, data) { 
+  async saveSectionInteriorCabin(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_INTERIOR_CABIN.replace(":id", id);
 
@@ -356,7 +356,7 @@ class InspectionAPI {
   async saveSectionObd(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_OBD.replace(":id", id);
-      
+
       const formData = new FormData();
       Object.keys(data).forEach(key => {
         const value = data[key];
@@ -502,11 +502,11 @@ class InspectionAPI {
 
   // Save Section 11: Vehicle Specs (Legacy/2W)
   async saveSectionVehicleSpecs(id, data) {
-    console.log("payload Data",data);
+    console.log("payload Data", data);
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_VEHICLE_SPECS.replace(":id", id);
       const response = await apiService.put(endpoint, data);
-      console.log("Response Data",response);
+      console.log("Response Data", response);
       return response.data || response;
     } catch (error) {
       console.error("Error saving vehicle specs section:", error);
@@ -592,6 +592,7 @@ class InspectionAPI {
   }
 
   async saveSectionMechanical2W(id, data) {
+        console.log("payload", data);
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_MECHANICAL.replace(":id", id);
       const formData = new FormData();
@@ -722,7 +723,7 @@ class InspectionAPI {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_TYRES.replace(":id", id);
       const formData = new FormData();
-      
+
       Object.keys(data).forEach(key => {
         const value = data[key];
         if (value !== null && value !== undefined) {
@@ -750,7 +751,7 @@ class InspectionAPI {
   async saveSectionObd2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_OBD.replace(":id", id);
-      
+
       const formData = new FormData();
       Object.keys(data).forEach(key => {
         const value = data[key];
@@ -832,8 +833,8 @@ class InspectionAPI {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_MEDIA.replace(":id", id);
       const formData = new FormData();
 
-      const mediaKeys = ["engineOrMotorRunningVideo", "testRideVideo", "chassisNumberPhoto", "engineNumberPhoto"];
-      
+      const mediaKeys = ["testRideVideo", "chassisNumberPhoto", "engineNumberPhoto"];
+
       mediaKeys.forEach(key => {
         const value = data[key];
         if (value && typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
@@ -844,26 +845,6 @@ class InspectionAPI {
           formData.append(key, { uri: value, name: filename, type });
         }
       });
-
-      let walkaroundPhotos = [];
-      if (data.fullVehicleWalkaroundPhotos) {
-        if (Array.isArray(data.fullVehicleWalkaroundPhotos)) {
-          walkaroundPhotos = data.fullVehicleWalkaroundPhotos;
-        } else {
-          walkaroundPhotos = [data.fullVehicleWalkaroundPhotos];
-        }
-      }
-
-      if (walkaroundPhotos.length > 0) {
-        walkaroundPhotos.forEach((photoUri) => {
-          if (photoUri && typeof photoUri === "string" && (photoUri.startsWith("file://") || photoUri.startsWith("content://"))) {
-            const filename = photoUri.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-            formData.append("fullVehicleWalkaroundPhotos", { uri: photoUri, name: filename, type });
-          }
-        });
-      }
 
       const response = await apiService.putMultipart(endpoint, formData);
       return response.data || response;
@@ -912,7 +893,7 @@ class InspectionAPI {
   async getInspectionReport(id, category) {
     try {
       const is2W = (category || "").toUpperCase().includes("TWO") || (category || "").toUpperCase() === "2W" || (category || "").toUpperCase().includes("2");
-      const endpoint = is2W 
+      const endpoint = is2W
         ? API_CONFIG.ENDPOINTS.INSPECTIONS_2W.GET_REPORT.replace(":id", id)
         : API_CONFIG.ENDPOINTS.INSPECTIONS.GET_REPORT.replace(":id", id);
       console.log("Endpoint:", endpoint);
