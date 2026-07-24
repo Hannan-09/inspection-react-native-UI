@@ -20,6 +20,7 @@ import messaging from "@react-native-firebase/messaging";
 import { authAPI } from "../services/api/authAPI";
 import { COLORS } from "../constants";
 import ThemeBackground from "../components/ThemeBackground";
+import { getDeviceInformation } from "../utils/deviceInfo";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -55,6 +56,11 @@ export default function LoginScreen() {
 
     try {
       await authAPI.login(username.trim(), password);
+
+      const deviceInfo = await getDeviceInformation();
+      console.log("========== DEVICE INFO ==========");
+      console.table(deviceInfo);
+      console.log("================================");
 
       try {
         // Request permissions for iOS

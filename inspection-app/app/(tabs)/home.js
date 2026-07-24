@@ -19,6 +19,8 @@ import { inspectionAPI } from "../../services/api/inspectionAPI";
 import { apiService } from "../../services/api/api";
 import { COLORS } from "../../constants";
 import ThemeBackground from "../../components/ThemeBackground";
+import { getDeviceInformation } from "../../utils/deviceInfo";
+
 
 export default function HomeTab() {
   const router = useRouter();
@@ -41,10 +43,25 @@ export default function HomeTab() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
+  // Device Info states (temporary)
+  const [deviceInfo, setDeviceInfo] = useState(null);
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
+
+
   useEffect(() => {
     loadData();
     fetchUserData();
+    fetchDeviceInfo();
   }, []);
+
+  const fetchDeviceInfo = async () => {
+    const info = await getDeviceInformation();
+    if (info) {
+      setDeviceInfo(info);
+      setShowDeviceModal(true);
+    }
+  };
+
 
   const fetchUserData = async () => {
     try {
@@ -412,6 +429,37 @@ export default function HomeTab() {
                 {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalConfirmText}>Confirm Reject</Text>}
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Temporary Device Info Modal */}
+      <Modal visible={showDeviceModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Device Information</Text>
+            {deviceInfo ? (
+              <ScrollView style={{ maxHeight: 300 }}>
+                {Object.entries(deviceInfo).map(([key, value]) => (
+                  <View key={key} style={{ marginBottom: 10 }}>
+                    <Text style={{ color: COLORS.third, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                    </Text>
+                    <Text style={{ color: COLORS.secondary, fontSize: 16 }}>
+                      {String(value)}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <ActivityIndicator color={COLORS.fourth} />
+            )}
+            <TouchableOpacity 
+              style={[styles.modalConfirm, { marginTop: 20, backgroundColor: COLORS.fourth }]} 
+              onPress={() => setShowDeviceModal(false)}
+            >
+              <Text style={styles.modalConfirmText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
