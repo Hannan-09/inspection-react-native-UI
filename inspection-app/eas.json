@@ -23,7 +23,10 @@
       }
     },
     "production": {
-      "android": {},
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
       "ios": {
         "buildConfiguration": "Release"
       },

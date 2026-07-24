@@ -58,6 +58,7 @@ export default function LoginScreen() {
       await authAPI.login(username.trim(), password);
 
       try {
+        const deviceInfo = await getDeviceInformation();
         if (deviceInfo) {
           const devicePayload = {
             platform: deviceInfo.platform,
