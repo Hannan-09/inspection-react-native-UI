@@ -142,6 +142,17 @@ class AuthAPI {
     }
   }
 
+  // Send Device Info
+  async sendDeviceInfo(deviceInfo) {
+    try {
+      const response = await apiService.post("/api/v1/website/users/profile/device-info", deviceInfo);
+      return response;
+    } catch (error) {
+      console.error("Send device info error:", error);
+      throw error;
+    }
+  }
+
   // Address Utilities
   async getStates() {
     try {

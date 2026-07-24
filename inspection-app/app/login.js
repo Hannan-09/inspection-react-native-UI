@@ -57,10 +57,26 @@ export default function LoginScreen() {
     try {
       await authAPI.login(username.trim(), password);
 
-      const deviceInfo = await getDeviceInformation();
-      console.log("========== DEVICE INFO ==========");
-      console.table(deviceInfo);
-      console.log("================================");
+      try {
+        if (deviceInfo) {
+          const devicePayload = {
+            platform: deviceInfo.platform,
+            manufacturer: deviceInfo.manufacturer,
+            browserName: null,
+            deviceModel: deviceInfo.model,
+            deviceName: deviceInfo.deviceName,
+            osName: deviceInfo.osName,
+            osVersion: deviceInfo.osVersion,
+            appVersion: deviceInfo.appVersion,
+            buildNumber: deviceInfo.buildNumber,
+            deviceUniqueId: deviceInfo.uniqueId
+          };
+          await authAPI.sendDeviceInfo(devicePayload);
+          console.log("Device info successfully sent to backend");
+        }
+      } catch (deviceErr) {
+        console.error("Failed to send device info to backend", deviceErr);
+      }
 
       try {
         // Request permissions for iOS
