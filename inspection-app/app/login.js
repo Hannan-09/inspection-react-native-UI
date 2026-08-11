@@ -16,7 +16,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
-import messaging from "@react-native-firebase/messaging";
+// import messaging from "@react-native-firebase/messaging";
 import { authAPI } from "../services/api/authAPI";
 import { COLORS } from "../constants";
 import ThemeBackground from "../components/ThemeBackground";
@@ -79,6 +79,7 @@ export default function LoginScreen() {
         console.error("Failed to send device info to backend", deviceErr);
       }
 
+      /*
       try {
         // Request permissions for iOS
         const authStatus = await messaging().requestPermission();
@@ -99,6 +100,7 @@ export default function LoginScreen() {
       } catch (fcmErr) {
         console.error("Failed to fetch or send FCM token", fcmErr);
       }
+      */
 
       Toast.show({
         type: "success",

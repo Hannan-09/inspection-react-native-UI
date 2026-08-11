@@ -284,7 +284,7 @@ export default function ProfileTab() {
       icon: "wallet-outline",
       label: "Payment History",
       color: COLORS.fourth,
-      onPress: () => console.log("Payment History"),
+      onPress: () => router.push("/income"),
     },
     {
       id: 4,

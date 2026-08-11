@@ -501,8 +501,8 @@ export default function InspectionsTab() {
                     {item.assignmentStatus?.toUpperCase() === "REQUEST_CHANGES"
                       ? "Edit & Resubmit"
                       : item.assignmentStatus?.toUpperCase() === "IN_PROGRESS"
-                        ? "Continue to Inspection"
-                        : "Start Inspection"}
+                        ? "Continue"
+                        : "Start"}
                   </Text>
                 )}
               </TouchableOpacity>

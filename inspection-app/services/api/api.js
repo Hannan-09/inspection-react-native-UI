@@ -1,4 +1,6 @@
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import { API_CONFIG } from "../../config/api.config";
 
 class ApiService {
@@ -29,8 +31,9 @@ class ApiService {
     }
 
     try {
+      const requestTimeout = options.timeout || this.timeout;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
 
       const response = await fetch(url, {
         ...config,
@@ -71,7 +74,7 @@ class ApiService {
                   retryConfig.headers["Authorization"] = `Bearer ${newAccessToken}`;
                   
                   const retryController = new AbortController();
-                  const retryTimeoutId = setTimeout(() => retryController.abort(), this.timeout);
+                  const retryTimeoutId = setTimeout(() => retryController.abort(), requestTimeout);
                   const retryResponse = await fetch(url, { ...retryConfig, signal: retryController.signal });
                   clearTimeout(retryTimeoutId);
 
@@ -134,17 +137,21 @@ class ApiService {
     return this.request(endpoint, { method: "DELETE" });
   }
 
-  async postMultipart(endpoint, formData) {
+  async postMultipart(endpoint, formData, customOptions = {}) {
     return this.request(endpoint, {
       method: "POST",
       body: formData,
+      timeout: 300000, // 5 minutes timeout for uploads
+      ...customOptions
     });
   }
 
-  async putMultipart(endpoint, formData) {
+  async putMultipart(endpoint, formData, customOptions = {}) {
     return this.request(endpoint, {
       method: "PUT",
       body: formData,
+      timeout: 300000, // 5 minutes timeout for uploads
+      ...customOptions
     });
   }
 
@@ -163,11 +170,28 @@ class ApiService {
     return error;
   }
 
+  // ── Helper ──────────────────────────────────────────────────────────────
+
+  async _getItem(key) {
+    if (Platform.OS === "web") return await AsyncStorage.getItem(key);
+    return await SecureStore.getItemAsync(key);
+  }
+
+  async _setItem(key, value) {
+    if (Platform.OS === "web") await AsyncStorage.setItem(key, value);
+    else await SecureStore.setItemAsync(key, value);
+  }
+
+  async _removeItem(key) {
+    if (Platform.OS === "web") await AsyncStorage.removeItem(key);
+    else await SecureStore.deleteItemAsync(key);
+  }
+
   // ── Token Management ──────────────────────────────────────────────────────
 
   async getAuthToken() {
     try {
-      return await SecureStore.getItemAsync("authToken");
+      return await this._getItem("authToken");
     } catch {
       return null;
     }
@@ -175,7 +199,7 @@ class ApiService {
 
   async setAuthToken(token) {
     try {
-      await SecureStore.setItemAsync("authToken", token);
+      await this._setItem("authToken", token);
     } catch (error) {
       console.error("Error saving token:", error);
     }
@@ -183,7 +207,7 @@ class ApiService {
 
   async clearAuthToken() {
     try {
-      await SecureStore.deleteItemAsync("authToken");
+      await this._removeItem("authToken");
     } catch (error) {
       console.error("Error clearing token:", error);
     }
@@ -193,7 +217,7 @@ class ApiService {
 
   async setUserData(user) {
     try {
-      await SecureStore.setItemAsync("userData", JSON.stringify(user));
+      await this._setItem("userData", JSON.stringify(user));
     } catch (error) {
       console.error("Error saving user data:", error);
     }
@@ -201,7 +225,7 @@ class ApiService {
 
   async getUserData() {
     try {
-      const raw = await SecureStore.getItemAsync("userData");
+      const raw = await this._getItem("userData");
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
@@ -210,7 +234,7 @@ class ApiService {
 
   async clearUserData() {
     try {
-      await SecureStore.deleteItemAsync("userData");
+      await this._removeItem("userData");
     } catch (error) {
       console.error("Error clearing user data:", error);
     }
@@ -226,7 +250,7 @@ class ApiService {
 
   async getRefreshToken() {
     try {
-      return await SecureStore.getItemAsync("refreshToken");
+      return await this._getItem("refreshToken");
     } catch {
       return null;
     }
@@ -234,7 +258,7 @@ class ApiService {
 
   async setRefreshToken(token) {
     try {
-      await SecureStore.setItemAsync("refreshToken", token);
+      await this._setItem("refreshToken", token);
     } catch (error) {
       console.error("Error saving refresh token:", error);
     }
@@ -242,7 +266,7 @@ class ApiService {
 
   async clearRefreshToken() {
     try {
-      await SecureStore.deleteItemAsync("refreshToken");
+      await this._removeItem("refreshToken");
     } catch (error) {
       console.error("Error clearing refresh token:", error);
     }

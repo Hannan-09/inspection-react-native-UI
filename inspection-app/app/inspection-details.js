@@ -525,7 +525,7 @@ export default function InspectionDetailsScreen() {
                   />
                   <Text style={styles.acceptButtonText}>
                     {details.assignmentStatus?.toUpperCase() === 'ASSIGNED' ? "Accept" : 
-                     details.assignmentStatus?.toUpperCase() === 'IN_PROGRESS' ? "Continue to Inspection" : "Start Inspection"}
+                     details.assignmentStatus?.toUpperCase() === 'IN_PROGRESS' ? "Continue" : "Start"}
                   </Text>
                 </>
               )}
