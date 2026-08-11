@@ -45,7 +45,7 @@
         "fuel_tank": { "type": "string", "enum": ["GOOD", "FAIR", "POOR", "NA"], "input_ui": "tap_buttons" },
         "fuel_lines": { "type": "string", "enum": ["WORKING", "PARTIALLY_WORKING", "NOT_WORKING", "NA"], "input_ui": "tap_buttons" },
         "fuel_rails_injectors": { "type": "string", "enum": ["WORKING", "PARTIALLY_WORKING", "NOT_WORKING", "NA"], "input_ui": "tap_buttons" },
-        "wiring_harness": { "type": "string", "enum": ["GOOD", "FAIR", "POOR", "NA"], "input_ui": "tap_buttons" },
+        "wiring_harness": { "type": "string", "enum": ["GOOD", "FAIR", "POOR", "NA"], "input_ui": "tap_buttons", "photo_required_on_fail": true },
         "battery_voltage": { "type": "string", "enum": ["WORKING", "PARTIALLY_WORKING", "NOT_WORKING", "NA"], "input_ui": "tap_buttons" },
         "battery_voltage_value": { "type": "number", "unit": "V", "optional": true },
         "alternator_starter": { "type": "string", "enum": ["WORKING", "PARTIALLY_WORKING", "NOT_WORKING", "NA"], "input_ui": "tap_buttons" },

@@ -59,29 +59,7 @@ class InspectionAPI {
   async saveSectionEngine(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_ENGINE.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          // If value is a local file URI, append as file object
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `${key.toLowerCase().includes("video") ? "video" : "image"}/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving engine section:", error);
@@ -93,29 +71,7 @@ class InspectionAPI {
   async saveSectionEvBattery(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_EV_BATTERY.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          // If value is a local file URI, append as file object
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `${key.toLowerCase().includes("video") ? "video" : "image"}/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving EV battery section:", error);
@@ -127,29 +83,7 @@ class InspectionAPI {
   async saveSectionMechanical(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_MECHANICAL.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          // If value is a local file URI, append as file object
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving mechanical section:", error);
@@ -161,50 +95,7 @@ class InspectionAPI {
   async saveSectionExteriorPanels(id, payload) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_EXTERIOR_PANELS.replace(":id", id);
-      const formData = new FormData();
-
-      // Map panels to indexed fields for @ModelAttribute
-      payload.panels.forEach((panel, index) => {
-        formData.append(`panels[${index}].panelName`, panel.panelName);
-        formData.append(`panels[${index}].originalPaint`, panel.originalPaint);
-        formData.append(`panels[${index}].repainted`, panel.repainted);
-        formData.append(`panels[${index}].dentSeverity`, panel.dentSeverity || "NONE");
-        formData.append(`panels[${index}].scratchSeverity`, panel.scratchSeverity || "NONE");
-        formData.append(`panels[${index}].rustPresent`, panel.rustPresent);
-        if (panel.dentPhotoIndices && panel.dentPhotoIndices.length > 0) {
-          panel.dentPhotoIndices.forEach(photoIndex => {
-            formData.append(`panels[${index}].dentPhotoIndices`, photoIndex);
-          });
-        }
-        if (panel.scratchPhotoIndices && panel.scratchPhotoIndices.length > 0) {
-          panel.scratchPhotoIndices.forEach(photoIndex => {
-            formData.append(`panels[${index}].scratchPhotoIndices`, photoIndex);
-          });
-        }
-        if (panel.panelPhotoIndices && panel.panelPhotoIndices.length > 0) {
-          panel.panelPhotoIndices.forEach(photoIndex => {
-            formData.append(`panels[${index}].panelPhotoIndices`, photoIndex);
-          });
-        }
-      });
-
-      // Map photos to the list part
-      if (payload.photos && payload.photos.length > 0) {
-        payload.photos.forEach((uri) => {
-          if (uri && (uri.startsWith("file://") || uri.startsWith("content://"))) {
-            const filename = uri.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-            formData.append("panelPhotos", {
-              uri,
-              name: filename,
-              type: type
-            });
-          }
-        });
-      }
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, payload);
       return response.data || response;
     } catch (error) {
       console.error("Error saving exterior panels section:", error);
@@ -216,29 +107,7 @@ class InspectionAPI {
   async saveSectionGlassExterior(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_GLASS_EXTERIOR.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          // If value is a local file URI, append as file object
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving glass exterior section:", error);
@@ -250,29 +119,7 @@ class InspectionAPI {
   async saveSectionInteriorCabin(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_INTERIOR_CABIN.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          // If value is a local file URI, append as file object
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving interior cabin section:", error);
@@ -284,33 +131,7 @@ class InspectionAPI {
   async saveSectionStructuralHistory(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_STRUCTURAL_HISTORY.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (Array.isArray(value)) {
-            // Handle array of files
-            value.forEach(fileUri => {
-              if (typeof fileUri === "string" && (fileUri.startsWith("file://") || fileUri.startsWith("content://"))) {
-                const filename = fileUri.split("/").pop();
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : "image/jpeg";
-                formData.append(key, { uri: fileUri, name: filename, type });
-              }
-            });
-          } else if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-            formData.append(key, { uri: value, name: filename, type });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving structural history section:", error);
@@ -322,29 +143,7 @@ class InspectionAPI {
   async saveSectionTyres(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_TYRES.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          // If value is a local file URI, append as file object
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving tyres section:", error);
@@ -356,28 +155,7 @@ class InspectionAPI {
   async saveSectionObd(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_OBD.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving OBD section:", error);
@@ -389,47 +167,7 @@ class InspectionAPI {
   async saveSectionModifications(id, payload) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_MODIFICATIONS.replace(":id", id);
-      const formData = new FormData();
-
-      // Summary fields
-      formData.append("modificationsDetected", payload.modificationsDetected);
-      formData.append("modificationCount", payload.modificationCount || 0);
-      formData.append("modificationRiskLevel", payload.modificationRiskLevel || "LOW");
-      formData.append("sellerDeclarationMatch", payload.sellerDeclarationMatch);
-
-      // Map modification items to indexed fields
-      if (payload.modificationItems && payload.modificationItems.length > 0) {
-        payload.modificationItems.forEach((item, index) => {
-          formData.append(`modificationItems[${index}].modificationCategory`, item.modificationCategory);
-          formData.append(`modificationItems[${index}].modificationType`, item.modificationType);
-          formData.append(`modificationItems[${index}].isOem`, item.isOem);
-          formData.append(`modificationItems[${index}].impactOnWarranty`, item.impactOnWarranty || "NONE");
-          formData.append(`modificationItems[${index}].impactOnSafety`, item.impactOnSafety || "NONE");
-          formData.append(`modificationItems[${index}].documentationAvailable`, item.documentationAvailable);
-          formData.append(`modificationItems[${index}].remarks`, item.remarks || "");
-          if (item.photoIndex !== null && item.photoIndex !== undefined) {
-            formData.append(`modificationItems[${index}].photoIndex`, item.photoIndex);
-          }
-        });
-      }
-
-      // Map photos to the list part
-      if (payload.photos && payload.photos.length > 0) {
-        payload.photos.forEach((uri) => {
-          if (uri && (uri.startsWith("file://") || uri.startsWith("content://"))) {
-            const filename = uri.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-            formData.append("modificationPhotos", {
-              uri,
-              name: filename,
-              type: type
-            });
-          }
-        });
-      }
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, payload);
       return response.data || response;
     } catch (error) {
       console.error("Error saving modifications section:", error);
@@ -441,44 +179,7 @@ class InspectionAPI {
   async saveSectionMedia(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS.SECTION_MEDIA.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (Array.isArray(value)) {
-            // Handle array of files
-            value.forEach(fileUri => {
-              if (typeof fileUri === "string" && (fileUri.startsWith("file://") || fileUri.startsWith("content://"))) {
-                const filename = fileUri.split("/").pop();
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : "image/jpeg";
-                formData.append(key, {
-                  uri: fileUri,
-                  name: filename,
-                  type: type
-                });
-              }
-            });
-          } else if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            // Handle single file
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const isVideo = key.toLowerCase().includes("video");
-            const type = match ? `${isVideo ? "video" : "image"}/${match[1]}` : (isVideo ? "video/mp4" : "image/jpeg");
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving media section:", error);

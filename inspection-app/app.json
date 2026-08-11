@@ -56,7 +56,8 @@
             "enableProguardInRelease": true
           }
         }
-      ]
+      ],
+      "react-native-compressor"
     ],
     "extra": {
       "router": {},

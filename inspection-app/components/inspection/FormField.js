@@ -336,7 +336,7 @@ export const MediaUpload = ({
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: type === "video" ? ImagePicker.MediaType.Video : ImagePicker.MediaType.Image,
+      mediaTypes: type === "video" ? ImagePicker.MediaTypeOptions.Videos : ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
     });
     if (!result.canceled && result.assets?.length > 0) {

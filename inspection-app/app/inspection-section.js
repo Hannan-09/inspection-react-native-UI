@@ -10,8 +10,10 @@ import inspectionSchema2W from "../reecomm_inspection_2W.json";
 import inspectionSchema4W from "../reecomm_inspection_4W.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { inspectionAPI } from "../services/api/inspectionAPI";
+import { s3UploadService } from "../services/api/s3UploadService";
 import { COLORS } from "../constants";
 import ThemeBackground from "../components/ThemeBackground";
+import UploadProgressModal from "../components/inspection/UploadProgressModal";
 
 // ── Normalizers ────────────────────────────────────────────────────────────────
 const normalizeCategory = (vehicleType) => {
@@ -166,6 +168,8 @@ export default function InspectionSectionScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [s3UploadModalVisible, setS3UploadModalVisible] = useState(false);
+  const [s3UploadProgress, setS3UploadProgress] = useState({ current: 0, total: 0 });
   const [vehicleDocFetching, setVehicleDocFetching] = useState(false);
   // For modifications — add item modal
   const [addModModal, setAddModModal] = useState(false);
@@ -482,7 +486,7 @@ export default function InspectionSectionScreen() {
         ac_heating: normalizeEnum(s.acHeating),
         ac_compressor: normalizeEnum(s.acCompressor),
         ac_gas_leakage: normalizeEnum(s.acGasLeakage),
-        hvac_climate_control: normalizeEnum(s.hvacClimateControl),
+
         speakers: normalizeEnum(s.speakers),
         infotainment_system: normalizeEnum(s.infotainmentSystem),
         ventilated_seat: normalizeEnum(s.ventilatedSeat),
@@ -650,6 +654,16 @@ export default function InspectionSectionScreen() {
     return val.toUpperCase().replace(/\s+/g, "_");
   };
 
+  const ensureStringArray = (val) => {
+    if (Array.isArray(val)) {
+      return val.filter(p => typeof p === "string" && p.trim().length > 0);
+    }
+    if (val && typeof val === "string" && val.trim().length > 0) {
+      return [val];
+    }
+    return [];
+  };
+
   const mapEngineData = (data, category) => {
     if (category === "2W") {
       return {
@@ -776,45 +790,20 @@ export default function InspectionSectionScreen() {
   };
 
   const mapExteriorPanelsData = (data, panelsList) => {
-    const photos = [];
     const panels = (panelsList || []).map((panelName) => {
       const panelData = data[panelName] || {};
-      const dentPhotoIndices = [];
-      const scratchPhotoIndices = [];
 
-      const dPhotos = Array.isArray(panelData.dent_photo)
-        ? panelData.dent_photo
-        : (panelData.dent_photo ? [panelData.dent_photo] : []);
+      const dentPhotos = Array.isArray(panelData.dent_photo)
+        ? panelData.dent_photo.filter(p => typeof p === "string" && p.trim().length > 0)
+        : (panelData.dent_photo && typeof panelData.dent_photo === "string" && panelData.dent_photo.trim().length > 0 ? [panelData.dent_photo] : []);
 
-      dPhotos.forEach(photo => {
-        if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
-          dentPhotoIndices.push(photos.length);
-          photos.push(photo);
-        }
-      });
+      const scratchPhotos = Array.isArray(panelData.scratch_photo)
+        ? panelData.scratch_photo.filter(p => typeof p === "string" && p.trim().length > 0)
+        : (panelData.scratch_photo && typeof panelData.scratch_photo === "string" && panelData.scratch_photo.trim().length > 0 ? [panelData.scratch_photo] : []);
 
-      const sPhotos = Array.isArray(panelData.scratch_photo)
-        ? panelData.scratch_photo
-        : (panelData.scratch_photo ? [panelData.scratch_photo] : []);
-
-      sPhotos.forEach(photo => {
-        if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
-          scratchPhotoIndices.push(photos.length);
-          photos.push(photo);
-        }
-      });
-
-      const panelPhotoIndices = [];
-      const pPhotos = Array.isArray(panelData.panel_photo)
-        ? panelData.panel_photo
-        : (panelData.panel_photo ? [panelData.panel_photo] : []);
-
-      pPhotos.forEach(photo => {
-        if (photo && typeof photo === "string" && (photo.startsWith("file://") || photo.startsWith("content://"))) {
-          panelPhotoIndices.push(photos.length);
-          photos.push(photo);
-        }
-      });
+      const panelPhotos = Array.isArray(panelData.panel_photo)
+        ? panelData.panel_photo.filter(p => typeof p === "string" && p.trim().length > 0)
+        : (panelData.panel_photo && typeof panelData.panel_photo === "string" && panelData.panel_photo.trim().length > 0 ? [panelData.panel_photo] : []);
 
       return {
         panelName,
@@ -823,13 +812,13 @@ export default function InspectionSectionScreen() {
         dentSeverity: mapEnum(panelData.dent_severity),
         scratchSeverity: mapEnum(panelData.scratch_severity),
         rustPresent: !!panelData.rust_present,
-        dentPhotoIndices,
-        scratchPhotoIndices,
-        panelPhotoIndices
+        dentPhotos: dentPhotos,
+        scratchPhotos: scratchPhotos,
+        panelPhotos: panelPhotos
       };
     });
 
-    return { panels, photos };
+    return { panels };
   };
 
   const mapGlassExteriorData = (data, category) => {
@@ -878,7 +867,6 @@ export default function InspectionSectionScreen() {
       acHeating: mapEnum(data.ac_heating),
       acCompressor: mapEnum(data.ac_compressor),
       acGasLeakage: mapEnum(data.ac_gas_leakage),
-      hvacClimateControl: mapEnum(data.hvac_climate_control),
       speakers: mapEnum(data.speakers),
       musicSystem: mapEnum(data.music_system),
       infotainmentSystem: mapEnum(data.infotainment_system),
@@ -919,19 +907,28 @@ export default function InspectionSectionScreen() {
     }
     return {
       structuralDamage: mapEnum(data.structural_damage),
-      structuralDamagePhotos: data.structural_damage_photo || [],
+      structuralDamagePhotos: ensureStringArray(data.structural_damage_photo),
       floodDamageConfirmed: mapEnum(data.flood_damage_confirmed),
-      floodDamageConfirmedPhotos: data.flood_damage_confirmed_photo || [],
+      floodDamageConfirmedPhotos: ensureStringArray(data.flood_damage_confirmed_photo),
       underbodyCondition: mapEnum(data.underbody_condition),
-      underbodyConditionPhotos: data.underbody_condition_photo || [],
+      underbodyConditionPhotos: ensureStringArray(data.underbody_condition_photo),
       otherRusting: mapEnum(data.other_rusting),
-      otherRustingPhotos: data.other_rusting_photo || [],
+      otherRustingPhotos: ensureStringArray(data.other_rusting_photo),
       chassisAlignment: mapEnum(data.chassis_alignment),
-      chassisAlignmentPhotos: data.chassis_alignment_photo || []
+      chassisAlignmentPhotos: ensureStringArray(data.chassis_alignment_photo)
     };
   };
 
   const mapTyresData = (data) => {
+    const payload = {
+      spareTyreCondition: mapEnum(data.spare_tyre_condition),
+      spareTyrePhoto: data.spare_tyre_condition_photo || null
+    };
+
+    const keysToProcess = vehicleCategory === "2W"
+      ? ["Front", "Rear"]
+      : ["Front Left", "Front Right", "Rear Left", "Rear Right"];
+
     const posMap = {
       "Front Left": "frontLeft",
       "Front Right": "frontRight",
@@ -941,12 +938,7 @@ export default function InspectionSectionScreen() {
       "Rear": "rear"
     };
 
-    const payload = {
-      spareTyreCondition: mapEnum(data.spare_tyre_condition),
-      spareTyrePhoto: data.spare_tyre_condition_photo || null
-    };
-
-    Object.keys(posMap).forEach(pos => {
+    keysToProcess.forEach(pos => {
       const camel = posMap[pos];
       const tData = data[pos] || {};
       
@@ -957,6 +949,7 @@ export default function InspectionSectionScreen() {
         payload[`${camel}TyrePhoto`] = tData.tyre_photo || null;
       } else {
         payload[`${camel}TreadDepthMm`] = tData.tread_depth_mm ? parseFloat(tData.tread_depth_mm) : null;
+        payload[`${camel}TyreAgeYears`] = tData.tyre_age_years ? parseInt(tData.tyre_age_years) : null;
         payload[`${camel}TyreCondition`] = tData.tyre_condition ? parseInt(tData.tyre_condition) : null;
         payload[`${camel}Condition`] = mapEnum(tData.condition);
         payload[`${camel}TyrePhoto`] = tData.tyre_photo || null;
@@ -978,16 +971,8 @@ export default function InspectionSectionScreen() {
 
   const mapModificationsData = (data) => {
     const items = data.modification_items || [];
-    const photos = [];
 
     const mappedItems = items.map(item => {
-      let photoIndex = null;
-      // If there's a new photo, add it to the photos array and set the index
-      if (item.photo && typeof item.photo === "string" && (item.photo.startsWith("file://") || item.photo.startsWith("content://"))) {
-        photoIndex = photos.length;
-        photos.push(item.photo);
-      }
-
       return {
         modificationCategory: item.modification_category || null,
         modificationType: item.modification_type || null,
@@ -995,7 +980,7 @@ export default function InspectionSectionScreen() {
         impactOnWarranty: mapEnum(item.impact_on_warranty),
         impactOnSafety: mapEnum(item.impact_on_safety),
         documentationAvailable: !!item.documentation_available,
-        photoIndex,
+        photoUrl: item.photo || null,
         remarks: item.remarks || null
       };
     });
@@ -1005,8 +990,7 @@ export default function InspectionSectionScreen() {
       modificationCount: data.modification_count ? parseInt(data.modification_count) : mappedItems.length,
       modificationRiskLevel: mapEnum(data.modification_risk_level),
       sellerDeclarationMatch: !!data.seller_declaration_match,
-      modificationItems: mappedItems,
-      photos
+      modificationItems: mappedItems
     };
   };
 
@@ -1035,52 +1019,137 @@ export default function InspectionSectionScreen() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // --- S3 PRESIGNED URL UPLOAD POC ---
+      const extractLocalFiles = (obj, fileList = new Set()) => {
+        if (!obj) return fileList;
+        if (typeof obj === 'string' && (obj.startsWith('file://') || obj.startsWith('content://'))) {
+          fileList.add(obj);
+        } else if (Array.isArray(obj)) {
+          obj.forEach(item => extractLocalFiles(item, fileList));
+        } else if (typeof obj === 'object') {
+          Object.values(obj).forEach(val => extractLocalFiles(val, fileList));
+        }
+        return fileList;
+      };
+
+      const localFiles = Array.from(extractLocalFiles(formData));
+      
+      console.log(`[POC] Parsed formData, found ${localFiles.length} local files.`);
+      let finalUploadResults = [];
+      if (localFiles.length === 0) {
+        console.log(`[POC] No local files found (e.g. file:// or content://) in formData to upload. Saving section normally.`);
+        // console.log("FormData:", JSON.stringify(formData));
+      } else {
+        console.log(`[POC] Starting S3 upload process for ${localFiles.length} files...`);
+        setS3UploadProgress({ current: 0, total: localFiles.length });
+        setS3UploadModalVisible(true);
+        
+        try {
+          const uploadResults = await s3UploadService.processUploadBatch(
+            localFiles,
+            "INSPECTION_REPORT",
+            inspectionId,
+            (current, total) => {
+              setS3UploadProgress({ current, total });
+            }
+          );
+          finalUploadResults = uploadResults;
+          
+          console.log("\\n✅ [POC] S3 Upload Successful! Generated S3 URLs:");
+          uploadResults.forEach((res, i) => {
+            console.log(`  ${i + 1}. Key: ${res.key}`);
+            console.log(`     URL: ${res.fileUrl}`);
+          });
+          console.log("\\n");
+        } catch (s3Error) {
+          console.error("[POC] S3 Upload Failed:", s3Error);
+          // For POC, we just log and continue, but in prod we'd halt here
+        } finally {
+          setS3UploadModalVisible(false);
+        }
+      }
+      // -----------------------------------
+      
+      // Replace local URIs with S3 URLs in formData
+      const replaceLocalUris = (obj, s3Results) => {
+        if (!obj || !s3Results || s3Results.length === 0) return obj;
+        
+        const s3Map = new Map();
+        s3Results.forEach(r => s3Map.set(r.originalUri, r.fileUrl));
+        
+        const traverse = (node) => {
+          if (!node) return node;
+          if (typeof node === 'string') {
+            return s3Map.has(node) ? s3Map.get(node) : node;
+          }
+          if (Array.isArray(node)) {
+            return node.map(traverse);
+          }
+          if (typeof node === 'object') {
+            const newNode = {};
+            for (const k in node) {
+              newNode[k] = traverse(node[k]);
+            }
+            return newNode;
+          }
+          return node;
+        };
+        
+        return traverse(obj);
+        return traverse(obj);
+      };
+
+      let finalFormData = formData;
+      if (localFiles.length > 0) {
+        finalFormData = replaceLocalUris(formData, finalUploadResults);
+      }
+
       // 1. Save to local storage for persistence
-      await AsyncStorage.setItem(storageKey, JSON.stringify(formData));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(finalFormData));
 
       // 2. Call API based on sectionKey
       if (sectionKey === "section_1_engine_powertrain") {
-        const payload = mapEngineData(formData, vehicleCategory);
+        const payload = mapEngineData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionEngine2W(inspectionId, payload);
         else await inspectionAPI.saveSectionEngine(inspectionId, payload);
       } else if (sectionKey === "section_1_ev_battery") {
-        const payload = mapEvBatteryData(formData);
+        const payload = mapEvBatteryData(finalFormData);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionEvBattery2W(inspectionId, payload);
         else await inspectionAPI.saveSectionEvBattery(inspectionId, payload);
       } else if (sectionKey === "section_2_mechanical") {
-        const payload = mapMechanicalData(formData, vehicleCategory);
+        const payload = mapMechanicalData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionMechanical2W(inspectionId, payload);
         else await inspectionAPI.saveSectionMechanical(inspectionId, payload);
       } else if (sectionKey === "section_3_exterior_panels") {
-        const payload = mapExteriorPanelsData(formData, sectionData.panels);
+        const payload = mapExteriorPanelsData(finalFormData, sectionData.panels);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionExteriorPanels2W(inspectionId, payload);
         else await inspectionAPI.saveSectionExteriorPanels(inspectionId, payload);
       } else if (sectionKey === "section_4_glass_exterior_electronics") {
-        const payload = mapGlassExteriorData(formData, vehicleCategory);
+        const payload = mapGlassExteriorData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionGlassExterior2W(inspectionId, payload);
         else await inspectionAPI.saveSectionGlassExterior(inspectionId, payload);
       } else if (sectionKey === "section_5_interior_cabin" || sectionKey === "section_5_comfort_electronics") {
-        const payload = mapInteriorCabinData(formData, vehicleCategory);
+        const payload = mapInteriorCabinData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionInteriorCabin2W(inspectionId, payload);
         else await inspectionAPI.saveSectionInteriorCabin(inspectionId, payload);
       } else if (sectionKey === "section_6_structural_history") {
-        const payload = mapStructuralHistoryData(formData, vehicleCategory);
+        const payload = mapStructuralHistoryData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionStructuralHistory2W(inspectionId, payload);
         else await inspectionAPI.saveSectionStructuralHistory(inspectionId, payload);
       } else if (sectionKey === "section_7_tyres") {
-        const payload = mapTyresData(formData);
+        const payload = mapTyresData(finalFormData);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionTyres2W(inspectionId, payload);
         else await inspectionAPI.saveSectionTyres(inspectionId, payload);
       } else if (sectionKey === "section_8_obd_diagnostics") {
-        const payload = mapObdData(formData);
+        const payload = mapObdData(finalFormData);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionObd2W(inspectionId, payload);
         else await inspectionAPI.saveSectionObd(inspectionId, payload);
       } else if (sectionKey === "section_9_modifications") {
-        const payload = mapModificationsData(formData);
+        const payload = mapModificationsData(finalFormData);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionModifications2W(inspectionId, payload);
         else await inspectionAPI.saveSectionModifications(inspectionId, payload);
       } else if (sectionKey === "section_10_media") {
-        const payload = mapMediaData(formData, vehicleCategory);
+        const payload = mapMediaData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionMedia2W(inspectionId, payload);
         else await inspectionAPI.saveSectionMedia(inspectionId, payload);
       } else if (sectionKey === "section_11_vehicle_specs") {
@@ -1830,6 +1899,11 @@ export default function InspectionSectionScreen() {
       )}
 
       {/* Save Success Modal */}
+      <UploadProgressModal 
+        visible={s3UploadModalVisible} 
+        current={s3UploadProgress.current} 
+        total={s3UploadProgress.total} 
+      />
       <Modal visible={saveSuccess} transparent animationType="fade">
         <View style={styles.successOverlay}>
           <View style={styles.successModal}>

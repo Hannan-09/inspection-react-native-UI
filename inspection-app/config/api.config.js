@@ -35,6 +35,7 @@ export const API_CONFIG = {
       DELETE: "/api/inspections/:id",
       SUBMIT: "/api/inspections/:id/submit",
       STATS: "/api/inspections/stats",
+      PRESIGNED_URL: "/api/v1/website/s3/uploads/presigned-url",
       ASSIGNED_LIST: "/api/v1/website/vehicle/inspector/assigned-inspections",
       ASSIGNED_DETAILS: "/api/v1/website/vehicle/inspector/assigned-inspections/:id",
       ACCEPT: "/api/v1/website/vehicle/inspector/assigned-inspections/:id/accept",
