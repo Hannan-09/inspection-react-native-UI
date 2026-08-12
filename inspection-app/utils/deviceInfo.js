@@ -1,4 +1,4 @@
-// import DeviceInfo from 'react-native-device-info';
+import DeviceInfo from 'react-native-device-info';
 import { Platform } from 'react-native';
 
 export const IPHONE_MODELS = {
@@ -73,8 +73,6 @@ export const getModelName = (identifier) => {
 };
 
 export const getDeviceInformation = async () => {
-  return null;
-  /*
   try {
     const rawModel = DeviceInfo.getModel();
     const modelName = Platform.OS === 'ios' ? getModelName(rawModel) : rawModel;
@@ -96,5 +94,4 @@ export const getDeviceInformation = async () => {
     console.log('Device Info Error', error);
     return null;
   }
-  */
 };

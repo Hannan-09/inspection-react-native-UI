@@ -4,7 +4,7 @@ import Toast from "react-native-toast-message";
 import "../global.css";
 import { COLORS } from "../constants";
 import { useEffect } from "react";
-// import messaging from "@react-native-firebase/messaging";
+import messaging from "@react-native-firebase/messaging";
 import { PermissionsAndroid, Platform } from "react-native";
 
 export default function RootLayout() {
@@ -14,7 +14,7 @@ export default function RootLayout() {
         if (Platform.OS === 'android' && Platform.Version >= 33) {
           await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
         } else {
-          // await messaging().requestPermission();
+          await messaging().requestPermission();
         }
       } catch (error) {
         console.error("Error requesting notification permission:", error);
@@ -23,7 +23,7 @@ export default function RootLayout() {
 
     requestNotificationPermission();
 
-    /*
+    
     // Listen for foreground notifications
     const unsubscribe = messaging().onMessage(async (remoteMessage) => {
       Toast.show({
@@ -37,7 +37,6 @@ export default function RootLayout() {
     });
 
     return unsubscribe;
-    */
   }, []);
 
   return (

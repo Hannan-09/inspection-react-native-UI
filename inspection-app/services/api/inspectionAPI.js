@@ -245,21 +245,7 @@ class InspectionAPI {
   async saveSectionEngine2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_ENGINE.replace(":id", id);
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `${key.toLowerCase().includes("video") ? "video" : "image"}/${match[1]}` : "image/jpeg";
-            formData.append(key, { uri: value, name: filename, type });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W engine section:", error);
@@ -270,21 +256,7 @@ class InspectionAPI {
   async saveSectionEvBattery2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_EV_BATTERY.replace(":id", id);
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `${key.toLowerCase().includes("video") ? "video" : "image"}/${match[1]}` : "image/jpeg";
-            formData.append(key, { uri: value, name: filename, type });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W EV battery section:", error);
@@ -293,24 +265,9 @@ class InspectionAPI {
   }
 
   async saveSectionMechanical2W(id, data) {
-        console.log("payload", data);
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_MECHANICAL.replace(":id", id);
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-            formData.append(key, { uri: value, name: filename, type });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W mechanical section:", error);
@@ -321,42 +278,7 @@ class InspectionAPI {
   async saveSectionExteriorPanels2W(id, payload) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_EXTERIOR_PANELS.replace(":id", id);
-      const formData = new FormData();
-
-      payload.panels.forEach((panel, index) => {
-        formData.append(`panels[${index}].panelName`, panel.panelName);
-        formData.append(`panels[${index}].originalPaint`, panel.originalPaint);
-        formData.append(`panels[${index}].repainted`, panel.repainted);
-        if (panel.dentSeverity) formData.append(`panels[${index}].dentSeverity`, panel.dentSeverity);
-        if (panel.scratchSeverity) formData.append(`panels[${index}].scratchSeverity`, panel.scratchSeverity);
-        formData.append(`panels[${index}].rustPresent`, panel.rustPresent);
-        if (panel.dentPhotoIndices && panel.dentPhotoIndices.length > 0) {
-          panel.dentPhotoIndices.forEach(photoIndex => {
-            formData.append(`panels[${index}].dentPhotoIndices`, photoIndex);
-          });
-        }
-        if (panel.scratchPhotoIndices && panel.scratchPhotoIndices.length > 0) {
-          panel.scratchPhotoIndices.forEach(photoIndex => {
-            formData.append(`panels[${index}].scratchPhotoIndices`, photoIndex);
-          });
-        }
-        if (panel.panelPhotoIndices && panel.panelPhotoIndices.length > 0) {
-          panel.panelPhotoIndices.forEach(photoIndex => {
-            formData.append(`panels[${index}].panelPhotoIndices`, photoIndex);
-          });
-        }
-      });
-
-      if (payload.photos && payload.photos.length > 0) {
-        payload.photos.forEach((photoUri) => {
-          const filename = photoUri.split("/").pop();
-          const match = /\.(\w+)$/.exec(filename);
-          const type = match ? `image/${match[1]}` : "image/jpeg";
-          formData.append("panelPhotos", { uri: photoUri, name: filename, type });
-        });
-      }
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, payload);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W exterior panels section:", error);
@@ -389,30 +311,7 @@ class InspectionAPI {
   async saveSectionStructuralHistory2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_STRUCTURAL_HISTORY.replace(":id", id);
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (Array.isArray(value)) {
-            value.forEach(fileUri => {
-              if (typeof fileUri === "string" && (fileUri.startsWith("file://") || fileUri.startsWith("content://"))) {
-                const filename = fileUri.split("/").pop();
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : "image/jpeg";
-                formData.append(key, { uri: fileUri, name: filename, type });
-              }
-            });
-          } else if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-            formData.append(key, { uri: value, name: filename, type });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W structural history section:", error);
@@ -423,25 +322,7 @@ class InspectionAPI {
   async saveSectionTyres2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_TYRES.replace(":id", id);
-      const formData = new FormData();
-
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (key === "frontTyrePhoto" || key === "rearTyrePhoto") {
-            if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-              const filename = value.split("/").pop();
-              const match = /\.(\w+)$/.exec(filename);
-              const type = match ? `image/${match[1]}` : "image/jpeg";
-              formData.append(key, { uri: value, name: filename, type });
-            }
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W tyres section:", error);
@@ -452,28 +333,7 @@ class InspectionAPI {
   async saveSectionObd2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_OBD.replace(":id", id);
-
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        if (value !== null && value !== undefined) {
-          if (typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-            const filename = value.split("/").pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : "image/jpeg";
-
-            formData.append(key, {
-              uri: value,
-              name: filename,
-              type: type
-            });
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W OBD section:", error);
@@ -484,44 +344,7 @@ class InspectionAPI {
   async saveSectionModifications2W(id, payload) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_MODIFICATIONS.replace(":id", id);
-      const formData = new FormData();
-
-      formData.append("modificationsDetected", payload.modificationsDetected);
-      if (payload.modificationCount !== null && payload.modificationCount !== undefined) {
-        formData.append("modificationCount", payload.modificationCount);
-      }
-      if (payload.modificationRiskLevel) {
-        formData.append("modificationRiskLevel", payload.modificationRiskLevel);
-      }
-      if (payload.sellerDeclarationMatch !== null && payload.sellerDeclarationMatch !== undefined) {
-        formData.append("sellerDeclarationMatch", payload.sellerDeclarationMatch);
-      }
-
-      if (payload.modificationItems && payload.modificationItems.length > 0) {
-        payload.modificationItems.forEach((item, index) => {
-          if (item.modificationCategory) formData.append(`modificationItems[${index}].modificationCategory`, item.modificationCategory);
-          if (item.modificationType) formData.append(`modificationItems[${index}].modificationType`, item.modificationType);
-          formData.append(`modificationItems[${index}].isOem`, item.isOem);
-          if (item.impactOnWarranty) formData.append(`modificationItems[${index}].impactOnWarranty`, item.impactOnWarranty);
-          if (item.impactOnSafety) formData.append(`modificationItems[${index}].impactOnSafety`, item.impactOnSafety);
-          formData.append(`modificationItems[${index}].documentationAvailable`, item.documentationAvailable);
-          if (item.photoIndex !== null && item.photoIndex !== undefined) {
-            formData.append(`modificationItems[${index}].photoIndex`, item.photoIndex);
-          }
-          if (item.remarks) formData.append(`modificationItems[${index}].remarks`, item.remarks);
-        });
-      }
-
-      if (payload.photos && payload.photos.length > 0) {
-        payload.photos.forEach((photoUri) => {
-          const filename = photoUri.split("/").pop();
-          const match = /\.(\w+)$/.exec(filename);
-          const type = match ? `image/${match[1]}` : "image/jpeg";
-          formData.append("modificationPhotos", { uri: photoUri, name: filename, type });
-        });
-      }
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, payload);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W modifications section:", error);
@@ -532,22 +355,7 @@ class InspectionAPI {
   async saveSectionMedia2W(id, data) {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.INSPECTIONS_2W.SECTION_MEDIA.replace(":id", id);
-      const formData = new FormData();
-
-      const mediaKeys = ["testRideVideo", "chassisNumberPhoto", "engineNumberPhoto"];
-
-      mediaKeys.forEach(key => {
-        const value = data[key];
-        if (value && typeof value === "string" && (value.startsWith("file://") || value.startsWith("content://"))) {
-          const filename = value.split("/").pop();
-          const match = /\.(\w+)$/.exec(filename);
-          const isVideo = key.toLowerCase().includes("video");
-          const type = match ? `${isVideo ? "video" : "image"}/${match[1]}` : (isVideo ? "video/mp4" : "image/jpeg");
-          formData.append(key, { uri: value, name: filename, type });
-        }
-      });
-
-      const response = await apiService.putMultipart(endpoint, formData);
+      const response = await apiService.put(endpoint, data);
       return response.data || response;
     } catch (error) {
       console.error("Error saving 2W media section:", error);

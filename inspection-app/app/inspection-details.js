@@ -178,7 +178,8 @@ export default function InspectionDetailsScreen() {
       `&fuelType=${encodeURIComponent(details.fuelType || "")}` +
       `&makerName=${encodeURIComponent(details.makerName || "")}` +
       `&modelName=${encodeURIComponent(details.modelName || "")}` +
-      `&regNumber=${encodeURIComponent(details.regNumber || "")}`
+      `&regNumber=${encodeURIComponent(details.regNumber || "")}` +
+      `&thumbnailUrl=${encodeURIComponent(details.thumbnailUrl || "")}`
     );
   };
 
@@ -535,7 +536,7 @@ export default function InspectionDetailsScreen() {
 
         {(details.assignmentStatus?.toUpperCase() === "COMPLETED" || details.assignmentStatus?.toUpperCase() === "SUBMITTED") && (
           <TouchableOpacity 
-            style={[styles.acceptButton, { marginLeft: 0, backgroundColor: COLORS.fourth }]} 
+            style={[styles.acceptButton, { marginLeft: 0, backgroundColor: (!details.reportPdfUrl && details.assignmentStatus?.toUpperCase() === "SUBMITTED") ? "#6B7280" : COLORS.fourth }]} 
             onPress={() => {
               if (details.reportPdfUrl) {
                 Linking.openURL(details.reportPdfUrl).catch((err) => {
@@ -554,9 +555,12 @@ export default function InspectionDetailsScreen() {
                 );
               }
             }}
+            disabled={!details.reportPdfUrl && details.assignmentStatus?.toUpperCase() === "SUBMITTED"}
           >
-            <Ionicons name="document-text" size={22} color="#FFFFFF" />
-            <Text style={styles.acceptButtonText}>View Inspection Report</Text>
+            <Ionicons name={(!details.reportPdfUrl && details.assignmentStatus?.toUpperCase() === "SUBMITTED") ? "time-outline" : "document-text"} size={22} color="#FFFFFF" />
+            <Text style={styles.acceptButtonText}>
+              {(!details.reportPdfUrl && details.assignmentStatus?.toUpperCase() === "SUBMITTED") ? "Report Processing..." : "View Inspection Report"}
+            </Text>
           </TouchableOpacity>
         )}
 

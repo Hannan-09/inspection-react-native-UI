@@ -667,31 +667,27 @@ export default function InspectionSectionScreen() {
   const mapEngineData = (data, category) => {
     if (category === "2W") {
       return {
-        engineSoundVideo: data.engine_sound_video || null,
         overheating: mapEnum(data.overheating),
         misfiringSmoke: mapEnum(data.misfiring_smoke),
         backCompression: mapEnum(data.back_compression),
         oilLeakage: mapEnum(data.oil_leakage),
         coolantLeakage: mapEnum(data.coolant_leakage),
-        engineMountCondition: mapEnum(data.engine_mount_condition),
-        exhaustLeaks: mapEnum(data.exhaust_leaks),
-        fuelLines: mapEnum(data.fuel_lines),
-        fuelTank: mapEnum(data.fuel_tank),
         gasketsAndSeals: mapEnum(data.gaskets_and_seals),
-        wiringHarness: mapEnum(data.wiring_harness),
-        wiringHarnessPhoto: data.wiring_harness_photo || null,
-        batteryVoltage: mapEnum(data.battery_voltage),
-        batteryVoltageValue: data.battery_voltage_value ? parseFloat(data.battery_voltage_value) : null,
-        alternatorStarter: mapEnum(data.alternator_starter),
-        gearShifting: mapEnum(data.gear_shifting),
-        gearboxLeaks: mapEnum(data.gearbox_leaks),
-        clutchLifePercent: data.clutch_life_percent ? parseInt(data.clutch_life_percent) : null,
         exhaustCondition: mapEnum(data.exhaust_condition),
+        fuelTank: mapEnum(data.fuel_tank),
+        fuelLines: mapEnum(data.fuel_lines),
         carburetorOrInjector: mapEnum(data.carburetor_or_injector),
+        wiringHarness: mapEnum(data.wiring_harness),
         batteryAndVoltage: mapEnum(data.battery_and_voltage),
+        batteryVoltageValue: data.battery_voltage_value ? parseFloat(data.battery_voltage_value) : null,
         selfStartFunctioning: mapEnum(data.self_start_functioning),
         chainSprocketCondition: mapEnum(data.chain_sprocket_condition),
-        clutchCondition: mapEnum(data.clutch_condition)
+        gearShifting: mapEnum(data.gear_shifting),
+        gearboxLeaks: mapEnum(data.gearbox_leaks),
+        clutchCondition: mapEnum(data.clutch_condition),
+        clutchLifePercent: data.clutch_life_percent ? parseInt(data.clutch_life_percent) : null,
+        engineSoundVideo: data.engine_sound_video || null,
+        wiringHarnessPhoto: data.wiring_harness_photo || null
       };
     }
     return {
@@ -722,7 +718,24 @@ export default function InspectionSectionScreen() {
     };
   };
 
-  const mapEvBatteryData = (data) => {
+  const mapEvBatteryData = (data, category) => {
+    if (category === "2W") {
+      return {
+        batterySohPercent: data.battery_soh_percent ? parseInt(data.battery_soh_percent) : null,
+        batterySocPercent: data.battery_soc_percent ? parseInt(data.battery_soc_percent) : null,
+        batteryPackCondition: mapEnum(data.battery_pack_condition),
+        chargingPortCondition: mapEnum(data.charging_port_condition),
+        bmsWarningLight: mapEnum(data.bms_warning_light),
+        rangeIndicatorFunctional: mapEnum(data.range_indicator_functional),
+        motorNoiseVibration: mapEnum(data.motor_noise_vibration),
+        regenerativeBrakingActive: mapEnum(data.regenerative_braking_active),
+        hvWiringHarness: mapEnum(data.hv_wiring_harness),
+        dcDcConverter: mapEnum(data.dc_dc_converter),
+        motorRunningVideo: data.motor_running_video || null,
+        chargingPortPhoto: data.charging_port_condition_photo || null,
+        hvWiringHarnessPhoto: data.hv_wiring_harness_photo || null
+      };
+    }
     return {
       motorRunningVideo: data.motor_running_video || null,
       batterySohPercent: data.battery_soh_percent ? parseInt(data.battery_soh_percent) : null,
@@ -919,13 +932,13 @@ export default function InspectionSectionScreen() {
     };
   };
 
-  const mapTyresData = (data) => {
-    const payload = {
+  const mapTyresData = (data, category) => {
+    const payload = category === "2W" ? {} : {
       spareTyreCondition: mapEnum(data.spare_tyre_condition),
       spareTyrePhoto: data.spare_tyre_condition_photo || null
     };
 
-    const keysToProcess = vehicleCategory === "2W"
+    const keysToProcess = category === "2W"
       ? ["Front", "Rear"]
       : ["Front Left", "Front Right", "Rear Left", "Rear Right"];
 
@@ -997,15 +1010,9 @@ export default function InspectionSectionScreen() {
   const mapMediaData = (data, category) => {
     if (category === "2W") {
       return {
-        engineOrMotorRunningVideo: data.engine_or_motor_running_video || null,
-        testRideVideo: data.test_ride_video || null,
         chassisNumberPhoto: data.chassis_number_photo || null,
         engineNumberPhoto: data.engine_number_photo || null,
-        fullVehicleWalkaroundPhotos: data.full_vehicle_walkaround_photos
-          ? (Array.isArray(data.full_vehicle_walkaround_photos)
-            ? data.full_vehicle_walkaround_photos
-            : [data.full_vehicle_walkaround_photos])
-          : []
+        testRideVideo: data.test_ride_video || null
       };
     }
     return {
@@ -1113,7 +1120,7 @@ export default function InspectionSectionScreen() {
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionEngine2W(inspectionId, payload);
         else await inspectionAPI.saveSectionEngine(inspectionId, payload);
       } else if (sectionKey === "section_1_ev_battery") {
-        const payload = mapEvBatteryData(finalFormData);
+        const payload = mapEvBatteryData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionEvBattery2W(inspectionId, payload);
         else await inspectionAPI.saveSectionEvBattery(inspectionId, payload);
       } else if (sectionKey === "section_2_mechanical") {
@@ -1137,7 +1144,7 @@ export default function InspectionSectionScreen() {
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionStructuralHistory2W(inspectionId, payload);
         else await inspectionAPI.saveSectionStructuralHistory(inspectionId, payload);
       } else if (sectionKey === "section_7_tyres") {
-        const payload = mapTyresData(finalFormData);
+        const payload = mapTyresData(finalFormData, vehicleCategory);
         if (vehicleCategory === "2W") await inspectionAPI.saveSectionTyres2W(inspectionId, payload);
         else await inspectionAPI.saveSectionTyres(inspectionId, payload);
       } else if (sectionKey === "section_8_obd_diagnostics") {
@@ -1193,14 +1200,17 @@ export default function InspectionSectionScreen() {
             penaltyAmount: c.violation_details && c.violation_details.length > 0 ? parseFloat(c.violation_details[0].penalty) || 0.0 : 0.0,
             status: c.challan_status ? (c.challan_status.toUpperCase() === "PAID" ? "PAID" : "UNPAID") : "UNPAID"
           })) : [],
-          permitNumber: formData.permit_no || null,
-          permitType: formData.permit_type || null,
-          permitFromDate: parseDate(formData.permit_from_date),
-          permitToDate: parseDate(formData.permit_to_date),
-          nationalPermitNumber: formData.national_permit_no || null,
-          nationalPermitValidUptoDate: parseDate(formData.national_permit_upto_date),
           rtoCode: formData.rto_code || null
         };
+
+        if (vehicleCategory !== "2W") {
+          payload.permitNumber = formData.permit_no || null;
+          payload.permitType = formData.permit_type || null;
+          payload.permitFromDate = parseDate(formData.permit_from_date);
+          payload.permitToDate = parseDate(formData.permit_to_date);
+          payload.nationalPermitNumber = formData.national_permit_no || null;
+          payload.nationalPermitValidUptoDate = parseDate(formData.national_permit_upto_date);
+        }
 
         if (vehicleCategory === "2W") {
           await inspectionAPI.saveSectionVehicleDocuments2W(inspectionId, payload);

@@ -1,7 +1,7 @@
 import { apiService } from "./api";
 import { API_CONFIG } from "../../config/api.config";
 import { Platform } from "react-native";
-// import { Image as ImageCompressor, Video as VideoCompressor } from 'react-native-compressor';
+import { Image as ImageCompressor, Video as VideoCompressor } from 'react-native-compressor';
 
 class S3UploadService {
   /**
@@ -61,38 +61,38 @@ class S3UploadService {
    * @param {String} contentType MIME type
    * @returns {Promise<String>} Compressed file URI
    */
-  // async compressMedia(fileUri, contentType) {
-  //   try {
-  //     if (contentType.startsWith('video/')) {
-  //       console.log(`[Compression] Compressing video: ${fileUri}`);
-  //       const result = await VideoCompressor.compress(
-  //         fileUri,
-  //         {
-  //           compressionMethod: 'auto',
-  //         },
-  //         (progress) => {
-  //           // Optional: you can log progress here
-  //         }
-  //       );
-  //       console.log(`[Compression] Video compression complete: ${result}`);
-  //       return result;
-  //     } else if (contentType.startsWith('image/')) {
-  //       console.log(`[Compression] Compressing image: ${fileUri}`);
-  //       const result = await ImageCompressor.compress(fileUri, {
-  //         compressionMethod: 'auto',
-  //         quality: 0.7,
-  //         maxWidth: 1920,
-  //         maxHeight: 1920,
-  //       });
-  //       console.log(`[Compression] Image compression complete: ${result}`);
-  //       return result;
-  //     }
-  //     return fileUri;
-  //   } catch (error) {
-  //     console.warn(`[Compression] Failed to compress ${fileUri}, uploading original. Error:`, error);
-  //     return fileUri; // Fallback to original if compression fails
-  //   }
-  // }
+  async compressMedia(fileUri, contentType) {
+    try {
+      if (contentType.startsWith('video/')) {
+        console.log(`[Compression] Compressing video: ${fileUri}`);
+        const result = await VideoCompressor.compress(
+          fileUri,
+          {
+            compressionMethod: 'auto',
+          },
+          (progress) => {
+            // Optional: you can log progress here
+          }
+        );
+        console.log(`[Compression] Video compression complete: ${result}`);
+        return result;
+      } else if (contentType.startsWith('image/')) {
+        console.log(`[Compression] Compressing image: ${fileUri}`);
+        const result = await ImageCompressor.compress(fileUri, {
+          compressionMethod: 'auto',
+          quality: 0.7,
+          maxWidth: 1920,
+          maxHeight: 1920,
+        });
+        console.log(`[Compression] Image compression complete: ${result}`);
+        return result;
+      }
+      return fileUri;
+    } catch (error) {
+      console.warn(`[Compression] Failed to compress ${fileUri}, uploading original. Error:`, error);
+      return fileUri; // Fallback to original if compression fails
+    }
+  }
 
   /**
    * Orchestrates the batch processing of multiple files.
@@ -113,8 +113,17 @@ class S3UploadService {
     // 1. Prepare metadata for backend request
     const metadata = files.map((fileUri, index) => {
       // Extract filename from URI or assign a generic one
-      const fileName = fileUri.split("/").pop() || `image_${index}.jpg`;
-      const contentType = "image/jpeg"; // Default to jpeg for now
+      const fileName = fileUri.split("/").pop() || (uploadType.includes("VIDEO") ? `video_${index}.mp4` : `image_${index}.jpg`);
+      
+      let contentType = "image/jpeg"; // Default to jpeg
+      const lowerName = fileName.toLowerCase();
+      if (lowerName.endsWith('.mp4') || uploadType.includes('VIDEO')) {
+        contentType = "video/mp4";
+      } else if (lowerName.endsWith('.mov')) {
+        contentType = "video/quicktime";
+      } else if (lowerName.endsWith('.png')) {
+        contentType = "image/png";
+      }
       
       return {
         fileName,
@@ -157,9 +166,9 @@ class S3UploadService {
         }
 
         const contentType = s3Meta.contentType || "image/jpeg";
-        await this.uploadFileToS3(fileUri, s3Meta.uploadUrl, contentType);
-        // const compressedUri = await this.compressMedia(fileUri, contentType);
-        // await this.uploadFileToS3(compressedUri, s3Meta.uploadUrl, contentType);
+        const compressedUri = await this.compressMedia(fileUri, contentType);
+        await this.uploadFileToS3(compressedUri, s3Meta.uploadUrl, contentType);
+        // await this.uploadFileToS3(fileUri, s3Meta.uploadUrl, contentType);
         
         completed++;
         if (onProgress) {

@@ -507,11 +507,8 @@
             "POOR",
             "NA"
           ],
-          "input_ui": "tap_buttons"
-        },
-        "rear_brake_condition_photo": {
-          "type": "media_url",
-          "required": true
+          "input_ui": "tap_buttons",
+          "photo_required_on_fail": true
         },
         "brake_pad_life_percent": {
           "type": "integer",

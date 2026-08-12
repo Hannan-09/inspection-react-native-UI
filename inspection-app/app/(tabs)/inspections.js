@@ -12,6 +12,7 @@ import {
   Alert,
   Linking,
   Platform,
+  Image,
 } from "react-native";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,26 @@ import { populateInspectionStorage } from "../../utils/reportMapper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../../constants";
 import ThemeBackground from "../../components/ThemeBackground";
+
+const LoadingImage = ({ uri, style, ...props }) => {
+  const [imageLoading, setImageLoading] = useState(false);
+  return (
+    <View style={style}>
+      <Image
+        source={{ uri }}
+        style={[style, { position: "absolute", top: 0, left: 0 }]}
+        onLoadStart={() => setImageLoading(true)}
+        onLoadEnd={() => setImageLoading(false)}
+        {...props}
+      />
+      {imageLoading && (
+        <View style={[style, { justifyContent: "center", alignItems: "center", backgroundColor: "rgba(255, 255, 255, 0.05)" }]}>
+          <ActivityIndicator size="small" color={COLORS.fourth} />
+        </View>
+      )}
+    </View>
+  );
+};
 
 export default function InspectionsTab() {
   const router = useRouter();
@@ -46,7 +67,7 @@ export default function InspectionsTab() {
     contentWidth: 0,
     layoutWidth: 0,
   });
-
+  
   // Status mapping for API
   const statusMap = {
     pending: "ASSIGNED",
@@ -213,7 +234,8 @@ export default function InspectionsTab() {
       `&fuelType=${encodeURIComponent(item.fuelType || "")}` +
       `&makerName=${encodeURIComponent(item.makerName || "")}` +
       `&modelName=${encodeURIComponent(item.modelName || "")}` +
-      `&regNumber=${encodeURIComponent(item.regNumber || "")}`
+      `&regNumber=${encodeURIComponent(item.regNumber || "")}` +
+      `&thumbnailUrl=${encodeURIComponent(item.thumbnailUrl || "")}`
     );
   };
 
@@ -393,16 +415,29 @@ export default function InspectionsTab() {
       >
         {/* Header with Car Model and Status */}
         <View className="flex-row justify-between items-start mb-3">
-          <View className="flex-1">
-            <Text className="font-bold" style={styles.carModel}>
-              {item.makerName} {item.modelName}
-            </Text>
-            <Text className="font-semibold mt-1" style={styles.carNumber}>
-              {item.regNumber}
-            </Text>
+          <View className="flex-row items-center flex-1">
+            <View style={styles.carIcon}>
+              {item.thumbnailUrl ? (
+                <LoadingImage 
+                  uri={item.thumbnailUrl} 
+                  style={styles.carThumbnail} 
+                  resizeMode="cover" 
+                />
+              ) : (
+                <Ionicons name="car-sport" size={24} color={COLORS.fourth} />
+              )}
+            </View>
+            <View className="flex-1 ml-3">
+              <Text className="font-bold" style={styles.carModel}>
+                {item.makerName} {item.modelName}
+              </Text>
+              <Text className="font-semibold mt-1" style={styles.carNumber}>
+                {item.regNumber}
+              </Text>
+            </View>
           </View>
           <View
-            style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}
+            style={[styles.statusBadge, { backgroundColor: statusColor.bg, alignSelf: 'flex-start' }]}
           >
             <Ionicons
               name={statusColor.icon}
@@ -511,7 +546,7 @@ export default function InspectionsTab() {
 
           {(item.assignmentStatus === "COMPLETED" || item.assignmentStatus === "SUBMITTED") && (
             <TouchableOpacity
-              style={[styles.cardAcceptButton, { backgroundColor: COLORS.fourth }]}
+              style={[styles.cardAcceptButton, { backgroundColor: (!item.reportPdfUrl && item.assignmentStatus === "SUBMITTED") ? "#6B7280" : COLORS.fourth }]}
               onPress={() => {
                 if (item.reportPdfUrl) {
                   Linking.openURL(item.reportPdfUrl).catch((err) => {
@@ -530,8 +565,11 @@ export default function InspectionsTab() {
                   );
                 }
               }}
+              disabled={!item.reportPdfUrl && item.assignmentStatus === "SUBMITTED"}
             >
-              <Text style={styles.cardAcceptButtonText}>View Report</Text>
+              <Text style={styles.cardAcceptButtonText}>
+                {(!item.reportPdfUrl && item.assignmentStatus === "SUBMITTED") ? "Report Processing..." : "View Report"}
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -1281,6 +1319,18 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  carIcon: {
+    width: 44,
+    height: 44,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  carThumbnail: { width: "100%", height: "100%", borderRadius: 22 },
   carModel: {
     fontSize: 17,
     color: COLORS.secondary,

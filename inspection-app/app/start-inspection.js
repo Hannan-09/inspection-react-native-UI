@@ -1,5 +1,5 @@
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image,
 } from "react-native";
 import { useState, useEffect, useCallback } from "react";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
@@ -78,6 +78,7 @@ export default function StartInspectionScreen() {
     makerName: params.makerName || "",
     modelName: params.modelName || "",
     regNumber: params.regNumber || "",
+    thumbnailUrl: params.thumbnailUrl || null,
   };
 
   useEffect(() => {
@@ -195,7 +196,11 @@ export default function StartInspectionScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
           <View style={styles.vehicleIconContainer}>
-            <Ionicons name={resolvedCategory === "4W" ? "car-sport" : "bicycle"} size={40} color={COLORS.fourth} />
+            {vehicleDisplay.thumbnailUrl ? (
+              <Image source={{ uri: vehicleDisplay.thumbnailUrl }} style={styles.thumbnailImage} resizeMode="cover" />
+            ) : (
+              <Ionicons name={resolvedCategory === "4W" ? "car-sport" : "bicycle"} size={40} color={COLORS.fourth} />
+            )}
           </View>
           <Text style={styles.vehicleModel}>
             {vehicleDisplay.makerName} {vehicleDisplay.modelName}
@@ -296,7 +301,11 @@ export default function StartInspectionScreen() {
         {/* Vehicle info banner */}
         <View style={styles.vehicleBanner}>
           <View style={styles.vehicleBannerIcon}>
-            <Ionicons name={resolvedCategory === "4W" ? "car-sport" : "bicycle"} size={28} color={COLORS.fourth} />
+            {vehicleDisplay.thumbnailUrl ? (
+              <Image source={{ uri: vehicleDisplay.thumbnailUrl }} style={styles.bannerThumbnailImage} resizeMode="cover" />
+            ) : (
+              <Ionicons name={resolvedCategory === "4W" ? "car-sport" : "bicycle"} size={28} color={COLORS.fourth} />
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.vehicleBannerModel}>
@@ -426,6 +435,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
+    overflow: "hidden",
+  },
+  thumbnailImage: {
+    width: "100%",
+    height: "100%",
   },
   vehicleModel: { fontSize: 20, fontWeight: "bold", color: COLORS.secondary, marginBottom: 2, textAlign: "center" },
   vehicleNumber: { fontSize: 15, fontWeight: "600", color: COLORS.fourth, marginBottom: 10 },
@@ -521,6 +535,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
+    overflow: "hidden",
+  },
+  bannerThumbnailImage: {
+    width: "100%",
+    height: "100%",
   },
   vehicleBannerModel: { fontSize: 16, fontWeight: "bold", color: COLORS.secondary },
   vehicleBannerReg: { fontSize: 13, fontWeight: "600", color: COLORS.fourth, marginTop: 1 },
